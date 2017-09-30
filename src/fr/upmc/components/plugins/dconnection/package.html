@@ -1,0 +1,119 @@
+<!-- fr.upmc.components.plugins.dconnection (dynamic connection) -->
+<html>
+<body>
+<p>Component dynamic connection pattern plug-in.</p>
+<p>
+The package <code>fr.upmc.components.plugins.dconnection</code> defines and
+implements a component dynamic connection pattern.
+</p>
+<p><strong>Description</strong></p>
+<p>
+The component model uses ports and connectors to connect components.
+In static architectures, connections that need to be done are known
+at initialisation time.  However, in dynamic architectures, connections
+can appear and disappear during the execution.  Such dynamic architectures
+are especially needed when components also appear during execution and when
+the number of connections vary over time.
+</p>
+<p>
+The easiest way to do dynamic connections between components and their
+ports is to use the methods <code>doPortConnection</code> and
+<code>doPortDisconnection</code> of the <code>ReflectionI</code>
+interface. These methods require to know the URI of the ports to be
+connected. The reflection interface allows to query components for
+these. As this can grow in code complexity, this dynamic connection
+plug-in proposes an alternative to cope with complex dynamic
+architectures. 
+</p>
+<p>
+The pattern uses two set of interfaces/ports/connector:
+</p>
+<ul>
+<li>a static interface/port/connector offers the dynamic connection service
+  through an offered interface and its inbound port that is created at
+  initialisation time;</li>
+<li>a dynamic interface/port/connector represent the actual dynamic
+  connection that the component can handle.</li>
+</ul>
+<p>
+When a client component wants to perform dynamically connections with a client
+component, it must first install the client side plug-in. If the client
+component did not install the server side plug-in yet, the client side
+component can use the plug-in facility to make the server component install it.
+When the two plug-ins have been installed, the client side component can connect$
+its plug-in with the one of the server side using the plug-in method
+<code>connectWithServerSide</code>. The first requires that the client side
+component be connected to the server side component through the
+<code>ReflectionI</code> interface to be able to call the server side to get
+the URI of its dynamic connection service inbound port. With this URI, the
+client side component plug-in creates the client side outbound port and
+connect it to the server side inbound port.
+</p>
+<p>
+To perform the dynamic connection per se, the client side calls its plug-in
+method <code>doDynamicConnection</code>. This methods takes an interface
+that is used to get from the server side the URI of an inbound port
+implementing this interface. The the client side plug-in creates the
+corresponding outbound port and connect it to the provided inbound port.
+After this, the dynamic connection becomes operational. If the client side
+do not need to perform other dynamic connection with the same server side
+component, it can disconnect its dynamic connection service outbound port by
+calling the plug-in method <code>disconnectFromServerSide</code>. It can also
+disconnect its reflection outbound port from the server side reflection
+inbound port. Hence, the server side may continuously offers the dynamic
+connection service, but the client side connects to it only for the time
+required to set up a dynamic connection.  Indeed, this pattern is meant to
+cater for an unlimited number of dynamic connection accessible through a
+permanent and open dynamic connection service offered by the server.
+</p>
+<p>
+<i>Note:</i> the terms client and server in the above description refer to the
+respective roles of the component that initiates the dynamic connection and
+the component that waits for such requests.  The dynamic connection built
+through this pattern need not be a client/server one, but can also be a
+data connection or a two way connection.
+</p>
+<p>Protocol</p>
+<p>
+The client is the one that requires the
+<code>DynamicConnectionRequestRequiredI</code> interface, while the server is
+the component that offers the companion
+<code>DynamicConnectionRequestOfferedI</code> interface.
+</p>
+<pre>
+                                          Client                                 Server
+                                             |                                      |
+                                        -----|                                      |
+               connectDynamicallyWith() |    |                                      |
+                                        ---->|                                      |
+                                             |                                      |
+                                        -----|                                      |
+                  doDynamicConnection() |    |                                      |
+                                        ---->|                                      |
+                                             |         requestNewPortURI()          |
+                                             |------------------------------------->|
+                                             |                                      |   creates a new dynamic port
+                                             |                                      |-----
+                                             |                                      |    | createServerSideDynamicPort()  
+                                             |                                      |<----
+                                             |            new port URI              | 
+                                             |<-------------------------------------|
+                                             |                                      |
+                                             | components can now exchange          |
+                                             |                                      |
+                                        -----|                                      |
+             disconnectFromServerSide() |    |                                      |
+                                        ---->|                                      |
+                                             |                                      |
+</pre>
+<p>
+The abstract class <code>DynamicConnectionServerSidePlugin</code> defines the
+methods and data needed to implement both the client side of the protocol. To
+use the protocol, programmers have to define a concrete subclass of this
+abstract class, and provide implementations for method
+<code>createServerSideDynamicPort</code>. The class
+<code>DynamicConnectionClientSidePlugin</code> does the same for the client
+side.
+</p>
+</body>
+</html>

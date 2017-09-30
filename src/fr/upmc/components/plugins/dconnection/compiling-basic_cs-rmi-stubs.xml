@@ -1,0 +1,10 @@
+<project name="TestDynamicConnection" default="tests.stubs.compilation">
+	<target name="tests.stubs.compilation">
+		<echo message="Recompiling stubs..."/>
+		<echo message="Recompiling fr.upmc.components.plugins.dconnection.ports.DynamicConnectionRequestInboundPort"/>
+		<rmic classpath="${classpath}:../../../../../../../BCM-Plugins/bin/:../../../../../../../BasicComponentModel/bin/"
+			  classname="fr.upmc.components.plugins.dconnection.ports.DynamicConnectionRequestInboundPort"
+		      base="../../../../../../../BCM-Plugins/bin/"/>
+		<echo message="Stubs recompiled!"/>
+	</target>
+</project>
