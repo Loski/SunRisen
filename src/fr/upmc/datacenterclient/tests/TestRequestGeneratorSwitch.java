@@ -1,5 +1,7 @@
 package fr.upmc.datacenterclient.tests;
 
+import java.util.ArrayList;
+
 //Copyright Jacques Malenfant, Univ. Pierre et Marie Curie.
 //
 //Jacques.Malenfant@lip6.fr
@@ -36,11 +38,13 @@ package fr.upmc.datacenterclient.tests;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.connectors.DataConnector;
 import fr.upmc.components.cvm.AbstractCVM;
+import fr.upmc.components.ports.PortI;
 import fr.upmc.datacenter.connectors.ControlledDataConnector;
 import fr.upmc.datacenter.hardware.computers.Computer;
 import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
@@ -114,8 +118,12 @@ extends		AbstractCVM
 	public static final String	ApplicationVMManagementOutboundPortURI = "avm-obp" ;
 	public static final String	RequestSubmissionInboundPortURI = "rsibp" ;
 	public static final String	RequestSubmissionOutboundPortURI = "rsobp" ;
+	public static final String	RequestSubmissionOutboundPort2URI = "rsobp2" ;
 	public static final String	RequestNotificationInboundPortURI = "rnibp" ;
+	public static final String  RequestNotificationInboundPort2URI = "rnibp2";
 	public static final String	RequestNotificationOutboundPortURI = "rnobp" ;
+	public static final String	RequestSubmissionInboundPortVMURI = "rsobpVM" ;
+	public static final String	RequestNotificationOutboundPortVMURI = "rnibpVM" ;
 	public static final String	RequestGeneratorManagementInboundPortURI = "rgmip" ;
 	public static final String	RequestGeneratorManagementOutboundPortURI = "rgmop" ;
 
@@ -123,6 +131,8 @@ extends		AbstractCVM
 	protected ComputerServicesOutboundPort			csPort ;
 	/** 	Computer monitor component.										*/
 	protected ComputerMonitor						cm ;
+	/** 	Application virtual machine component.							*/
+	protected ApplicationVM							vm ;
 	/** 	Application virtual machine component.							*/
 	protected VmSwitcher							vmS ;
 	/** 	Request generator component.										*/
@@ -214,24 +224,33 @@ extends		AbstractCVM
 		// --------------------------------------------------------------------
 		// Create an Application VM component
 		// --------------------------------------------------------------------
-		this.vmS = new VmSwitcher(  RequestSubmissionInboundPortURI,
-								    RequestNotificationOutboundPortURI) ;
+		this.vm = new ApplicationVM("vm0",	// application vm component URI
+			    ApplicationVMManagementInboundPortURI,
+			    RequestSubmissionInboundPortVMURI,
+			    RequestNotificationOutboundPortVMURI) ;
+		this.addDeployedComponent(this.vm) ;
+		
+		List<String> vmport = new ArrayList<String>();
+		vmport.add(RequestSubmissionOutboundPort2URI);
+		
+		this.vmS = new VmSwitcher("switch0", RequestSubmissionInboundPortURI,
+								    RequestNotificationOutboundPortURI,vmport,RequestNotificationInboundPort2URI) ;
 		this.addDeployedComponent(this.vmS) ;
 
 		// Create a mock up port to manage the AVM component (allocate cores).
-		/*this.avmPort = new ApplicationVMManagementOutboundPort(
+		this.avmPort = new ApplicationVMManagementOutboundPort(
 									ApplicationVMManagementOutboundPortURI,
 									new AbstractComponent(0, 0) {}) ;
 		this.avmPort.publishPort() ;
 		this.avmPort.
 				doConnection(
 					ApplicationVMManagementInboundPortURI,
-					ApplicationVMManagementConnector.class.getCanonicalName()) ;*/
+					ApplicationVMManagementConnector.class.getCanonicalName()) ;
 
 		// Toggle on tracing and logging in the application virtual machine to
 		// follow the execution of individual requests.
-		/*this.vm.toggleTracing() ;
-		this.vm.toggleLogging() ;*/
+		this.vm.toggleTracing() ;
+		this.vm.toggleLogging() ;
 		// --------------------------------------------------------------------
 
 		// --------------------------------------------------------------------
@@ -268,7 +287,18 @@ extends		AbstractCVM
 					RequestNotificationOutboundPortURI,
 					RequestNotificationInboundPortURI,
 					RequestNotificationConnector.class.getCanonicalName()) ;
-
+		
+		this.vm.doPortConnection(
+				RequestNotificationOutboundPortVMURI,
+				RequestNotificationInboundPort2URI,
+				RequestNotificationConnector.class.getCanonicalName()) ;
+		
+		this.vmS.doPortConnection(
+				RequestSubmissionOutboundPort2URI,
+				RequestSubmissionInboundPortVMURI,
+				RequestSubmissionConnector.class.getCanonicalName()) ;
+		
+		
 		// Create a mock up port to manage to request generator component
 		// (starting and stopping the generation).
 		this.rgmop = new RequestGeneratorManagementOutboundPort(
@@ -294,8 +324,8 @@ extends		AbstractCVM
 
 		// Allocate the 4 cores of the computer to the application virtual
 		// machine.
-		/*AllocatedCore[] ac = this.csPort.allocateCores(4) ;
-		this.avmPort.allocateCores(ac) ;*/
+		AllocatedCore[] ac = this.csPort.allocateCores(4) ;
+		this.avmPort.allocateCores(ac) ;
 	}
 
 	/**
