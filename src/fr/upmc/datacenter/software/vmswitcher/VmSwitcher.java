@@ -100,8 +100,6 @@ implements	ProcessorServicesNotificationConsumerI,
 	public void acceptRequestSubmissionAndNotify(RequestI r) throws Exception {
 		// TODO Auto-generated method stub
 		
-		System.out.println("GOTCHA");
-		
 		RequestSubmissionOutboundPort port = this.outBoundPortList.get(0);
 		port.submitRequestAndNotify( r );
 	}
@@ -109,13 +107,12 @@ implements	ProcessorServicesNotificationConsumerI,
 	@Override
 	public void acceptNotifyEndOfTask(TaskI t) throws Exception {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void acceptRequestTerminationNotification(RequestI r) throws Exception {
 		// TODO Auto-generated method stub
-		
+		this.requestNotificationOutboundPort.notifyRequestTermination( r );
 	}
 
 }
