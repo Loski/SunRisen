@@ -1,22 +1,11 @@
 package fr.upmc.datacenter.software.vmswitcher;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import fr.upmc.components.AbstractComponent;
-import fr.upmc.datacenter.hardware.processors.interfaces.ProcessorServicesI;
 import fr.upmc.datacenter.hardware.processors.interfaces.ProcessorServicesNotificationConsumerI;
-import fr.upmc.datacenter.hardware.processors.interfaces.ProcessorServicesNotificationI;
-import fr.upmc.datacenter.hardware.processors.ports.ProcessorServicesNotificationInboundPort;
-import fr.upmc.datacenter.hardware.processors.ports.ProcessorServicesOutboundPort;
-import fr.upmc.datacenter.interfaces.PushModeControllingI;
-import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
-import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagementConnector;
-import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMManagementI;
 import fr.upmc.datacenter.software.applicationvm.interfaces.TaskI;
-import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementInboundPort;
-import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
 import fr.upmc.datacenter.software.interfaces.RequestI;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationHandlerI;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationI;
@@ -37,10 +26,13 @@ implements	ProcessorServicesNotificationConsumerI,
 	/** URI of this VM switcher */
 	protected String vmsURI;
 	
+	/** InboundPort to receive submission*/
 	private RequestSubmissionInboundPort requestSubmissionInboundPort;
+	
+	/** OutboundPort to send notification*/
 	private RequestNotificationOutboundPort requestNotificationOutboundPort;
 	
-	/** InboundPort to handle VM notification */
+	/** InboundPort to receive VM notification */
 	protected RequestNotificationInboundPort  requestNotificationInboundPort;
 
 	/** List of OutboundPort to resend requests to VM */
@@ -98,7 +90,6 @@ implements	ProcessorServicesNotificationConsumerI,
 
 	@Override
 	public void acceptRequestSubmissionAndNotify(RequestI r) throws Exception {
-		// TODO Auto-generated method stub
 		
 		RequestSubmissionOutboundPort port = this.outBoundPortList.get(0);
 		port.submitRequestAndNotify( r );
@@ -111,7 +102,7 @@ implements	ProcessorServicesNotificationConsumerI,
 
 	@Override
 	public void acceptRequestTerminationNotification(RequestI r) throws Exception {
-		// TODO Auto-generated method stub
+		
 		this.requestNotificationOutboundPort.notifyRequestTermination( r );
 	}
 
