@@ -57,7 +57,7 @@ import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagem
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
 import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
-import fr.upmc.datacenter.software.vmswitcher.VmSwitcher;
+import fr.upmc.datacenter.software.requestdispatcher.RequestDispatcher;
 import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
 import fr.upmc.datacenterclient.requestgenerator.connectors.RequestGeneratorManagementConnector;
 import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementOutboundPort;
@@ -99,7 +99,7 @@ import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagemen
  * @author	<a href="mailto:Jacques.Malenfant@lip6.fr">Jacques Malenfant</a>
  * @version	$Name$ -- $Revision$ -- $Date$
  */
-public class				TestRequestGeneratorSwitch
+public class				TestRequestDispatcher
 extends		AbstractCVM
 {
 	// ------------------------------------------------------------------------
@@ -134,7 +134,7 @@ extends		AbstractCVM
 	/** 	Application virtual machine component.							*/
 	protected ApplicationVM							vm ;
 	/** 	Application virtual machine component.							*/
-	protected VmSwitcher							vmS ;
+	protected RequestDispatcher							vmS ;
 	/** 	Request generator component.										*/
 	protected RequestGenerator						rg ;
 	/** Port connected to the AVM component to allocate it cores.			*/
@@ -147,7 +147,7 @@ extends		AbstractCVM
 	// Component virtual machine constructors
 	// ------------------------------------------------------------------------
 
-	public				TestRequestGeneratorSwitch()
+	public				TestRequestDispatcher()
 	throws Exception
 	{
 		super();
@@ -233,7 +233,7 @@ extends		AbstractCVM
 		List<String> vmport = new ArrayList<String>();
 		vmport.add(RequestSubmissionOutboundPort2URI);
 		
-		this.vmS = new VmSwitcher("switch0", RequestSubmissionInboundPortURI,
+		this.vmS = new RequestDispatcher("switch0", RequestSubmissionInboundPortURI,
 								    RequestNotificationOutboundPortURI,vmport,RequestNotificationInboundPort2URI) ;
 		this.addDeployedComponent(this.vmS) ;
 
@@ -373,19 +373,19 @@ extends		AbstractCVM
 		// Uncomment next line to execute components in debug mode.
 		// AbstractCVM.toggleDebugMode() ;
 		try {
-			final TestRequestGeneratorSwitch trg = new TestRequestGeneratorSwitch() ;
+			final TestRequestDispatcher trd = new TestRequestDispatcher() ;
 			// Deploy the components
-			trg.deploy() ;
+			trd.deploy() ;
 			System.out.println("starting...") ;
 			// Start them.
-			trg.start() ;
+			trd.start() ;
 			// Execute the chosen request generation test scenario in a
 			// separate thread.
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
 					try {
-						trg.testScenario() ;
+						trd.testScenario() ;
 					} catch (Exception e) {
 						throw new RuntimeException(e) ;
 					}
@@ -395,7 +395,7 @@ extends		AbstractCVM
 			Thread.sleep(90000L) ;
 			// Shut down the application.
 			System.out.println("shutting down...") ;
-			trg.shutdown() ;
+			trd.shutdown() ;
 			System.out.println("ending...") ;
 			// Exit from Java.
 			System.exit(0) ;
