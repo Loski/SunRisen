@@ -5,15 +5,15 @@ import fr.upmc.components.ports.AbstractOutboundPort;
 import fr.upmc.datacenter.software.controller.AdmissionController;
 import fr.upmc.datacenter.software.controller.interfaces.AdmissionControllerManagementI;
 
-public class AdmissionControllerNotifyOutboundPort extends		AbstractOutboundPort
+public class AdmissionControllerManagementOutboundPort extends		AbstractOutboundPort
 implements	AdmissionControllerManagementI{
 
-	public AdmissionControllerNotifyOutboundPort(Class<?> implementedInterface, ComponentI owner) throws Exception {
+	public AdmissionControllerManagementOutboundPort(Class<?> implementedInterface, ComponentI owner) throws Exception {
 		super(AdmissionControllerManagementI.class, owner);
 		assert	owner != null && owner instanceof AdmissionController ;
 	}
 
-	public AdmissionControllerNotifyOutboundPort(String uri, Class<?> implementedInterface, ComponentI owner)
+	public AdmissionControllerManagementOutboundPort(String uri, Class<?> implementedInterface, ComponentI owner)
 			throws Exception {
 		super(uri, AdmissionControllerManagementI.class, owner);
 		assert	owner != null && owner instanceof AdmissionController ;

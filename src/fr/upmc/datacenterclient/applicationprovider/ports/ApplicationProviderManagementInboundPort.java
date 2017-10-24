@@ -8,7 +8,7 @@ import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationProvid
 public class ApplicationProviderManagementInboundPort extends AbstractInboundPort implements ApplicationProviderManagementI {
 
 	public ApplicationProviderManagementInboundPort(Class<?> implementedInterface, ComponentI owner) throws Exception {
-		super(implementedInterface, owner);
+		super(ApplicationProviderManagementI.class, owner);
 		assert	owner != null && owner instanceof ApplicationProvider ;
 	}
 
