@@ -39,7 +39,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.math3.random.RandomDataGenerator;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.exceptions.ComponentShutdownException;
-import fr.upmc.components.ports.PortI;
 import fr.upmc.datacenter.TimeManagement;
 import fr.upmc.datacenter.software.interfaces.RequestI;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationHandlerI;
@@ -194,12 +193,6 @@ implements	RequestNotificationHandlerI
 	// -------------------------------------------------------------------------
 	// Component life-cycle
 	// -------------------------------------------------------------------------
-
-	@Override
-	public PortI findPortFromURI(String portURI) {
-		// TODO Auto-generated method stub
-		return super.findPortFromURI(portURI);
-	}
 
 	/**
 	 * shut down the component, first canceling any future request generation

@@ -18,8 +18,8 @@ public class ApplicationSubmissionOutboundPort extends AbstractOutboundPort impl
 	}
 
 	@Override
-	public String[] sendApplication() {
-		 return ( ( ApplicationSubmissionI ) this.connector ).sendApplication();
+	public void sendApplication() {
+		// TODO Auto-generated method stub
 	}
 
 }

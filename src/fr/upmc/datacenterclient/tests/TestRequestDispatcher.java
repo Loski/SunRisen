@@ -233,7 +233,7 @@ extends		AbstractCVM
 		List<String> vmport = new ArrayList<String>();
 		vmport.add(RequestSubmissionOutboundPort2URI);
 		
-		this.rd = new RequestDispatcher("switch0","rdmi", RequestSubmissionInboundPortURI,
+		this.rd = new RequestDispatcher("switch0", RequestSubmissionInboundPortURI,
 								    RequestNotificationOutboundPortURI,vmport,RequestNotificationInboundPort2URI) ;
 		this.addDeployedComponent(this.rd) ;
 

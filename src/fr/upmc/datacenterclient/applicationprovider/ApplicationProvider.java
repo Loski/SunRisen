@@ -3,9 +3,7 @@ package fr.upmc.datacenterclient.applicationprovider;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.cvm.AbstractCVM;
 import fr.upmc.components.exceptions.ComponentShutdownException;
-import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
-import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationNotificationI;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationProviderManagementI;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationSubmissionI;
 import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationProviderManagementInboundPort;
@@ -72,7 +70,7 @@ public class ApplicationProvider extends AbstractComponent {
         this.addPort( asop );
         this.asop.localPublishPort();
 
-        this.addRequiredInterface( ApplicationNotificationI.class );
+       /* this.addRequiredInterface( ApplicationNotificationI.class );
         this.anop = new ApplicationNotificationOutboundPort( applicationNotificationOutboundPortURI , this );
         this.addPort( anop );
 
@@ -80,7 +78,7 @@ public class ApplicationProvider extends AbstractComponent {
         this.apmip = new ApplicationProviderManagementInboundPort(ApplicationProviderManagementI.class, this );
         this.addPort( this.apmip );
         this.apmip.publishPort();
-        
+        */
         // Ports of the request generator
         rgUri = apURI + "-rg";
         rgmipUri = apURI + "-rgmip";
@@ -98,8 +96,8 @@ public class ApplicationProvider extends AbstractComponent {
     public void sendApplication() throws Exception {
         print( "Submit an application" );
         print( "Waiting for URI" );
-      //  String res[] = this.asop.sendApplication();
-        String requestDispatcherURI = "switch0";
+        String res[] = this.asop.submitApplication( 2 );
+        String requestDispatcherURI = res[0];
 
         print( "URI received" );
         if ( requestDispatcherURI != null ) {
@@ -115,13 +113,13 @@ public class ApplicationProvider extends AbstractComponent {
 
             rg.toggleTracing();
             rg.toggleLogging();
- 
+
             rgmop = new RequestGeneratorManagementOutboundPort( rgmopUri , this );
             rgmop.publishPort();
             rgmop.doConnection( rgmipUri , RequestGeneratorManagementConnector.class.getCanonicalName() );
 
-            //String rdnopUri = res[1];
- 
+            String rdnopUri = res[1];
+
             rg.start();
 
             rg.startGeneration();
@@ -154,9 +152,9 @@ public class ApplicationProvider extends AbstractComponent {
             if ( this.rgmop.connected() ) {
                 this.rgmop.doDisconnection();
             }
-     /*       if ( this.anop.connected() ) {
+            if ( this.anop.connected() ) {
                 this.anop.doDisconnection();
-            } */
+            }
       
         }
         catch ( Exception e ) {
