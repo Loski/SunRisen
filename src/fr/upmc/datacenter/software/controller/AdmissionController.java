@@ -6,6 +6,8 @@ import fr.upmc.components.exceptions.ComponentStartException;
 import fr.upmc.components.ports.PortI;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
+import fr.upmc.datacenter.software.ports.ApplicationNotificationInboundPort;
+import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationNotificationI;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationSubmissionI;
 
 public class AdmissionController extends AbstractComponent {
@@ -51,41 +53,4 @@ public class AdmissionController extends AbstractComponent {
 		super(reflectionInboundPortURI, nbThreads, nbSchedulableThreads);
 		// TODO Auto-generated constructor stub
 	}
-
-	@Override
-	protected void addPort(PortI p) throws Exception {
-		// TODO Auto-generated method stub
-		super.addPort(p);
-	}
-
-	@Override
-	public void doPortConnection(String portURI, String otherPortURI, String ccname) throws Exception {
-		// TODO Auto-generated method stub
-		super.doPortConnection(portURI, otherPortURI, ccname);
-	}
-
-	@Override
-	public void doPortDisconnection(String portURI) throws Exception {
-		// TODO Auto-generated method stub
-		super.doPortDisconnection(portURI);
-	}
-
-	@Override
-	public void start() throws ComponentStartException {
-		// TODO Auto-generated method stub
-		super.start();
-	}
-
-	@Override
-	public void shutdown() throws ComponentShutdownException {
-		// TODO Auto-generated method stub
-		super.shutdown();
-	}
-
-	@Override
-	public void shutdownNow() throws ComponentShutdownException {
-		// TODO Auto-generated method stub
-		super.shutdownNow();
-	}
-
 }

@@ -58,6 +58,9 @@ import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOu
 import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenter.software.requestdispatcher.RequestDispatcher;
+import fr.upmc.datacenterclient.applicationprovider.ApplicationProvider;
+import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationProviderManagementOutboundPort;
+import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationSubmissionOutboundPort;
 import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
 import fr.upmc.datacenterclient.requestgenerator.connectors.RequestGeneratorManagementConnector;
 import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementOutboundPort;
@@ -99,7 +102,7 @@ import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagemen
  * @author	<a href="mailto:Jacques.Malenfant@lip6.fr">Jacques Malenfant</a>
  * @version	$Name$ -- $Revision$ -- $Date$
  */
-public class				TestRequestDispatcher
+public class				TestApplicationProvider
 extends		AbstractCVM
 {
 	// ------------------------------------------------------------------------
@@ -143,11 +146,15 @@ extends		AbstractCVM
 	 *  execution (starting and stopping the request generation).			*/
 	protected RequestGeneratorManagementOutboundPort	rgmop ;
 
-	// ------------------------------------------------------------------------
+	   protected ApplicationSubmissionOutboundPort         asop;
+	   // protected ApplicationNotificationOutboundPort       anop;
+	    protected ApplicationProvider                       ap;
+	    protected ApplicationProviderManagementOutboundPort apmop;
+	//protected RequestDispatcherManagementOutboundPort rdmop;	// ------------------------------------------------------------------------
 	// Component virtual machine constructors
 	// ------------------------------------------------------------------------
 
-	public				TestRequestDispatcher()
+	public				TestApplicationProvider()
 	throws Exception
 	{
 		super();
@@ -233,7 +240,7 @@ extends		AbstractCVM
 		List<String> vmport = new ArrayList<String>();
 		vmport.add(RequestSubmissionOutboundPort2URI);
 		
-		this.rd = new RequestDispatcher("switch0","rdmi", RequestSubmissionInboundPortURI,
+		this.rd = new RequestDispatcher("switch0", RequestSubmissionInboundPortURI,
 								    RequestNotificationOutboundPortURI,vmport,RequestNotificationInboundPort2URI) ;
 		this.addDeployedComponent(this.rd) ;
 
@@ -256,38 +263,18 @@ extends		AbstractCVM
 		// --------------------------------------------------------------------
 		// Creating the request generator component.
 		// --------------------------------------------------------------------
-		this.rg = new RequestGenerator(
-					"rg",			// generator component URI
-					500.0,			// mean time between two requests
-					6000000000L,	// mean number of instructions in requests
-					RequestGeneratorManagementInboundPortURI,
-					RequestSubmissionOutboundPortURI,
-					RequestNotificationInboundPortURI) ;
-		this.addDeployedComponent(rg) ;
+		
+		ap = new ApplicationProvider( "ap" , "asop" , "anop" , "apmip" );
+        this.addDeployedComponent( ap );
+        ap.toggleTracing();
+        ap.toggleLogging();
 
-		// Toggle on tracing and logging in the request generator to
-		// follow the submission and end of execution notification of
-		// individual requests.
-		this.rg.toggleTracing() ;
-		this.rg.toggleLogging() ;
-
-		// Connecting the request generator to the application virtual machine.
-		// Request generators have three different interfaces:
-		// - one for submitting requests to application virtual machines,
-		// - one for receiving end of execution notifications from application
-		//   virtual machines, and
-		// - one for request generation management i.e., starting and stopping
-		//   the generation process.
-		this.rg.doPortConnection(
-					RequestSubmissionOutboundPortURI,
-					RequestSubmissionInboundPortURI,
-					RequestSubmissionConnector.class.getCanonicalName()) ;
-
-		this.rd.doPortConnection(
+        
+/*		this.rd.doPortConnection(
 					RequestNotificationOutboundPortURI,
 					RequestNotificationInboundPortURI,
 					RequestNotificationConnector.class.getCanonicalName()) ;
-		
+		*/
 		this.vm.doPortConnection(
 				RequestNotificationOutboundPortVMURI,
 				RequestNotificationInboundPort2URI,
@@ -298,16 +285,6 @@ extends		AbstractCVM
 				RequestSubmissionInboundPortVMURI,
 				RequestSubmissionConnector.class.getCanonicalName()) ;
 		
-		
-		// Create a mock up port to manage to request generator component
-		// (starting and stopping the generation).
-		this.rgmop = new RequestGeneratorManagementOutboundPort(
-							RequestGeneratorManagementOutboundPortURI,
-							new AbstractComponent(0, 0) {}) ;
-		this.rgmop.publishPort() ;
-		this.rgmop.doConnection(
-				RequestGeneratorManagementInboundPortURI,
-				RequestGeneratorManagementConnector.class.getCanonicalName()) ;
 		// --------------------------------------------------------------------
 
 		// complete the deployment at the component virtual machine level.
@@ -355,12 +332,7 @@ extends		AbstractCVM
 	 */
 	public void			testScenario() throws Exception
 	{
-		// start the request generation in the request generator.
-		this.rgmop.startGeneration() ;
-		// wait 20 seconds
-		Thread.sleep(20000L) ;
-		// then stop the generation.
-		this.rgmop.stopGeneration() ;
+		this.ap.sendApplication();
 	}
 
 	/**
@@ -371,9 +343,9 @@ extends		AbstractCVM
 	public static void	main(String[] args)
 	{
 		// Uncomment next line to execute components in debug mode.
-		// AbstractCVM.toggleDebugMode() ;
+		 AbstractCVM.toggleDebugMode() ;
 		try {
-			final TestRequestDispatcher trd = new TestRequestDispatcher() ;
+			final TestApplicationProvider trd = new TestApplicationProvider() ;
 			// Deploy the components
 			trd.deploy() ;
 			System.out.println("starting...") ;
