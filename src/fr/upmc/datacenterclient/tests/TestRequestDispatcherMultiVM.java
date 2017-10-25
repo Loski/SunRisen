@@ -58,6 +58,8 @@ import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOu
 import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenter.software.requestdispatcher.RequestDispatcher;
+import fr.upmc.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
+import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
 import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
 import fr.upmc.datacenterclient.requestgenerator.connectors.RequestGeneratorManagementConnector;
 import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementOutboundPort;
@@ -133,6 +135,9 @@ extends		AbstractCVM
 	
 	public static final String	RequestGeneratorManagementInboundPortURI = "rgmip" ;
 	public static final String	RequestGeneratorManagementOutboundPortURI = "rgmop" ;
+	
+	public static final String	RequestDispatcherManagementInboundPortURI = "rdmip" ;
+	public static final String	RequestDispatcherManagementOutboundPortURI = "rdmop" ;
 
 	/** Port connected to the computer component to access its services.	*/
 	protected ComputerServicesOutboundPort			csPort ;
@@ -149,6 +154,8 @@ extends		AbstractCVM
 	/** Port connected to the request generator component to manage its
 	 *  execution (starting and stopping the request generation).			*/
 	protected RequestGeneratorManagementOutboundPort	rgmop ;
+	
+	protected RequestDispatcherManagementOutboundPort	rdmop ;
 
 	// ------------------------------------------------------------------------
 	// Component virtual machine constructors
@@ -283,7 +290,7 @@ extends		AbstractCVM
 			// --------------------------------------------------------------------
 		}
 		
-		this.rd = new RequestDispatcher("rd0", RequestSubmissionInboundPortURI,
+		this.rd = new RequestDispatcher("rd0", RequestSubmissionInboundPortURI,RequestDispatcherManagementInboundPortURI,
 								    RequestNotificationOutboundPortURI,vmport,RequestNotificationInboundPortRDURI) ;
 		this.addDeployedComponent(this.rd) ;
 
@@ -348,6 +355,15 @@ extends		AbstractCVM
 				RequestGeneratorManagementInboundPortURI,
 				RequestGeneratorManagementConnector.class.getCanonicalName()) ;
 		// --------------------------------------------------------------------
+		
+		// Create a mock up port to manage to requestDispacther component
+				this.rdmop = new RequestDispatcherManagementOutboundPort(
+							RequestDispatcherManagementOutboundPortURI,
+									new AbstractComponent(0, 0) {}) ;
+				this.rdmop.publishPort() ;
+				this.rdmop.doConnection(
+						RequestDispatcherManagementInboundPortURI,
+						RequestDispatcherManagementConnector.class.getCanonicalName()) ;
 
 		// complete the deployment at the component virtual machine level.
 		super.deploy();
@@ -384,6 +400,7 @@ extends		AbstractCVM
 		this.rg.doPortDisconnection(RequestSubmissionOutboundPortURI) ;
 		this.rd.doPortDisconnection(RequestNotificationOutboundPortURI) ;
 		this.rgmop.doDisconnection() ;
+		this.rdmop.doDisconnection();
 
 		super.shutdown() ;
 	}

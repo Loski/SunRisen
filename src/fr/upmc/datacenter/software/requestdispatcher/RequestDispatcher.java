@@ -5,8 +5,8 @@ import java.util.List;
 
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.exceptions.ComponentShutdownException;
-import fr.upmc.datacenter.hardware.processors.interfaces.ProcessorServicesNotificationConsumerI;
-import fr.upmc.datacenter.software.applicationvm.interfaces.TaskI;
+import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMManagementI;
+import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementInboundPort;
 import fr.upmc.datacenter.software.interfaces.RequestI;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationHandlerI;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationI;
@@ -16,12 +16,15 @@ import fr.upmc.datacenter.software.ports.RequestNotificationInboundPort;
 import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionInboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
+import fr.upmc.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
+import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementInboundPort;
 
 public class RequestDispatcher 
 extends		AbstractComponent
 implements	
 			RequestSubmissionHandlerI,
-			RequestNotificationHandlerI
+			RequestNotificationHandlerI,
+			RequestDispatcherManagementI
 {
 
 	/** URI of this request dispatcher */
@@ -42,18 +45,41 @@ implements
 	/** index of the VM in the requestSubmissionOutboundPortList which will receive the next request*/
 	private int currentVM;
 	
-	public RequestDispatcher(String uri, String requestSubmissionInboundPortURI, String requestNotificationOutboundPortURI, List<String> vmList, String requestNotificationInboundPortURI) throws Exception {
+	/** Inbound port offering the management interface.						*/
+	protected RequestDispatcherManagementInboundPort requestDispatcherManagementInboundPort ;
+	
+	public RequestDispatcher(
+			String uri, 
+			String requestDispatcherManagementInboundPort, 
+			String requestSubmissionInboundPortURI, 
+			String requestNotificationOutboundPortURI, 
+			List<String> requestSubmissionOutboundPortList, 
+			String requestNotificationInboundPortURI
+			) throws Exception 
+	{
 		
 				super(1,1);
 		
 				// Preconditions
+				assert	uri != null ;
+				assert	requestDispatcherManagementInboundPort != null ;
 				assert	requestSubmissionInboundPortURI != null ;
 				assert	requestNotificationOutboundPortURI != null ;
+				assert	requestNotificationInboundPortURI != null;
+				assert	requestSubmissionOutboundPortList != null;
 				
 				this.rdURI=uri;
 				
 				// Interfaces and ports
 
+				this.addOfferedInterface(RequestDispatcherManagementI.class) ;
+				this.requestDispatcherManagementInboundPort =
+						new RequestDispatcherManagementInboundPort(
+								requestDispatcherManagementInboundPort,
+								this) ;
+				this.addPort(this.requestDispatcherManagementInboundPort) ;
+				this.requestDispatcherManagementInboundPort.publishPort() ;
+				
 					//To communicate with the sender of the request
 				
 				this.addOfferedInterface( RequestNotificationI.class );
@@ -82,8 +108,8 @@ implements
 				
 				this.requestSubmissionOutboundPortList = new ArrayList<RequestSubmissionOutboundPort>();
 				this.addOfferedInterface( RequestSubmissionI.class );
-				for ( int i = 0 ; i < vmList.size() ; i++ ) {
-					this.requestSubmissionOutboundPortList.add( new RequestSubmissionOutboundPort( vmList.get( i ) , this ) );
+				for ( int i = 0 ; i < requestSubmissionOutboundPortList.size() ; i++ ) {
+					this.requestSubmissionOutboundPortList.add( new RequestSubmissionOutboundPort( requestSubmissionOutboundPortList.get( i ) , this ) );
 					this.addPort( this.requestSubmissionOutboundPortList.get( i ) );
 					this.requestSubmissionOutboundPortList.get( i ).publishPort();
 				}
@@ -151,6 +177,12 @@ implements
 	        }
 
 	        super.shutdown();
+	}
+
+	@Override
+	public void connectWithRequestSubmissioner() throws Exception {
+		// TODO Auto-generated method stub
+		System.out.println("CONNECTED");
 	}
 
 }

@@ -116,6 +116,8 @@ extends		AbstractCVM
 	public static final String	ComputerDynamicStateDataOutboundPortURI = "cds-dop" ;
 	public static final String	ApplicationVMManagementInboundPortURI = "avm-ibp" ;
 	public static final String	ApplicationVMManagementOutboundPortURI = "avm-obp" ;
+	public static final String	RequestDispatcherManagementInboundPortURI = "rdm-ibp" ;
+	public static final String	RequestDispatcherManagementOutboundPortURI = "rdm-obp" ;
 	public static final String	RequestSubmissionInboundPortURI = "rsibp" ;
 	public static final String	RequestSubmissionOutboundPortURI = "rsobp" ;
 	public static final String	RequestSubmissionOutboundPort2URI = "rsobp2" ;
@@ -233,7 +235,7 @@ extends		AbstractCVM
 		List<String> vmport = new ArrayList<String>();
 		vmport.add(RequestSubmissionOutboundPort2URI);
 		
-		this.rd = new RequestDispatcher("switch0", RequestSubmissionInboundPortURI,
+		this.rd = new RequestDispatcher("rd0", RequestDispatcherManagementInboundPortURI,RequestSubmissionInboundPortURI,
 								    RequestNotificationOutboundPortURI,vmport,RequestNotificationInboundPort2URI) ;
 		this.addDeployedComponent(this.rd) ;
 
