@@ -21,4 +21,15 @@ public class ApplicationProviderManagementOutboundPort extends AbstractOutboundP
 		assert	owner != null && owner instanceof ApplicationProvider ;
 	}
 
+	@Override
+	public void createAndSendApplication() throws Exception {
+		((ApplicationProviderManagementI)this.connector).createAndSendApplication();
+		
+	}
+
+	@Override
+	public void stopApplication() throws Exception {
+		((ApplicationProviderManagementI)this.connector).stopApplication();
+	}
+
 }
