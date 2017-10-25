@@ -1,6 +1,7 @@
 package fr.upmc.datacenter.software.requestdispatcher.ports;
 
 import fr.upmc.components.ComponentI;
+import fr.upmc.components.ComponentI.ComponentService;
 import fr.upmc.components.ports.AbstractInboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.RequestDispatcher;
 import fr.upmc.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
@@ -40,11 +41,29 @@ implements	RequestDispatcherManagementI
 		
 		final RequestDispatcher rd = ( RequestDispatcher ) this.owner;
 		
+		this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Void>() {
+					@Override
+					public Void call() throws Exception {
+						rd.connectVirtualMachine(vmURI, requestSubmissionInboundPortURI) ;
+						return null;
+					}
+				}) ;
 	}
 
 	@Override
 	public void disconnectVirtualMachine() throws Exception {
 		
+		final RequestDispatcher rd = ( RequestDispatcher ) this.owner;
+		
+		this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Void>() {
+					@Override
+					public Void call() throws Exception {
+						rd.disconnectVirtualMachine();
+						return null;
+					}
+				}) ;
 	}
 	
 	

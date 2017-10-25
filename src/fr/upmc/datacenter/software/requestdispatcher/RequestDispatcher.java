@@ -7,6 +7,7 @@ import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMManagementI;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementInboundPort;
+import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenter.software.interfaces.RequestI;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationHandlerI;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationI;
@@ -111,7 +112,7 @@ implements
 				for ( int i = 0 ; i < requestSubmissionOutboundPortList.size() ; i++ ) {
 					this.requestSubmissionOutboundPortList.add( new RequestSubmissionOutboundPort( requestSubmissionOutboundPortList.get( i ) , this ) );
 					this.addPort( this.requestSubmissionOutboundPortList.get( i ) );
-					this.requestSubmissionOutboundPortList.get( i ).publishPort();
+					this.requestSubmissionOutboundPortList.get( i ).localPublishPort();
 				}
 	}
 	
@@ -181,13 +182,22 @@ implements
 
 	@Override
 	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception {
-		// TODO Auto-generated method stub
 		
+		String portURI = "vmPort-"+this.requestSubmissionOutboundPortList.size();
+		RequestSubmissionOutboundPort port = new RequestSubmissionOutboundPort( portURI, this );
+		
+		this.requestSubmissionOutboundPortList.add( port );
+		this.addPort( port );
+		port.localPublishPort();
+		
+		
+		// TODO : allouer mémoire
+		
+		this.requestSubmissionOutboundPortList.add(port);
 	}
 
 	@Override
 	public void disconnectVirtualMachine() throws Exception {
-		// TODO Auto-generated method stub
 		
 	}
 
