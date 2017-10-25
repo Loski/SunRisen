@@ -11,12 +11,14 @@ public class				RequestDispatcherManagementConnector
 extends		AbstractConnector
 implements	RequestDispatcherManagementI
 {
+	@Override
+	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception {
+		( ( RequestDispatcherManagementI ) this.offering ).connectVirtualMachine(vmURI, requestSubmissionInboundPortURI);
+	}
 
 	@Override
-	public void connectWithRequestSubmissioner() throws Exception {
+	public void disconnectVirtualMachine() throws Exception {
+		( ( RequestDispatcherManagementI ) this.offering ).disconnectVirtualMachine();
+		
 	}
-	// ------------------------------------------------------------------------
-	// Methods
-	// ------------------------------------------------------------------------
-
 }

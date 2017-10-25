@@ -290,7 +290,7 @@ extends		AbstractCVM
 			// --------------------------------------------------------------------
 		}
 		
-		this.rd = new RequestDispatcher("rd0", RequestSubmissionInboundPortURI,RequestDispatcherManagementInboundPortURI,
+		this.rd = new RequestDispatcher("rd0",RequestDispatcherManagementInboundPortURI, RequestSubmissionInboundPortURI,
 								    RequestNotificationOutboundPortURI,vmport,RequestNotificationInboundPortRDURI) ;
 		this.addDeployedComponent(this.rd) ;
 

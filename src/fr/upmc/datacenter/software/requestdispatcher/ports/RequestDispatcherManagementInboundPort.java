@@ -2,6 +2,7 @@ package fr.upmc.datacenter.software.requestdispatcher.ports;
 
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ports.AbstractInboundPort;
+import fr.upmc.datacenter.software.requestdispatcher.RequestDispatcher;
 import fr.upmc.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 
 
@@ -35,8 +36,14 @@ implements	RequestDispatcherManagementI
 	}
 
 	@Override
-	public void connectWithRequestSubmissioner() throws Exception {
-		// TODO Auto-generated method stub
+	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception {
+		
+		final RequestDispatcher rd = ( RequestDispatcher ) this.owner;
+		
+	}
+
+	@Override
+	public void disconnectVirtualMachine() throws Exception {
 		
 	}
 	

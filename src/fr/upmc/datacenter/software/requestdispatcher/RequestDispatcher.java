@@ -180,9 +180,15 @@ implements
 	}
 
 	@Override
-	public void connectWithRequestSubmissioner() throws Exception {
+	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception {
 		// TODO Auto-generated method stub
-		System.out.println("CONNECTED");
+		
+	}
+
+	@Override
+	public void disconnectVirtualMachine() throws Exception {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

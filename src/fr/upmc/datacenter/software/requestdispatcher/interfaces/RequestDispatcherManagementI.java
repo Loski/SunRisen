@@ -7,7 +7,7 @@ public interface			RequestDispatcherManagementI
 extends		OfferedI,
 			RequiredI
 {
-	
-	public void			connectWithRequestSubmissioner()
-			throws Exception ;
+	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception;
+    
+	public void disconnectVirtualMachine() throws Exception;
 }

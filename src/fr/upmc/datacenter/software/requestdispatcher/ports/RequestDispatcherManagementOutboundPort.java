@@ -26,10 +26,17 @@ implements	RequestDispatcherManagementI
 	{
 		super(uri, RequestDispatcherManagementI.class, owner);
 	}
+	
+	@Override
+	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception {
+		( ( RequestDispatcherManagementI ) this.connector ).connectVirtualMachine(vmURI, requestSubmissionInboundPortURI);
+
+	}
 
 	@Override
-	public void connectWithRequestSubmissioner() throws Exception {
-		// TODO Auto-generated method stub
-		
-	}
+	public void disconnectVirtualMachine() throws Exception {
+		( ( RequestDispatcherManagementI ) this.connector ).disconnectVirtualMachine();
+
+}
+
 }
