@@ -106,7 +106,8 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
             rg.toggleLogging();
 
             rgmop = new RequestGeneratorManagementOutboundPort( rgmopUri , this );
-            rgmop.publishPort();
+            rgmop.localPublishPort();
+            
             rgmop.doConnection( rgmipUri , RequestGeneratorManagementConnector.class.getCanonicalName() );
  
             String rdnopUri = res[1];
