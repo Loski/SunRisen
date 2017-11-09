@@ -236,7 +236,7 @@ extends		AbstractCVM
 		vmport.add(RequestSubmissionOutboundPort2URI);
 		
 		this.rd = new RequestDispatcher("rd0", RequestDispatcherManagementInboundPortURI,RequestSubmissionInboundPortURI,
-								    RequestNotificationOutboundPortURI,vmport,RequestNotificationInboundPort2URI) ;
+								    RequestNotificationOutboundPortURI,RequestNotificationInboundPort2URI) ;
 		this.addDeployedComponent(this.rd) ;
 
 		// Create a mock up port to manage the AVM component (allocate cores).
@@ -295,10 +295,12 @@ extends		AbstractCVM
 				RequestNotificationInboundPort2URI,
 				RequestNotificationConnector.class.getCanonicalName()) ;
 		
-		this.rd.doPortConnection(
+		this.rd.connectVirtualMachine("vm0", RequestSubmissionInboundPortVMURI);
+		
+		/*this.rd.doPortConnection(
 				RequestSubmissionOutboundPort2URI,
 				RequestSubmissionInboundPortVMURI,
-				RequestSubmissionConnector.class.getCanonicalName()) ;
+				RequestSubmissionConnector.class.getCanonicalName()) ;*/
 		
 		
 		// Create a mock up port to manage to request generator component
