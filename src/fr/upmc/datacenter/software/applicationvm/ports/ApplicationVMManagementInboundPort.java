@@ -135,6 +135,15 @@ implements	ApplicationVMManagementI
 	@Override
 	public void			connectWithRequestSubmissioner() throws Exception {
 		// TODO Auto-generated method stub
-		
+		final ApplicationVMManagementI avm =
+				(ApplicationVMManagementI) this.owner ;
+		this.owner.handleRequestSync(
+		new ComponentI.ComponentService<Void>() {
+		@Override
+		public Void call() throws Exception {
+			avm.connectWithRequestSubmissioner() ;
+			return null;
+		}
+		}) ;
 	}
 }

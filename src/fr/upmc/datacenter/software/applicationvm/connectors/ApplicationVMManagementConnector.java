@@ -77,7 +77,7 @@ implements	ApplicationVMManagementI
 
 	@Override
 	public void connectWithRequestSubmissioner() throws Exception {
-		// TODO Auto-generated method stub
 		
+		((ApplicationVMManagementI)this.offering).connectWithRequestSubmissioner();		
 	}
 }

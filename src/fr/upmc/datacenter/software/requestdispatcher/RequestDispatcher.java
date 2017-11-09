@@ -7,6 +7,7 @@ import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMManagementI;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementInboundPort;
+import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenter.software.interfaces.RequestI;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationHandlerI;
@@ -37,6 +38,9 @@ implements
 	/** OutboundPort to send notification*/
 	protected RequestNotificationOutboundPort requestNotificationOutboundPort;
 	
+	/** Manage VM**/
+	protected ApplicationVMManagementInboundPort avmPort;
+	
 	/** InboundPort to receive VM notification */
 	protected RequestNotificationInboundPort  requestNotificationInboundPort;
 
@@ -54,7 +58,7 @@ implements
 			String requestDispatcherManagementInboundPort, 
 			String requestSubmissionInboundPortURI, 
 			String requestNotificationOutboundPortURI, 
-			List<String> requestSubmissionOutboundPortList, 
+			//List<String> requestSubmissionOutboundPortList, 
 			String requestNotificationInboundPortURI
 			) throws Exception 
 	{
@@ -67,7 +71,7 @@ implements
 				assert	requestSubmissionInboundPortURI != null ;
 				assert	requestNotificationOutboundPortURI != null ;
 				assert	requestNotificationInboundPortURI != null;
-				assert	requestSubmissionOutboundPortList != null;
+				//assert	requestSubmissionOutboundPortList != null;
 				
 				this.rdURI=uri;
 				
@@ -109,11 +113,27 @@ implements
 				
 				this.requestSubmissionOutboundPortList = new ArrayList<RequestSubmissionOutboundPort>();
 				this.addOfferedInterface( RequestSubmissionI.class );
-				for ( int i = 0 ; i < requestSubmissionOutboundPortList.size() ; i++ ) {
+				/*for ( int i = 0 ; i < requestSubmissionOutboundPortList.size() ; i++ ) {
 					this.requestSubmissionOutboundPortList.add( new RequestSubmissionOutboundPort( requestSubmissionOutboundPortList.get( i ) , this ) );
 					this.addPort( this.requestSubmissionOutboundPortList.get( i ) );
-					this.requestSubmissionOutboundPortList.get( i ).localPublishPort();
-				}
+					this.requestSubmissionOutboundPortList.get( i ).publishPort();
+				}*/
+				
+				this.connectPorts();
+	}
+	
+	private void connectPorts() throws Exception
+	{		
+		this.doPortConnection(
+				this.requestNotificationOutboundPort.getPortURI(),
+				this.requestSubmissionInboundPort.getPortURI(),
+				RequestNotificationConnector.class.getCanonicalName());
+		
+		/*for(RequestSubmissionOutboundPort port : requestSubmissionOutboundPortList)
+		this.doPortConnection(
+				port.getPortURI(),
+				this.requestSubmissionInboundPort.getPortURI(),
+				RequestSubmissionConnector.class.getCanonicalName()) ;*/
 	}
 	
 	private void nextVM()
@@ -166,12 +186,6 @@ implements
 	                if (port.connected() ) {
 	                    port.doDisconnection();
 	                }
-	            
-	            if ( this.requestSubmissionInboundPort.connected() ) 
-	            	this.requestSubmissionInboundPort.doDisconnection();
-	            
-	            if ( this.requestNotificationInboundPort.connected() ) 
-	            	this.requestNotificationInboundPort.doDisconnection();
 	        }
 	        catch ( Exception e ) {
 	            throw new ComponentShutdownException( e );
@@ -188,12 +202,12 @@ implements
 		
 		this.requestSubmissionOutboundPortList.add( port );
 		this.addPort( port );
-		port.localPublishPort();
+		port.publishPort();
 		
-		
-		// TODO : allouer mémoire
-		
-		this.requestSubmissionOutboundPortList.add(port);
+		this.doPortConnection(
+				port.getPortURI(),
+				requestSubmissionInboundPortURI,
+				RequestSubmissionConnector.class.getCanonicalName()) ;		
 	}
 
 	@Override
