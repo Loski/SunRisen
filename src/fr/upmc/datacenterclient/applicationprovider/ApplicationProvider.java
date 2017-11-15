@@ -61,8 +61,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
     
     
     private static int indice_rd_uri = 0;
-    private static int indice_rdmo_uri = 1;
-    private static int indice_rdso_uri = 2;
+    private static int indice_rdso_uri = 1;
 
 
 
@@ -91,18 +90,17 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
         this.apmip = new ApplicationProviderManagementInboundPort(applicationManagementInboundPort, ApplicationProviderManagementI.class, this);
         this.addPort( this.apmip );
         this.apmip.publishPort();
-        System.out.println(applicationSubmissionInboundPortURI);
-        this.asop.doConnection(applicationSubmissionInboundPortURI, ApplicationSubmissionConnector.class.getCanonicalName());
-        
+        this.asop.doConnection(applicationSubmissionInboundPortURI, ApplicationSubmissionConnector.class.getCanonicalName());        
 	}
 	
 	@Override
 	public void createAndSendApplication() throws Exception {
+		System.out.println("Send request ...");
 		rdUri = this.asop.submitApplication(apURI,  2 );
         if ( rdUri != null ) {
             // Creation dynamique du request generator
             System.out.println( "creating RequestGenerator" );
-            rnipUri =rdUri[0] + rnipUri; 
+            rnipUri = rdUri[0] + rnipUri; 
             RequestGenerator rg = new RequestGenerator( rgUri , 500.0 , 6000000000L , rgmipUri , rsopUri , rnipUri );
             AbstractCVM.theCVM.addDeployedComponent( rg );
            

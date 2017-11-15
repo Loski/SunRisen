@@ -11,6 +11,7 @@ import fr.upmc.components.exceptions.ComponentStartException;
 import fr.upmc.components.interfaces.DataRequiredI;
 import fr.upmc.components.ports.PortI;
 import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
+import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagementConnector;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenter.software.controller.interfaces.AdmissionControllerManagementI;
@@ -130,6 +131,17 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 		this.addPort(this.cssdop);
 		this.cssdop.publishPort();
 		
+		
+		/*this.avmOutPort = new ApplicationVMManagementOutboundPort(
+						ApplicationVMManagementOutboundPortURI,
+						vm) ;
+		this.avmOutPort.publishPort();
+		
+		this.avmOutPort.
+			doConnection(
+			ApplicationVMManagementInboundPortURI,
+			ApplicationVMManagementConnector.class.getCanonicalName()) ;
+
 		// this.addOfferedInterface(ComputerStaticStateDataI.class);
 		// or :
 	/*	this.addOfferedInterface(DataRequiredI.PushI.class);
@@ -142,9 +154,10 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 		this.cdsdop.publishPort();
 		*/
 		
+		this.csop.allocateCores(12);
 
 
-
+		
 		
 		this.rdmopList = new HashMap<String, RequestDispatcherManagementOutboundPort>();
 		
@@ -202,11 +215,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	}
 
 	
-	public String[] addCore(String rdUri, int nbCore) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
+
 	
 	@Override
 	public void shutdown() throws ComponentShutdownException {
