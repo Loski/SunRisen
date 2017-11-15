@@ -119,12 +119,22 @@ implements
 		this.currentVM = (this.currentVM+1)%this.requestSubmissionOutboundPortList.size();
 	}
 
+	private RequestSubmissionOutboundPort getCurrentVMPort()
+	{
+		return (RequestSubmissionOutboundPort) this.requestSubmissionOutboundPortList.values().toArray()[this.currentVM];
+	}
+	
+	private String getCurrentVMURI()
+	{		
+		return (String) this.requestSubmissionOutboundPortList.keySet().toArray()[this.currentVM];
+	}
+	
 	@Override
 	public void acceptRequestSubmission(RequestI r) throws Exception {
 
 		assert r != null;
 		
-		RequestSubmissionOutboundPort port = (RequestSubmissionOutboundPort) this.requestSubmissionOutboundPortList.values().toArray()[this.currentVM];
+		RequestSubmissionOutboundPort port = getCurrentVMPort();
 		port.submitRequest(r);
 		
 		this.nextVM();
@@ -135,9 +145,9 @@ implements
 		
 		assert r != null;
 		
-		RequestSubmissionOutboundPort port = (RequestSubmissionOutboundPort) this.requestSubmissionOutboundPortList.values().toArray()[this.currentVM];
+		RequestSubmissionOutboundPort port = getCurrentVMPort();
 		
-		System.out.println(String.format("%s transfers %s to %s port",this.rdURI,r.getRequestURI(),port.getPortURI()));
+		System.out.println(String.format("%s transfers %s to %s using %s",this.rdURI,r.getRequestURI(),getCurrentVMURI(),port.getPortURI()));
 		port.submitRequestAndNotify(r);
 		
 		this.nextVM();
