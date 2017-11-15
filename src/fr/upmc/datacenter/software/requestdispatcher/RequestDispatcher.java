@@ -76,7 +76,7 @@ implements
 				
 				// Interfaces and ports
 
-				this.addRequiredInterface(RequestDispatcherManagementI.class) ;
+				this.addOfferedInterface(RequestDispatcherManagementI.class) ;
 				this.requestDispatcherManagementInboundPort =
 						new RequestDispatcherManagementInboundPort(
 								requestDispatcherManagementInboundPortURI,
@@ -86,14 +86,14 @@ implements
 				
 					//To communicate with the sender of the request
 				
-				this.addRequiredInterface( RequestNotificationI.class );
+				this.addOfferedInterface( RequestNotificationI.class );
 				this.requestNotificationInboundPort = 
 								new RequestNotificationInboundPort( 
 												requestNotificationInboundPortURI, this);
 				this.addPort( this.requestNotificationInboundPort );
 				this.requestNotificationInboundPort.publishPort();
 				
-				this.addRequiredInterface(RequestSubmissionI.class) ;
+				this.addOfferedInterface(RequestSubmissionI.class) ;
 				this.requestSubmissionInboundPort =
 								new RequestSubmissionInboundPort(
 												requestSubmissionInboundPortURI, this) ;
@@ -102,7 +102,7 @@ implements
 				
 					//To communicate with the VMs
 
-				this.addOfferedInterface(RequestNotificationI.class) ;
+				this.addRequiredInterface(RequestNotificationI.class) ;
 				this.requestNotificationOutboundPort =
 					new RequestNotificationOutboundPort(
 											requestNotificationOutboundPortURI,
@@ -111,7 +111,7 @@ implements
 				this.requestNotificationOutboundPort.publishPort() ;
 				
 				this.requestSubmissionOutboundPortList = new LinkedHashMap<String,RequestSubmissionOutboundPort>();
-				this.addOfferedInterface( RequestSubmissionI.class );
+				this.addRequiredInterface( RequestSubmissionI.class );
 	}
 	
 	private void nextVM()
