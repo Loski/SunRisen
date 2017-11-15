@@ -10,4 +10,8 @@ extends		OfferedI,
 	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception;
     
 	public void disconnectVirtualMachine() throws Exception;
+	
+	public void connectWithRequestGenerator(String rgURI, String requestNotificationInboundPortURI) throws Exception;
+	
+	public void disconnectRequestGenerator() throws Exception;
 }

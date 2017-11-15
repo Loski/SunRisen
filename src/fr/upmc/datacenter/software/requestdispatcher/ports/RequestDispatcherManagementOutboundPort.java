@@ -39,4 +39,16 @@ implements	RequestDispatcherManagementI
 
 }
 
+	@Override
+	public void connectWithRequestGenerator(String rgURI, String requestNotificationInboundPortURI) throws Exception {
+		( ( RequestDispatcherManagementI ) this.connector ).connectWithRequestGenerator(rgURI, requestNotificationInboundPortURI);
+		
+	}
+
+	@Override
+	public void disconnectRequestGenerator() throws Exception {
+
+		( ( RequestDispatcherManagementI ) this.connector ).disconnectRequestGenerator();
+	}
+
 }

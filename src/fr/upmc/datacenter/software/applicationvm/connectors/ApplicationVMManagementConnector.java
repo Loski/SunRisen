@@ -76,8 +76,8 @@ implements	ApplicationVMManagementI
 	}
 
 	@Override
-	public void connectWithRequestSubmissioner() throws Exception {
+	public void connectWithRequestSubmissioner(String rgURI, String RequestNotificationInboundPortURI) throws Exception {
 		
-		((ApplicationVMManagementI)this.offering).connectWithRequestSubmissioner();		
+		((ApplicationVMManagementI)this.offering).connectWithRequestSubmissioner(rgURI,RequestNotificationInboundPortURI);		
 	}
 }

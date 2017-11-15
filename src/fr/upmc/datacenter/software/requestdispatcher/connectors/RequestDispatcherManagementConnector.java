@@ -21,4 +21,16 @@ implements	RequestDispatcherManagementI
 		( ( RequestDispatcherManagementI ) this.offering ).disconnectVirtualMachine();
 		
 	}
+
+	@Override
+	public void connectWithRequestGenerator(String rgURI, String requestNotificationInboundPortURI) throws Exception {
+		// TODO Auto-generated method stub
+		( ( RequestDispatcherManagementI ) this.offering ).connectWithRequestGenerator(rgURI, requestNotificationInboundPortURI);
+	}
+
+	@Override
+	public void disconnectRequestGenerator() throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
 }

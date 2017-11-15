@@ -38,9 +38,6 @@ implements
 	/** OutboundPort to send notification*/
 	protected RequestNotificationOutboundPort requestNotificationOutboundPort;
 	
-	/** Manage VM**/
-	protected ApplicationVMManagementInboundPort avmPort;
-	
 	/** InboundPort to receive VM notification */
 	protected RequestNotificationInboundPort  requestNotificationInboundPort;
 
@@ -113,27 +110,6 @@ implements
 				
 				this.requestSubmissionOutboundPortList = new ArrayList<RequestSubmissionOutboundPort>();
 				this.addOfferedInterface( RequestSubmissionI.class );
-				/*for ( int i = 0 ; i < requestSubmissionOutboundPortList.size() ; i++ ) {
-					this.requestSubmissionOutboundPortList.add( new RequestSubmissionOutboundPort( requestSubmissionOutboundPortList.get( i ) , this ) );
-					this.addPort( this.requestSubmissionOutboundPortList.get( i ) );
-					this.requestSubmissionOutboundPortList.get( i ).publishPort();
-				}*/
-				
-				this.connectPorts();
-	}
-	
-	private void connectPorts() throws Exception
-	{		
-		this.doPortConnection(
-				this.requestNotificationOutboundPort.getPortURI(),
-				this.requestSubmissionInboundPort.getPortURI(),
-				RequestNotificationConnector.class.getCanonicalName());
-		
-		/*for(RequestSubmissionOutboundPort port : requestSubmissionOutboundPortList)
-		this.doPortConnection(
-				port.getPortURI(),
-				this.requestSubmissionInboundPort.getPortURI(),
-				RequestSubmissionConnector.class.getCanonicalName()) ;*/
 	}
 	
 	private void nextVM()
@@ -207,11 +183,31 @@ implements
 		this.doPortConnection(
 				port.getPortURI(),
 				requestSubmissionInboundPortURI,
-				RequestSubmissionConnector.class.getCanonicalName()) ;		
+				RequestSubmissionConnector.class.getCanonicalName());
+		
+		System.out.println(String.format("[RequestSubmissionConnector] Connecting %s with %s using %s", this.rdURI,vmURI,requestSubmissionInboundPortURI));
+
 	}
 
 	@Override
 	public void disconnectVirtualMachine() throws Exception {
+		
+	}
+
+	@Override
+	public void connectWithRequestGenerator(String rgURI, String requestNotificationInboundPortURI) throws Exception {
+		
+		this.doPortConnection(
+				this.requestNotificationOutboundPort.getPortURI(),
+				requestNotificationInboundPortURI,
+				RequestNotificationConnector.class.getCanonicalName());
+		
+		System.out.println(String.format("[RequestNotificationConnector] Connecting %s with %s using %s", this.rdURI,rgURI,requestNotificationInboundPortURI));
+	}
+
+	@Override
+	public void disconnectRequestGenerator() throws Exception {
+		// TODO Auto-generated method stub
 		
 	}
 

@@ -63,6 +63,7 @@ import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMDynamicState
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMIntrospectionInboundPort;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementInboundPort;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMStaticStateDataInboundPort;
+import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.interfaces.RequestI;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationI;
 import fr.upmc.datacenter.software.interfaces.RequestSubmissionHandlerI;
@@ -664,13 +665,17 @@ implements	ProcessorServicesNotificationConsumerI,
 	}
 
 	/**
-	 * @see fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMManagementI#connectWithRequestSubmissioner()
+	 * @see fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMManagementI#connectWithRequestSubmissioner(String,String)
 	 */
 	@Override
-	public void			connectWithRequestSubmissioner()
+	public void			connectWithRequestSubmissioner(String rgURI, String RequestNotificationInboundPortURI)
 	throws Exception
 	{
-		// TODO Auto-generated method stub
-		System.out.println("VM CONNECTED WITH ???");
+		this.doPortConnection(
+				this.requestNotificationOutboundPort.getPortURI(),
+				RequestNotificationInboundPortURI,
+				RequestNotificationConnector.class.getCanonicalName()) ;
+		
+		System.out.println(String.format("[RequestNotificationConnector] Connecting %s with %s using %s", this.vmURI,rgURI,RequestNotificationInboundPortURI));
 	}
 }

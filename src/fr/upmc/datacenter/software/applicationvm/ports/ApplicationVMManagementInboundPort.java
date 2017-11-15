@@ -133,7 +133,7 @@ implements	ApplicationVMManagementI
 	}
 
 	@Override
-	public void			connectWithRequestSubmissioner() throws Exception {
+	public void			connectWithRequestSubmissioner(String rgURI, String RequestNotificationInboundPortURI) throws Exception {
 		// TODO Auto-generated method stub
 		final ApplicationVMManagementI avm =
 				(ApplicationVMManagementI) this.owner ;
@@ -141,7 +141,7 @@ implements	ApplicationVMManagementI
 		new ComponentI.ComponentService<Void>() {
 		@Override
 		public Void call() throws Exception {
-			avm.connectWithRequestSubmissioner() ;
+			avm.connectWithRequestSubmissioner(rgURI, RequestNotificationInboundPortURI) ;
 			return null;
 		}
 		}) ;

@@ -39,13 +39,13 @@ implements	RequestDispatcherManagementI
 	@Override
 	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception {
 		
-		final RequestDispatcher rd = ( RequestDispatcher ) this.owner;
+		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
 		
 		this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
-						rd.connectVirtualMachine(vmURI, requestSubmissionInboundPortURI) ;
+						rdm.connectVirtualMachine(vmURI, requestSubmissionInboundPortURI) ;
 						return null;
 					}
 				}) ;
@@ -54,13 +54,43 @@ implements	RequestDispatcherManagementI
 	@Override
 	public void disconnectVirtualMachine() throws Exception {
 		
-		final RequestDispatcher rd = ( RequestDispatcher ) this.owner;
+		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
 		
 		this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
-						rd.disconnectVirtualMachine();
+						rdm.disconnectVirtualMachine();
+						return null;
+					}
+				}) ;
+	}
+
+	@Override
+	public void connectWithRequestGenerator(String rgURI, String requestNotificationInboundPortURI) throws Exception {
+
+		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
+		
+		this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Void>() {
+					@Override
+					public Void call() throws Exception {
+						rdm.connectWithRequestGenerator(rgURI, requestNotificationInboundPortURI) ;
+						return null;
+					}
+				}) ;
+	}
+
+	@Override
+	public void disconnectRequestGenerator() throws Exception {
+
+		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
+		
+		this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Void>() {
+					@Override
+					public Void call() throws Exception {
+						rdm.disconnectRequestGenerator();
 						return null;
 					}
 				}) ;

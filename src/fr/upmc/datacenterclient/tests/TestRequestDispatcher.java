@@ -58,6 +58,8 @@ import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOu
 import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenter.software.requestdispatcher.RequestDispatcher;
+import fr.upmc.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
+import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
 import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
 import fr.upmc.datacenterclient.requestgenerator.connectors.RequestGeneratorManagementConnector;
 import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementOutboundPort;
@@ -120,9 +122,9 @@ extends		AbstractCVM
 	public static final String	RequestDispatcherManagementOutboundPortURI = "rdm-obp" ;
 	public static final String	RequestSubmissionInboundPortURI = "rsibp" ;
 	public static final String	RequestSubmissionOutboundPortURI = "rsobp" ;
-	public static final String	RequestSubmissionOutboundPort2URI = "rsobp2" ;
+	public static final String	RequestSubmissionOutboundPortDispatcherURI = "rsobp-dispatcher" ;
 	public static final String	RequestNotificationInboundPortURI = "rnibp" ;
-	public static final String  RequestNotificationInboundPort2URI = "rnibp2";
+	public static final String  RequestNotificationInboundPortDispatcherURI = "rnibp-dispatcher";
 	public static final String	RequestNotificationOutboundPortURI = "rnobp" ;
 	public static final String	RequestSubmissionInboundPortVMURI = "rsobpVM" ;
 	public static final String	RequestNotificationOutboundPortVMURI = "rnibpVM" ;
@@ -144,6 +146,8 @@ extends		AbstractCVM
 	/** Port connected to the request generator component to manage its
 	 *  execution (starting and stopping the request generation).			*/
 	protected RequestGeneratorManagementOutboundPort	rgmop ;
+	
+	protected RequestDispatcherManagementOutboundPort	rdmop ;
 
 	// ------------------------------------------------------------------------
 	// Component virtual machine constructors
@@ -233,16 +237,16 @@ extends		AbstractCVM
 		this.addDeployedComponent(this.vm) ;
 		
 		List<String> vmport = new ArrayList<String>();
-		vmport.add(RequestSubmissionOutboundPort2URI);
+		vmport.add(RequestSubmissionOutboundPortDispatcherURI);
 		
 		this.rd = new RequestDispatcher("rd0", RequestDispatcherManagementInboundPortURI,RequestSubmissionInboundPortURI,
-								    RequestNotificationOutboundPortURI,RequestNotificationInboundPort2URI) ;
+								    RequestNotificationOutboundPortURI,RequestNotificationInboundPortDispatcherURI) ;
 		this.addDeployedComponent(this.rd) ;
 
 		// Create a mock up port to manage the AVM component (allocate cores).
 		this.avmPort = new ApplicationVMManagementOutboundPort(
 									ApplicationVMManagementOutboundPortURI,
-									new AbstractComponent(0, 0) {}) ;
+									vm) ;
 		this.avmPort.publishPort() ;
 		this.avmPort.
 				doConnection(
@@ -279,40 +283,36 @@ extends		AbstractCVM
 		// - one for receiving end of execution notifications from application
 		//   virtual machines, and
 		// - one for request generation management i.e., starting and stopping
-		//   the generation process.
-		this.rg.doPortConnection(
-					RequestSubmissionOutboundPortURI,
-					RequestSubmissionInboundPortURI,
-					RequestSubmissionConnector.class.getCanonicalName()) ;
-
-		this.rd.doPortConnection(
-					RequestNotificationOutboundPortURI,
-					RequestNotificationInboundPortURI,
-					RequestNotificationConnector.class.getCanonicalName()) ;
-		
-		this.vm.doPortConnection(
-				RequestNotificationOutboundPortVMURI,
-				RequestNotificationInboundPort2URI,
-				RequestNotificationConnector.class.getCanonicalName()) ;
-		
-		this.rd.connectVirtualMachine("vm0", RequestSubmissionInboundPortVMURI);
-		
-		/*this.rd.doPortConnection(
-				RequestSubmissionOutboundPort2URI,
-				RequestSubmissionInboundPortVMURI,
-				RequestSubmissionConnector.class.getCanonicalName()) ;*/
-		
+		//   the generation process.	
 		
 		// Create a mock up port to manage to request generator component
 		// (starting and stopping the generation).
 		this.rgmop = new RequestGeneratorManagementOutboundPort(
 							RequestGeneratorManagementOutboundPortURI,
-							new AbstractComponent(0, 0) {}) ;
+							rg) ;
 		this.rgmop.publishPort() ;
 		this.rgmop.doConnection(
 				RequestGeneratorManagementInboundPortURI,
 				RequestGeneratorManagementConnector.class.getCanonicalName()) ;
 		// --------------------------------------------------------------------
+		
+		this.rdmop = new RequestDispatcherManagementOutboundPort(
+				RequestGeneratorManagementOutboundPortURI,
+				rd) ;
+this.rdmop.publishPort() ;
+this.rdmop.doConnection(
+	RequestDispatcherManagementInboundPortURI,
+	RequestDispatcherManagementConnector.class.getCanonicalName()) ;
+// --------------------------------------------------------------------
+
+this.rg.doPortConnection(
+		RequestSubmissionOutboundPortURI,
+		RequestSubmissionInboundPortURI,
+		RequestSubmissionConnector.class.getCanonicalName());
+
+this.rdmop.connectWithRequestGenerator("rg0", RequestNotificationInboundPortURI);
+this.rdmop.connectVirtualMachine("vm0", RequestSubmissionInboundPortVMURI);
+this.avmPort.connectWithRequestSubmissioner("rd0", RequestNotificationInboundPortDispatcherURI);
 
 		// complete the deployment at the component virtual machine level.
 		super.deploy();
