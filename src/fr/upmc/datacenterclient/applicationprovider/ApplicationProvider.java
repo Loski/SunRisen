@@ -65,7 +65,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 
 
 
-	public ApplicationProvider(String apURI,  String asoUri, String anoUri, String mipUri)  throws Exception{
+	public ApplicationProvider(String apURI,  String applicationSubmissionOutboundPortURI, String applicationManagementInboundPort)  throws Exception{
 		super(1, 1);
         
 		
@@ -80,14 +80,14 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
         //Send a application to the controller.
         this.apURI = apURI;
         this.addRequiredInterface( ApplicationSubmissionI.class );
-        this.asop = new ApplicationSubmissionOutboundPort( asoUri , this );
+        this.asop = new ApplicationSubmissionOutboundPort( applicationSubmissionOutboundPortURI , this );
         this.addPort( asop );
         this.asop.localPublishPort();
 
         
         //send HERE
         this.addOfferedInterface( ApplicationProviderManagementI.class );
-        this.apmip = new ApplicationProviderManagementInboundPort( mipUri, ApplicationProviderManagementI.class, this);
+        this.apmip = new ApplicationProviderManagementInboundPort(applicationManagementInboundPort, ApplicationProviderManagementI.class, this);
         this.addPort( this.apmip );
         this.apmip.publishPort();
         

@@ -19,16 +19,4 @@ public class AdmissionControllerManagementInboundPort extends AbstractInboundPor
 		super(uri, AdmissionControllerManagementI.class, owner);
 		assert	owner != null && owner instanceof AdmissionControllerManagementI ;
 	}
-
-	@Override
-	public String[] addCore(String rdUri, int nbCore) throws Exception {
-		final AdmissionControllerManagementI acm = ( AdmissionControllerManagementI ) this.owner;
-        return this.owner.handleRequestSync( new ComponentService<String[]>() {
-            @Override
-            public String[] call() throws Exception {
-                return acm.addCore( rdUri, nbCore );
-            }
-        } );
-	}
-
 }

@@ -21,9 +21,7 @@ import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.RequestDispatcher;
 import fr.upmc.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
-import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationNotificationI;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationSubmissionI;
-import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationNotificationOutboundPort;
 import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationSubmissionInboundPort;
 import fr.upmc.datacenterclient.requestgenerator.connectors.RequestGeneratorManagementConnector;
 import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementOutboundPort;
@@ -66,7 +64,6 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 
 
 	protected fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort ComputerServicesOutboundPort;
-	protected ApplicationNotificationOutboundPort ApplicationNotificationOutboundPort;
 	private AdmissionControllerManagementInboundPort acmip;
 	protected ApplicationSubmissionInboundPort asip;
 	
@@ -101,7 +98,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	public AdmissionController(String acURI, String applicationSubmissionInboundPortURI,
 			String AdmissionControllerManagementInboundPortURI,
 			String computerServiceOutboundPortURI, String computerURI,
-			int nbAvailableCores, String computerStaticStateDataOutboundPortURI, String computerServicesOutboundPortURI) throws Exception {
+			int nbAvailableCores, String computerStaticStateDataOutboundPortURI) throws Exception {
 
 		
 		super(2, 2);
