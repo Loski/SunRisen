@@ -11,22 +11,22 @@ public class AdmissionControllerManagementInboundPort extends AbstractInboundPor
 
 	public AdmissionControllerManagementInboundPort(Class<?> implementedInterface, ComponentI owner) throws Exception {
 		super(AdmissionControllerManagementI.class, owner);
-		assert	owner != null && owner instanceof AdmissionController ;
+		assert	owner != null && owner instanceof AdmissionControllerManagementI ;
 	}
 
 	public AdmissionControllerManagementInboundPort(String uri, Class<?> implementedInterface, ComponentI owner)
 			throws Exception {
 		super(uri, AdmissionControllerManagementI.class, owner);
-		assert	owner != null && owner instanceof AdmissionController ;
+		assert	owner != null && owner instanceof AdmissionControllerManagementI ;
 	}
 
 	@Override
 	public String[] addCore(String rdUri, int nbCore) throws Exception {
-		final AdmissionController arh = ( AdmissionController ) this.owner;
+		final AdmissionControllerManagementI acm = ( AdmissionControllerManagementI ) this.owner;
         return this.owner.handleRequestSync( new ComponentService<String[]>() {
             @Override
             public String[] call() throws Exception {
-                return arh.addCore( rdUri, nbCore );
+                return acm.addCore( rdUri, nbCore );
             }
         } );
 	}

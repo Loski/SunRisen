@@ -8,10 +8,8 @@ import fr.upmc.datacenter.software.ports.RequestNotificationInboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementInboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
-import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationNotificationI;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationProviderManagementI;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationSubmissionI;
-import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationNotificationOutboundPort;
 import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationProviderManagementInboundPort;
 import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationSubmissionOutboundPort;
 import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
@@ -33,9 +31,6 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 
     /** the outbound port used to start or stop the requestgenerator dynamically created */
     protected RequestGeneratorManagementOutboundPort rgmop;
-
-    /** the outbound port to notify that the requestgenerator has been created */
-    protected RequestDispatcherManagementInboundPort rdmop;
 
     /** the inbound port used to send/stop application **/
     protected ApplicationProviderManagementInboundPort apmip;
@@ -71,7 +66,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 
 
 	public ApplicationProvider(String apURI,  String asoUri, String anoUri, String mipUri)  throws Exception{
-		super(false, false);
+		super(1, 1);
         
 		
 		rgmipUri = apURI + "-rgmip";
@@ -120,10 +115,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
             rgmop = new RequestGeneratorManagementOutboundPort( rgmopUri , this );
             rgmop.localPublishPort();
             rgmop.doConnection( rgmipUri , RequestGeneratorManagementConnector.class.getCanonicalName() );
-
-            rdmop.connectWithRequestGenerator(rgUri, rgmipUri);
-            
-            
+               
             this.asop.submitGenerator(rnipUri, apURI, rgUri);
                      
             rg.start();

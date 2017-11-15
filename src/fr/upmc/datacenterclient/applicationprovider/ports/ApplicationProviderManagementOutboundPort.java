@@ -12,13 +12,11 @@ public class ApplicationProviderManagementOutboundPort extends AbstractOutboundP
 
 	public ApplicationProviderManagementOutboundPort(Class<?> implementedInterface, ComponentI owner) throws Exception {
 		super(ApplicationProviderManagementI.class, owner);
-		assert	owner != null && owner instanceof ApplicationProvider ;
 	}
 
 	public ApplicationProviderManagementOutboundPort(String uri, Class<?> implementedInterface, ComponentI owner)
 			throws Exception {
 		super(uri, ApplicationProviderManagementI.class, owner);
-		assert	owner != null && owner instanceof ApplicationProvider ;
 	}
 
 	@Override

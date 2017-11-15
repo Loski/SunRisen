@@ -1,7 +1,6 @@
 package fr.upmc.datacenterclient.applicationprovider.ports;
 
 import fr.upmc.components.ComponentI;
-import fr.upmc.components.ComponentI.ComponentService;
 import fr.upmc.components.ports.AbstractInboundPort;
 import fr.upmc.datacenterclient.applicationprovider.ApplicationProvider;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationProviderManagementI;
@@ -10,23 +9,23 @@ public class ApplicationProviderManagementInboundPort extends AbstractInboundPor
 
 	public ApplicationProviderManagementInboundPort(Class<?> implementedInterface, ComponentI owner) throws Exception {
 		super(ApplicationProviderManagementI.class, owner);
-		assert	owner != null && owner instanceof ApplicationProvider ;
+		assert	owner != null && owner instanceof ApplicationProviderManagementI ;
 	}
 
 	public ApplicationProviderManagementInboundPort(String uri, Class<?> implementedInterface, ComponentI owner)
 			throws Exception {
 		super(uri, ApplicationProviderManagementI.class, owner);
-		assert	owner != null && owner instanceof ApplicationProvider ;
+		assert	owner != null && owner instanceof ApplicationProviderManagementI ;
 	}
 	
 	@Override
     public void createAndSendApplication() throws Exception  {
-        final ApplicationProvider ap = ( ApplicationProvider ) this.owner;
-        this.owner.handleRequestAsync( new ComponentService<String>() {
+        final ApplicationProviderManagementI apm = ( ApplicationProviderManagementI ) this.owner;
+        this.owner.handleRequestAsync( new ComponentI.ComponentService<Void>() {
 
             @Override
-            public String call() throws Exception {
-                ap.createAndSendApplication();
+            public Void call() throws Exception {
+                apm.createAndSendApplication();
                 return null;
 
             }
@@ -36,13 +35,13 @@ public class ApplicationProviderManagementInboundPort extends AbstractInboundPor
 
     @Override
     public void stopApplication() throws Exception {
-        final ApplicationProvider ap = ( ApplicationProvider ) this.owner;
+        final ApplicationProviderManagementI apm = ( ApplicationProviderManagementI ) this.owner;
 
-        this.owner.handleRequestAsync( new ComponentService<String>() {
+        this.owner.handleRequestAsync( new ComponentI.ComponentService<Void>() {
 
             @Override
-            public String call() throws Exception {
-                ap.stopApplication();
+            public Void call() throws Exception {
+                apm.stopApplication();
                 return null;
 
             }
