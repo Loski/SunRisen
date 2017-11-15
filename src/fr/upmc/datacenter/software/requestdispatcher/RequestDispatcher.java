@@ -1,7 +1,9 @@
 package fr.upmc.datacenter.software.requestdispatcher;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.exceptions.ComponentShutdownException;
@@ -42,7 +44,7 @@ implements
 	protected RequestNotificationInboundPort  requestNotificationInboundPort;
 
 	/** List of OutboundPort to resend requests to VM */
-	protected List<RequestSubmissionOutboundPort> requestSubmissionOutboundPortList;
+	protected LinkedHashMap<String,RequestSubmissionOutboundPort> requestSubmissionOutboundPortList;
 	
 	/** index of the VM in the requestSubmissionOutboundPortList which will receive the next request*/
 	private int currentVM;
@@ -108,7 +110,7 @@ implements
 				this.addPort(this.requestNotificationOutboundPort) ;
 				this.requestNotificationOutboundPort.publishPort() ;
 				
-				this.requestSubmissionOutboundPortList = new ArrayList<RequestSubmissionOutboundPort>();
+				this.requestSubmissionOutboundPortList = new LinkedHashMap<String,RequestSubmissionOutboundPort>();
 				this.addOfferedInterface( RequestSubmissionI.class );
 	}
 	
@@ -122,8 +124,7 @@ implements
 
 		assert r != null;
 		
-		System.out.println(String.format("%s transfers %s to %s port",this.rdURI,r.getRequestURI(),this.requestSubmissionOutboundPortList.get(currentVM).getPortURI()));
-		RequestSubmissionOutboundPort port = this.requestSubmissionOutboundPortList.get(this.currentVM);
+		RequestSubmissionOutboundPort port = (RequestSubmissionOutboundPort) this.requestSubmissionOutboundPortList.values().toArray()[this.currentVM];
 		port.submitRequest(r);
 		
 		this.nextVM();
@@ -134,8 +135,9 @@ implements
 		
 		assert r != null;
 		
-		System.out.println(String.format("%s transfers %s to %s port",this.rdURI,r.getRequestURI(),this.requestSubmissionOutboundPortList.get(currentVM).getPortURI()));
-		RequestSubmissionOutboundPort port = this.requestSubmissionOutboundPortList.get(this.currentVM);
+		RequestSubmissionOutboundPort port = (RequestSubmissionOutboundPort) this.requestSubmissionOutboundPortList.values().toArray()[this.currentVM];
+		
+		System.out.println(String.format("%s transfers %s to %s port",this.rdURI,r.getRequestURI(),port.getPortURI()));
 		port.submitRequestAndNotify(r);
 		
 		this.nextVM();
@@ -158,10 +160,14 @@ implements
 	            if ( this.requestNotificationOutboundPort.connected() ) {
 	                this.requestNotificationOutboundPort.doDisconnection();
 	            }
-	            for (RequestSubmissionOutboundPort port : requestSubmissionOutboundPortList)
-	                if (port.connected() ) {
-	                    port.doDisconnection();
-	                }
+	            for (Entry<String, RequestSubmissionOutboundPort> entry : requestSubmissionOutboundPortList.entrySet())
+	            {
+	            	RequestSubmissionOutboundPort port = entry.getValue();
+	            	if (port.connected() ) {
+	            		port.doDisconnection();
+	     	       }
+	            }
+	               
 	        }
 	        catch ( Exception e ) {
 	            throw new ComponentShutdownException( e );
@@ -176,7 +182,7 @@ implements
 		String portURI = "vmPort-"+this.requestSubmissionOutboundPortList.size();
 		RequestSubmissionOutboundPort port = new RequestSubmissionOutboundPort( portURI, this );
 		
-		this.requestSubmissionOutboundPortList.add( port );
+		this.requestSubmissionOutboundPortList.put("vmURI",port );
 		this.addPort( port );
 		port.publishPort();
 		
@@ -185,7 +191,7 @@ implements
 				requestSubmissionInboundPortURI,
 				RequestSubmissionConnector.class.getCanonicalName());
 		
-		System.out.println(String.format("[RequestSubmissionConnector] Connecting %s with %s using %s", this.rdURI,vmURI,requestSubmissionInboundPortURI));
+		System.out.println(String.format("[RequestSubmissionConnector] Connecting %s with %s using %s -> %s", this.rdURI,vmURI,port.getPortURI(),requestSubmissionInboundPortURI));
 
 	}
 
@@ -202,7 +208,7 @@ implements
 				requestNotificationInboundPortURI,
 				RequestNotificationConnector.class.getCanonicalName());
 		
-		System.out.println(String.format("[RequestNotificationConnector] Connecting %s with %s using %s", this.rdURI,rgURI,requestNotificationInboundPortURI));
+		System.out.println(String.format("[RequestNotificationConnector] Connecting %s with %s using %s -> %s", this.rdURI,rgURI,this.requestNotificationOutboundPort.getPortURI(),requestNotificationInboundPortURI));
 	}
 
 	@Override

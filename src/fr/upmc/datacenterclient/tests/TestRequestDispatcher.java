@@ -57,6 +57,9 @@ import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagem
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
 import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
+import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
+import fr.upmc.datacenter.software.ports.RequestNotificationInboundPort;
+import fr.upmc.datacenter.software.ports.RequestSubmissionInboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.RequestDispatcher;
 import fr.upmc.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
@@ -126,8 +129,8 @@ extends		AbstractCVM
 	public static final String	RequestNotificationInboundPortURI = "rnibp" ;
 	public static final String  RequestNotificationInboundPortDispatcherURI = "rnibp-dispatcher";
 	public static final String	RequestNotificationOutboundPortURI = "rnobp" ;
-	public static final String	RequestSubmissionInboundPortVMURI = "rsobpVM" ;
-	public static final String	RequestNotificationOutboundPortVMURI = "rnibpVM" ;
+	public static final String	RequestSubmissionInboundPortVMURI = "rsibpVM" ;
+	public static final String	RequestNotificationOutboundPortVMURI = "rnobpVM" ;
 	public static final String	RequestGeneratorManagementInboundPortURI = "rgmip" ;
 	public static final String	RequestGeneratorManagementOutboundPortURI = "rgmop" ;
 
@@ -238,9 +241,6 @@ extends		AbstractCVM
 			    RequestNotificationOutboundPortVMURI) ;
 		this.addDeployedComponent(this.vm) ;
 		
-		List<String> vmport = new ArrayList<String>();
-		vmport.add(RequestSubmissionOutboundPortDispatcherURI);
-		
 		this.rd = new RequestDispatcher("rd0", RequestDispatcherManagementInboundPortURI,RequestSubmissionInboundPortURI,
 								    RequestNotificationOutboundPortURI,RequestNotificationInboundPortDispatcherURI) ;
 		this.addDeployedComponent(this.rd) ;
@@ -299,7 +299,7 @@ extends		AbstractCVM
 		// --------------------------------------------------------------------
 		
 		this.rdmop = new RequestDispatcherManagementOutboundPort(
-				RequestGeneratorManagementOutboundPortURI,
+				RequestDispatcherManagementOutboundPortURI,
 				rd) ;
 		this.rdmop.publishPort() ;
 		this.rdmop.doConnection(

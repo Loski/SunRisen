@@ -676,6 +676,6 @@ implements	ProcessorServicesNotificationConsumerI,
 				RequestNotificationInboundPortURI,
 				RequestNotificationConnector.class.getCanonicalName()) ;
 		
-		System.out.println(String.format("[RequestNotificationConnector] Connecting %s with %s using %s", this.vmURI,rgURI,RequestNotificationInboundPortURI));
+		System.out.println(String.format("[RequestNotificationConnector] Connecting %s with %s using %s -> %s", this.vmURI,rgURI,this.requestNotificationOutboundPort.getPortURI(),RequestNotificationInboundPortURI));
 	}
 }
