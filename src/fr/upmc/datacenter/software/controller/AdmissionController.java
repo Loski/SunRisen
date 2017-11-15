@@ -1,5 +1,6 @@
 package fr.upmc.datacenter.software.controller;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,10 +12,12 @@ import fr.upmc.components.interfaces.DataRequiredI;
 import fr.upmc.components.ports.PortI;
 import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
+import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenter.software.controller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.datacenter.software.controller.ports.AdmissionControllerManagementInboundPort;
 import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 import fr.upmc.datacenter.software.ports.RequestSubmissionInboundPort;
+import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.RequestDispatcher;
 import fr.upmc.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
@@ -78,12 +81,17 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	private int nbVMCreated = 0;
 	protected List<ApplicationVM> vms ;
 	
+	
 
 	 // Map between RequestDispatcher URIs and the outbound ports to call them.
 	protected Map<String, RequestDispatcherManagementOutboundPort> rdmopList;
 	
 	// Map between RequestSubmissionInboundPort URIs and the inboundPort
 	protected Map<String, RequestSubmissionInboundPort> rsipList;
+	
+	
+	// Map between RequestSubmissionInboundPort URIs and the inboundPort
+	protected Map<String, RequestSubmissionOutboundPort> rsopList;
 	
 	
 	protected String computerURI;
@@ -133,7 +141,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 
 
 		
-		
+		this.rdmopList = new HashMap<String, RequestDispatcherManagementOutboundPort>();
 		
 		//Pour l'allocation de core.
 		this.addRequiredInterface(ComputerServicesI.class);
@@ -143,10 +151,12 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	 * @see fr.upmc.datacenter.admissioncontroller.interfaces.ApplicationSubmissionI#submitApplication(java.lang.Integer, java.lang.String, java.lang.String, java.lang.String)
 	 */
 	@Override
-	public String submitApplication(int nbVM) throws Exception {
+	public String[] submitApplication(String appURI, int nbVM) throws Exception {
 		
 		this.logMessage("New Application received.\n Waiting for evaluation.");
 		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
+		String dispatcherURI[] = new String[4];
+
 		if(allocatedCore.length != 0) {
 			RequestDispatcher rd = new RequestDispatcher("RD_" + rdmopList.size(), RequestDispatcherManagementInboundPortURI+ rdmopList.size(), RequestSubmissionInboundPortURI+ rdmopList.size(),
 				    RequestNotificationOutboundPortURI+ rdmopList.size(), RequestNotificationInboundPortURI+ rdmopList.size()) ;
@@ -158,20 +168,34 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 					RequestDispatcherManagementOutboundPortURI + rdmopList.size(),
 					rd) ;
 			rdmop.publishPort();
+			
 			rdmop.doConnection(
 				RequestDispatcherManagementInboundPortURI + rdmopList.size(),
 				RequestDispatcherManagementConnector.class.getCanonicalName());
+			
+			dispatcherURI[0] = "RD_" + rdmopList.size();
+			dispatcherURI[1] = RequestSubmissionInboundPortURI+ rdmopList.size();
+			
+			rdmopList.put(appURI, rdmop);
+
 			for(ApplicationVM vm : vms) {
 				rdmop.connectVirtualMachine("NAME VM URI", vm.findPortURIsFromInterface(RequestSubmissionI.class)[0]);
 			}
+			
+			
 		}else {
 			this.logMessage("Failed to allocates core for a new application.");
 			return null;
 		}
-		
-		return RequestDispatcherManagementInboundPortURI+ rdmopList.size();
+		return dispatcherURI;
 	}
 
+	@Override
+	public void submitGenerator(String RequestSubmissionInboundPort, String appUri, String rgURI) throws Exception {
+		this.rdmopList.get(appUri).connectWithRequestGenerator(rgURI, RequestSubmissionInboundPort);	
+	}
+
+	
 	public String[] addCore(String rdUri, int nbCore) {
 		// TODO Auto-generated method stub
 		return null;
@@ -197,5 +221,6 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 
 		super.shutdown();
 	}
+
 
 }

@@ -4,6 +4,7 @@ import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.cvm.AbstractCVM;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
+import fr.upmc.datacenter.software.ports.RequestNotificationInboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementInboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
@@ -34,7 +35,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
     protected RequestGeneratorManagementOutboundPort rgmop;
 
     /** the outbound port to notify that the requestgenerator has been created */
-    protected RequestDispatcherManagementInboundPort rdmip;
+    protected RequestDispatcherManagementInboundPort rdmop;
 
     /** the inbound port used to send/stop application **/
     protected ApplicationProviderManagementInboundPort apmip;
@@ -59,7 +60,15 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
     /** Request generator management outbound port */
     protected String rgmopUri;
     
-    protected String rdnopUri;
+    protected String[] rdUri;
+    RequestNotificationInboundPort rnip;
+    
+    
+    private static int indice_rd_uri = 0;
+    private static int indice_rdmo_uri = 1;
+    private static int indice_rdso_uri = 2;
+
+
 
 	public ApplicationProvider(String apURI,  String asoUri, String anoUri, String mipUri)  throws Exception{
 		super(false, false);
@@ -86,21 +95,24 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
         this.apmip = new ApplicationProviderManagementInboundPort( mipUri, ApplicationProviderManagementI.class, this);
         this.addPort( this.apmip );
         this.apmip.publishPort();
+        
+        
 	}
 	
 	@Override
 	public void createAndSendApplication() throws Exception {
-        rdnopUri = this.asop.submitApplication( 2 );
-        if ( rdnopUri != null ) {
-
+		rdUri = this.asop.submitApplication(apURI,  2 );
+        if ( rdUri != null ) {
             // Creation dynamique du request generator
             System.out.println( "creating RequestGenerator" );
+            rnipUri =rdUri[0] + rnipUri; 
             RequestGenerator rg = new RequestGenerator( rgUri , 500.0 , 6000000000L , rgmipUri , rsopUri , rnipUri );
             AbstractCVM.theCVM.addDeployedComponent( rg );
            
             RequestSubmissionOutboundPort rsop = ( RequestSubmissionOutboundPort ) rg.findPortFromURI( rsopUri );
-            
-            rsop.doConnection( rdnopUri , RequestSubmissionConnector.class.getCanonicalName() );
+            RequestSubmissionOutboundPort rnip = ( RequestSubmissionOutboundPort ) rg.findPortFromURI( rnipUri );
+
+            rsop.doConnection( rdUri[indice_rdso_uri] , RequestSubmissionConnector.class.getCanonicalName() );
  
             rg.toggleTracing();
             rg.toggleLogging();
@@ -109,7 +121,11 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
             rgmop.localPublishPort();
             rgmop.doConnection( rgmipUri , RequestGeneratorManagementConnector.class.getCanonicalName() );
 
-            rdmip.connectWithRequestGenerator(rgUri, rgmipUri);
+            rdmop.connectWithRequestGenerator(rgUri, rgmipUri);
+            
+            
+            this.asop.submitGenerator(rnipUri, apURI, rgUri);
+                     
             rg.start();
             startApplication();
         }
