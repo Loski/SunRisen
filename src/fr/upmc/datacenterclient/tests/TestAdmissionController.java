@@ -256,12 +256,15 @@ extends		AbstractCVM
 		// --------------------------------------------------------------------
 
 		//TODO
-		this.avmPort.connectWithRequestSubmissioner("rd0", RequestNotificationInboundPortDispatcherURI);
+	//	this.avmPort.connectWithRequestSubmissioner("rd0", RequestNotificationInboundPortDispatcherURI);
 
 		this.ac = new AdmissionController("AdmCtrl", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI, computerURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI);
 		
-		this.ap = new ApplicationProvider("moteurWalidien", applicationSubmissionOutboundPortURI, applicationManagementInboundPort);
+		this.ap = new ApplicationProvider("moteurWalidien", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI, applicationManagementInboundPort);
 				// complete the deployment at the component virtual machine level.
+		
+		
+		
 		super.deploy();
 	}
 
@@ -317,7 +320,7 @@ extends		AbstractCVM
 		// Uncomment next line to execute components in debug mode.
 		// AbstractCVM.toggleDebugMode() ;
 		try {
-			final TestRequestDispatcher trd = new TestRequestDispatcher() ;
+			final TestAdmissionController trd = new TestAdmissionController() ;
 			// Deploy the components
 			trd.deploy() ;
 			System.out.println("starting...") ;
