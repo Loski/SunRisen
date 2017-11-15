@@ -54,7 +54,7 @@ implements
 	
 	public RequestDispatcher(
 			String uri, 
-			String requestDispatcherManagementInboundPort, 
+			String requestDispatcherManagementInboundPortURI, 
 			String requestSubmissionInboundPortURI, 
 			String requestNotificationOutboundPortURI, 
 			//List<String> requestSubmissionOutboundPortList, 
@@ -66,7 +66,7 @@ implements
 		
 				// Preconditions
 				assert	uri != null ;
-				assert	requestDispatcherManagementInboundPort != null ;
+				assert	requestDispatcherManagementInboundPortURI != null ;
 				assert	requestSubmissionInboundPortURI != null ;
 				assert	requestNotificationOutboundPortURI != null ;
 				assert	requestNotificationInboundPortURI != null;
@@ -76,17 +76,17 @@ implements
 				
 				// Interfaces and ports
 
-				this.addOfferedInterface(RequestDispatcherManagementI.class) ;
+				this.addRequiredInterface(RequestDispatcherManagementI.class) ;
 				this.requestDispatcherManagementInboundPort =
 						new RequestDispatcherManagementInboundPort(
-								requestDispatcherManagementInboundPort,
+								requestDispatcherManagementInboundPortURI,
 								this) ;
 				this.addPort(this.requestDispatcherManagementInboundPort) ;
 				this.requestDispatcherManagementInboundPort.publishPort() ;
 				
 					//To communicate with the sender of the request
 				
-				this.addOfferedInterface( RequestNotificationI.class );
+				this.addRequiredInterface( RequestNotificationI.class );
 				this.requestNotificationInboundPort = 
 								new RequestNotificationInboundPort( 
 												requestNotificationInboundPortURI, this);
@@ -102,7 +102,7 @@ implements
 				
 					//To communicate with the VMs
 
-				this.addRequiredInterface(RequestNotificationI.class) ;
+				this.addOfferedInterface(RequestNotificationI.class) ;
 				this.requestNotificationOutboundPort =
 					new RequestNotificationOutboundPort(
 											requestNotificationOutboundPortURI,
@@ -214,7 +214,6 @@ implements
 	@Override
 	public void disconnectRequestGenerator() throws Exception {
 		// TODO Auto-generated method stub
-		
 	}
 
 }
