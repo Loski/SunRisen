@@ -64,13 +64,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
         rgmopUri = apURI + "-rgmop";
         
         
-        //Notify the creation of the request generator to the Application Controller.
-        this.addRequiredInterface( ApplicationNotificationI.class );
-        this.anop = new ApplicationNotificationOutboundPort( anoUri , this );
-        this.addPort( anop );
-        this.anop.localPublishPort();
-        
-        
+
         //Send a application to the controller.
         this.apURI = apURI;
         this.addRequiredInterface( ApplicationSubmissionI.class );
@@ -88,10 +82,9 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 	
 	@Override
 	public void createAndSendApplication() throws Exception {
-        String res[] = this.asop.submitApplication( 2 );
-        String requestDispatcherURI = res[0];
+        String rdnopUri = this.asop.submitApplication( 2 );
 
-        if ( requestDispatcherURI != null ) {
+        if ( rdnopUri != null ) {
 
             // Creation dynamique du request generator
             System.out.println( "creating RequestGenerator" );
@@ -100,7 +93,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
            
             RequestSubmissionOutboundPort rsop = ( RequestSubmissionOutboundPort ) rg.findPortFromURI( rsopUri );
             
-            rsop.doConnection( requestDispatcherURI , RequestSubmissionConnector.class.getCanonicalName() );
+            rsop.doConnection( rdnopUri , RequestSubmissionConnector.class.getCanonicalName() );
  
             rg.toggleTracing();
             rg.toggleLogging();
@@ -109,8 +102,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
             rgmop.localPublishPort();
             
             rgmop.doConnection( rgmipUri , RequestGeneratorManagementConnector.class.getCanonicalName() );
- 
-            String rdnopUri = res[1];
+
             anop.notifyRequestGeneratorCreated( rnipUri , rdnopUri );
             startApplication(rg);
         }

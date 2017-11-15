@@ -10,7 +10,7 @@ public class ApplicationSubmissionOutboundPort extends AbstractOutboundPort impl
     }
 
     @Override
-    public String[] submitApplication( int nbVM ) throws Exception {
+    public String submitApplication( int nbVM ) throws Exception {
       return  ( ( ApplicationSubmissionI ) this.connector ).submitApplication( nbVM );
 }
 }

@@ -143,17 +143,16 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	 * @see fr.upmc.datacenter.admissioncontroller.interfaces.ApplicationSubmissionI#submitApplication(java.lang.Integer, java.lang.String, java.lang.String, java.lang.String)
 	 */
 	@Override
-	public String[] submitApplication(int nbVM) throws Exception {
+	public String submitApplication(int nbVM) throws Exception {
 		
 		this.logMessage("New Application received.\n Waiting for evaluation.");
-		String rdURI[] = new String[1];
-		VMdata v;
 		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
 		if(allocatedCore.length != 0) {
 			RequestDispatcher rd = new RequestDispatcher("RD_" + rdmopList.size(), RequestDispatcherManagementInboundPortURI+ rdmopList.size(), RequestSubmissionInboundPortURI+ rdmopList.size(),
 				    RequestNotificationOutboundPortURI+ rdmopList.size(), RequestNotificationInboundPortURI+ rdmopList.size()) ;
 			rd.toggleLogging();
 			rd.toggleTracing();
+			
 			RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
 					RequestDispatcherManagementOutboundPortURI + rdmopList.size(),
 					rd) ;
@@ -165,10 +164,11 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 				rdmop.connectVirtualMachine("NAME VM URI", vm.findPortURIsFromInterface(RequestSubmissionI.class)[0]);
 			}
 		}else {
-			//failure to allocate
+			this.logMessage("Failed to allocates core for a new application.");
+			return null;
 		}
 		
-		return rdURI;
+		return RequestDispatcherManagementInboundPortURI+ rdmopList.size();
 	}
 
 	public String[] addCore(String rdUri, int nbCore) {

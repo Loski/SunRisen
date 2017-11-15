@@ -19,4 +19,10 @@ implements	AdmissionControllerManagementI{
 		assert	owner != null && owner instanceof AdmissionController ;
 	}
 
+	@Override
+	public String[] addCore(String rdUri, int nbCore) throws Exception {
+		return this.connector
+	}
+
+
 }
