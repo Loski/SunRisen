@@ -230,6 +230,8 @@ extends		AbstractCVM
 		// --------------------------------------------------------------------
 		// Create an Application VM component
 		// --------------------------------------------------------------------
+		
+		
 		this.vm = new ApplicationVM("vm0",	// application vm component URI
 			    ApplicationVMManagementInboundPortURI,
 			    RequestSubmissionInboundPortVMURI,
@@ -299,20 +301,20 @@ extends		AbstractCVM
 		this.rdmop = new RequestDispatcherManagementOutboundPort(
 				RequestGeneratorManagementOutboundPortURI,
 				rd) ;
-this.rdmop.publishPort() ;
-this.rdmop.doConnection(
-	RequestDispatcherManagementInboundPortURI,
-	RequestDispatcherManagementConnector.class.getCanonicalName()) ;
-// --------------------------------------------------------------------
-
-this.rg.doPortConnection(
-		RequestSubmissionOutboundPortURI,
-		RequestSubmissionInboundPortURI,
-		RequestSubmissionConnector.class.getCanonicalName());
-
-this.rdmop.connectWithRequestGenerator("rg0", RequestNotificationInboundPortURI);
-this.rdmop.connectVirtualMachine("vm0", RequestSubmissionInboundPortVMURI);
-this.avmPort.connectWithRequestSubmissioner("rd0", RequestNotificationInboundPortDispatcherURI);
+		this.rdmop.publishPort() ;
+		this.rdmop.doConnection(
+			RequestDispatcherManagementInboundPortURI,
+			RequestDispatcherManagementConnector.class.getCanonicalName()) ;
+		// --------------------------------------------------------------------
+		
+		this.rg.doPortConnection(
+				RequestSubmissionOutboundPortURI,
+				RequestSubmissionInboundPortURI,
+				RequestSubmissionConnector.class.getCanonicalName());
+		
+		this.rdmop.connectWithRequestGenerator("rg0", RequestNotificationInboundPortURI);
+		this.rdmop.connectVirtualMachine("vm0", RequestSubmissionInboundPortVMURI);
+		this.avmPort.connectWithRequestSubmissioner("rd0", RequestNotificationInboundPortDispatcherURI);
 
 		// complete the deployment at the component virtual machine level.
 		super.deploy();
