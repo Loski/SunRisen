@@ -13,7 +13,6 @@ public class ApplicationSubmissionOutboundPort extends AbstractOutboundPort impl
 
     @Override
     public String[] submitApplication(String appURI, int nbVM ) throws Exception {
-    	System.out.println(this.connector);
       return  ( ( ApplicationSubmissionI ) this.connector ).submitApplication(appURI, nbVM );
 }
 

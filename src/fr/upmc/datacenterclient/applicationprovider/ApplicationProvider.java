@@ -8,6 +8,7 @@ import fr.upmc.datacenter.software.ports.RequestNotificationInboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementInboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
+import fr.upmc.datacenterclient.applicationprovider.connectors.ApplicationSubmissionConnector;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationProviderManagementI;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationSubmissionI;
 import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationProviderManagementInboundPort;
@@ -65,7 +66,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 
 
 
-	public ApplicationProvider(String apURI,  String applicationSubmissionOutboundPortURI, String applicationManagementInboundPort)  throws Exception{
+	public ApplicationProvider(String apURI,  String applicationSubmissionInboundPortURI, String applicationSubmissionOutboundPortURI, String applicationManagementInboundPort)  throws Exception{
 		super(1, 1);
         
 		
@@ -90,7 +91,8 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
         this.apmip = new ApplicationProviderManagementInboundPort(applicationManagementInboundPort, ApplicationProviderManagementI.class, this);
         this.addPort( this.apmip );
         this.apmip.publishPort();
-        
+        System.out.println(applicationSubmissionInboundPortURI);
+        this.asop.doConnection(applicationSubmissionInboundPortURI, ApplicationSubmissionConnector.class.getCanonicalName());
         
 	}
 	

@@ -26,6 +26,7 @@ import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationSubmissionI
 import fr.upmc.datacenterclient.requestgenerator.connectors.RequestGeneratorManagementConnector;
 import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementOutboundPort;
 import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
+import fr.upmc.datacenter.hardware.computers.connectors.ComputerServicesConnector;
 import fr.upmc.datacenter.hardware.computers.interfaces.ComputerServicesI;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerDynamicStateDataOutboundPort;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort;
@@ -97,7 +98,8 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	
 	public AdmissionController(String acURI, String applicationSubmissionInboundPortURI,
 			String AdmissionControllerManagementInboundPortURI,
-			String computerServiceOutboundPortURI, String computerURI,
+			String computerServiceOutboundPortURI, String ComputerServicesInboundPortURI,
+			String computerURI,
 			int nbAvailableCores, String computerStaticStateDataOutboundPortURI) throws Exception {
 
 		
@@ -116,8 +118,14 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 		this.csop = new ComputerServicesOutboundPort(computerServiceOutboundPortURI, this);
 		this.addPort(csop);
 		this.csop.localPublishPort();
+		
+		this.csop.doConnection(
+				ComputerServicesInboundPortURI,
+				ComputerServicesConnector.class.getCanonicalName()) ;
+		
+		
 		this.computerURI = computerURI;
-
+		
 		this.cssdop = new ComputerStaticStateDataOutboundPort(computerStaticStateDataOutboundPortURI, this, computerURI);
 		this.addPort(this.cssdop);
 		this.cssdop.publishPort();
@@ -151,6 +159,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	public String[] submitApplication(String appURI, int nbVM) throws Exception {
 		
 		this.logMessage("New Application received.\n Waiting for evaluation.");
+		
 		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
 		String dispatcherURI[] = new String[4];
 
