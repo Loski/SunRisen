@@ -150,6 +150,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 		if(allocatedCore.length != 0) {
 			RequestDispatcher rd = new RequestDispatcher("RD_" + rdmopList.size(), RequestDispatcherManagementInboundPortURI+ rdmopList.size(), RequestSubmissionInboundPortURI+ rdmopList.size(),
 				    RequestNotificationOutboundPortURI+ rdmopList.size(), RequestNotificationInboundPortURI+ rdmopList.size()) ;
+			
 			rd.toggleLogging();
 			rd.toggleTracing();
 			

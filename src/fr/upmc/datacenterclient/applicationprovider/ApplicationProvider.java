@@ -2,8 +2,11 @@ package fr.upmc.datacenterclient.applicationprovider;
 
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.cvm.AbstractCVM;
+import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
+import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementInboundPort;
+import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationNotificationI;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationProviderManagementI;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationSubmissionI;
@@ -12,6 +15,7 @@ import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationProviderMan
 import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationSubmissionOutboundPort;
 import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
 import fr.upmc.datacenterclient.requestgenerator.connectors.RequestGeneratorManagementConnector;
+import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementInboundPort;
 import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementOutboundPort;
 
 public class ApplicationProvider extends AbstractComponent implements ApplicationProviderManagementI{
@@ -30,10 +34,12 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
     protected RequestGeneratorManagementOutboundPort rgmop;
 
     /** the outbound port to notify that the requestgenerator has been created */
-    protected ApplicationNotificationOutboundPort anop;
+    protected RequestDispatcherManagementInboundPort rdmip;
 
     /** the inbound port used to send/stop application **/
     protected ApplicationProviderManagementInboundPort apmip;
+    
+    
 
     // ------------------------------------------------------------------
     // REQUEST GENERATOR URIs
@@ -52,6 +58,8 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 
     /** Request generator management outbound port */
     protected String rgmopUri;
+    
+    protected String rdnopUri;
 
 	public ApplicationProvider(String apURI,  String asoUri, String anoUri, String mipUri)  throws Exception{
 		super(false, false);
@@ -82,8 +90,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 	
 	@Override
 	public void createAndSendApplication() throws Exception {
-        String rdnopUri = this.asop.submitApplication( 2 );
-
+        rdnopUri = this.asop.submitApplication( 2 );
         if ( rdnopUri != null ) {
 
             // Creation dynamique du request generator
@@ -100,11 +107,11 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 
             rgmop = new RequestGeneratorManagementOutboundPort( rgmopUri , this );
             rgmop.localPublishPort();
-            
             rgmop.doConnection( rgmipUri , RequestGeneratorManagementConnector.class.getCanonicalName() );
 
-            anop.notifyRequestGeneratorCreated( rnipUri , rdnopUri );
-            startApplication(rg);
+            rdmip.connectWithRequestGenerator(rgUri, rgmipUri);
+            rg.start();
+            startApplication();
         }
         else
             System.err.println("Pas de resources disponibles" );
@@ -113,7 +120,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
     
 
     /**
-     * Stop the application, call request generator stop function
+     * Stop the generation of requests
      * 
      * @throws Exception
      */
@@ -122,14 +129,29 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
     }
     
     /**
-     * Start the application, call request generator start function
+     * Start the generation of requests
      * 
      * @throws Exception
      */
-    public void startApplication(RequestGenerator rg) throws Exception {
-        rg.start();
-        rg.startGeneration();    
+    public void startApplication() throws Exception {
+        this.rgmop.startGeneration();    
      }
+
+	@Override
+	public void shutdown() throws ComponentShutdownException {
+		try {			
+			if (this.rgmop.connected()) {
+				this.rgmop.doDisconnection();
+			}
+			if (this.asop.connected()) {
+				this.asop.doDisconnection();
+			}
+			// tuer dispatcher???
+		} catch (Exception e) {
+			throw new ComponentShutdownException("Port disconnection error", e);
+		}
+		super.shutdown();
+	}
 
 
     
