@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import fr.upmc.components.AbstractComponent;
+import fr.upmc.components.cvm.pre.dcc.ports.DynamicComponentCreationOutboundPort;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.components.exceptions.ComponentStartException;
 import fr.upmc.components.interfaces.DataRequiredI;
@@ -12,14 +13,16 @@ import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
 import fr.upmc.datacenter.software.controller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.datacenter.software.controller.ports.AdmissionControllerManagementInboundPort;
+import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 import fr.upmc.datacenter.software.ports.RequestSubmissionInboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.RequestDispatcher;
+import fr.upmc.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationNotificationI;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationSubmissionI;
 import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationNotificationOutboundPort;
 import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationSubmissionInboundPort;
-
+import fr.upmc.datacenterclient.requestgenerator.connectors.RequestGeneratorManagementConnector;
 import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementOutboundPort;
 import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
 import fr.upmc.datacenter.hardware.computers.interfaces.ComputerServicesI;
@@ -50,26 +53,27 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 
 
 	private static final String RequestDispatcherManagementInboundPortURI = null;
-	private static final String RequestNotificationInboundPort2URI = null;
-	private static final int NB_CORES = 2;
-
+	private static final String RequestNotificationInboundPortURI = null;
 	private static final String RequestSubmissionInboundPortURI = null;
-
-
 	private static final String RequestNotificationOutboundPortURI = null;
+	private static final String RequestDispatcherManagementOutboundPortURI = null;
+
+	
+	private static final int NB_CORES = 2;
 
 
 	protected fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort ComputerServicesOutboundPort;
 	protected ApplicationNotificationOutboundPort ApplicationNotificationOutboundPort;
 	private AdmissionControllerManagementInboundPort acmip;
 	protected ApplicationSubmissionInboundPort asip;
+	
+	
 	protected ApplicationVMManagementOutboundPort avmOutPort;
 
 	
 	protected ComputerServicesOutboundPort csPort;
 	protected ComputerStaticStateDataOutboundPort cssdop;
 	protected ComputerDynamicStateDataOutboundPort cdsdop;
-	
 	
 	private int nbVMCreated = 0;
 	protected List<ApplicationVM> vms ;
@@ -90,11 +94,10 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 			String AdmissionControllerManagementInboundPortURI,
 			String computerServiceOutboundPortURI, String computerURI,
 			int nbAvailableCores, String computerStaticStateDataOutboundPortURI, String computerServicesOutboundPortURI) throws Exception {
+
 		
 		super(2, 2);
 		this.acURI = acURI;
-		
-		
 		this.addOfferedInterface(ApplicationSubmissionI.class);
 		this.asip = new ApplicationSubmissionInboundPort(applicationSubmissionInboundPortURI, this);
 		this.addPort(asip);
@@ -144,16 +147,26 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 		
 		this.logMessage("New Application received.\n Waiting for evaluation.");
 		String rdURI[] = new String[1];
-		
-		RequestDispatcher rd = new RequestDispatcher("RD_" + rdmopList.size(), RequestDispatcherManagementInboundPortURI, RequestSubmissionInboundPortURI,
-			    RequestNotificationOutboundPortURI, RequestNotificationInboundPort2URI) ;
-		rd.toggleLogging();
-		rd.toggleTracing();
-		
-		
-		
-		AllocatedCore[] aC = csop.allocateCores(NB_CORES);
-		
+		VMdata v;
+		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
+		if(allocatedCore.length != 0) {
+			RequestDispatcher rd = new RequestDispatcher("RD_" + rdmopList.size(), RequestDispatcherManagementInboundPortURI+ rdmopList.size(), RequestSubmissionInboundPortURI+ rdmopList.size(),
+				    RequestNotificationOutboundPortURI+ rdmopList.size(), RequestNotificationInboundPortURI+ rdmopList.size()) ;
+			rd.toggleLogging();
+			rd.toggleTracing();
+			RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
+					RequestDispatcherManagementOutboundPortURI + rdmopList.size(),
+					rd) ;
+			rdmop.publishPort();
+			rdmop.doConnection(
+				RequestDispatcherManagementInboundPortURI + rdmopList.size(),
+				RequestDispatcherManagementConnector.class.getCanonicalName());
+			for(ApplicationVM vm : vms) {
+				rdmop.connectVirtualMachine("NAME VM URI", vm.findPortURIsFromInterface(RequestSubmissionI.class)[0]);
+			}
+		}else {
+			//failure to allocate
+		}
 		
 		return rdURI;
 	}
@@ -161,6 +174,27 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	public String[] addCore(String rdUri, int nbCore) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	
+	@Override
+	public void shutdown() throws ComponentShutdownException {
+		
+		try {			
+			if (this.csop.connected()) {
+				this.csop.doDisconnection();
+			}
+			if (this.cssdop.connected()) {
+				this.cssdop.doDisconnection();
+			}
+			if (this.cdsdop.connected()) {
+				this.cdsdop.doDisconnection();
+			}
+		} catch (Exception e) {
+			throw new ComponentShutdownException("Port disconnection error", e);
+		}
+
+		super.shutdown();
 	}
 
 }

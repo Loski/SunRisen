@@ -152,6 +152,8 @@ extends		AbstractCVM
 	
 	protected RequestDispatcherManagementOutboundPort	rdmop ;
 
+	
+	
 	// ------------------------------------------------------------------------
 	// Component virtual machine constructors
 	// ------------------------------------------------------------------------

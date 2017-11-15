@@ -121,7 +121,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
     
 
     /**
-     * Stop the application, it means it stops the requestgenerator
+     * Stop the application, call request generator stop function
      * 
      * @throws Exception
      */
@@ -130,7 +130,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
     }
     
     /**
-     * Start the application, it means it stops the requestgenerator
+     * Start the application, call request generator start function
      * 
      * @throws Exception
      */
