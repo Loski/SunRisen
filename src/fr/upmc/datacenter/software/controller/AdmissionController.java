@@ -130,7 +130,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 		this.addPort(this.cssdop);
 		this.cssdop.publishPort();
 		
-		
+		ReflectionOutboundPort a;
 		this.avmOutPort = new LinkedList<ApplicationVMManagementOutboundPort>();
 		
 

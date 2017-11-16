@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="jar/jcip-annotations.jar"/>
-	<classpathentry exported="true" kind="lib" path="jar/BasicComponentModel-12092017.jar"/>
 	<classpathentry kind="lib" path="jar/javassist.jar"/>
 	<classpathentry kind="lib" path="jar/BasicComponentModel-27102017.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
