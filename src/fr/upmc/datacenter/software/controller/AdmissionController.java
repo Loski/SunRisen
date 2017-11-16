@@ -105,6 +105,8 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 
 		
 		super(2, 2);
+		this.toggleLogging();
+		this.toggleTracing();
 		this.acURI = acURI;
 		this.addOfferedInterface(ApplicationSubmissionI.class);
 		this.asip = new ApplicationSubmissionInboundPort(applicationSubmissionInboundPortURI, this);
@@ -154,7 +156,6 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 		this.cdsdop.publishPort();
 		*/
 		
-		this.csop.allocateCores(12);
 
 
 		
@@ -172,7 +173,6 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	public String[] submitApplication(String appURI, int nbVM) throws Exception {
 		
 		this.logMessage("New Application received.\n Waiting for evaluation.");
-		
 		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
 		String dispatcherURI[] = new String[4];
 
@@ -197,9 +197,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 			
 			rdmopList.put(appURI, rdmop);
 
-			for(ApplicationVM vm : vms) {
-				rdmop.connectVirtualMachine("NAME VM URI", vm.findPortURIsFromInterface(RequestSubmissionI.class)[0]);
-			}
+		
 			
 			
 		}else {

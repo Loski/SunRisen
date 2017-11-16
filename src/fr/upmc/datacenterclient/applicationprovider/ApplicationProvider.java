@@ -5,6 +5,7 @@ import fr.upmc.components.cvm.AbstractCVM;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenter.software.ports.RequestNotificationInboundPort;
+import fr.upmc.datacenter.software.ports.RequestSubmissionInboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementInboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
@@ -97,6 +98,8 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 	public void createAndSendApplication() throws Exception {
 		System.out.println("Send request ...");
 		rdUri = this.asop.submitApplication(apURI,  2 );
+		System.out.println("Finish ...");
+
         if ( rdUri != null ) {
             // Creation dynamique du request generator
             System.out.println( "creating RequestGenerator" );
@@ -105,7 +108,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
             AbstractCVM.theCVM.addDeployedComponent( rg );
            
             RequestSubmissionOutboundPort rsop = ( RequestSubmissionOutboundPort ) rg.findPortFromURI( rsopUri );
-            RequestSubmissionOutboundPort rnip = ( RequestSubmissionOutboundPort ) rg.findPortFromURI( rnipUri );
+            RequestNotificationInboundPort rnip = ( RequestNotificationInboundPort ) rg.findPortFromURI( rnipUri );
 
             rsop.doConnection( rdUri[indice_rdso_uri] , RequestSubmissionConnector.class.getCanonicalName() );
  
