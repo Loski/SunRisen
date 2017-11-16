@@ -1,6 +1,7 @@
 package fr.upmc.datacenter.software.controller;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -48,7 +49,7 @@ import fr.upmc.datacenter.interfaces.ControlledDataRequiredI;
  * He then bind the Virtual Machine to the request Dispatcher.
  * 
  * 
- * @author	Maxime LAVASTE Loïc LAFONTAINE
+ * @author	Maxime LAVASTE Loï¿½c LAFONTAINE
  */
 public class AdmissionController extends AbstractComponent implements ApplicationSubmissionI{
 
@@ -63,6 +64,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 
 	
 	private static final int NB_CORES = 2;
+	private static final int NB_VMS = 5;
 
 
 	protected fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort ComputerServicesOutboundPort;
@@ -70,15 +72,12 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	protected ApplicationSubmissionInboundPort asip;
 	
 	
-	protected ApplicationVMManagementOutboundPort avmOutPort;
+	protected List<ApplicationVMManagementOutboundPort> avmOutPort;
 
 	
 	protected ComputerServicesOutboundPort csPort;
 	protected ComputerStaticStateDataOutboundPort cssdop;
 	protected ComputerDynamicStateDataOutboundPort cdsdop;
-	
-	private int nbVMCreated = 0;
-	protected List<ApplicationVM> vms ;
 	
 	
 
@@ -134,15 +133,42 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 		this.cssdop.publishPort();
 		
 		
-		/*this.avmOutPort = new ApplicationVMManagementOutboundPort(
-						ApplicationVMManagementOutboundPortURI,
-						vm) ;
-		this.avmOutPort.publishPort();
+		this.avmOutPort = new LinkedList<ApplicationVMManagementOutboundPort>();
 		
-		this.avmOutPort.
-			doConnection(
-			ApplicationVMManagementInboundPortURI,
-			ApplicationVMManagementConnector.class.getCanonicalName()) ;
+		for(int i=0;i<NB_VMS;i++)
+		{
+			// --------------------------------------------------------------------
+			// Create an Application VM component
+			// --------------------------------------------------------------------
+			
+			
+			String ApplicationVMManagementInboundPortURI = "avmibp-"+this.avmOutPort.size();
+			String RequestSubmissionInboundPortVMURI = "rsibpVM-"+this.avmOutPort.size();
+			String RequestNotificationOutboundPortVMURI = "rnobpVM-"+this.avmOutPort.size();
+			String ApplicationVMManagementOutboundPortURI = "avmobp-"+this.avmOutPort.size();
+			
+			ApplicationVM vm = new ApplicationVM("vm"+this.avmOutPort.size(),	// application vm component URI
+					ApplicationVMManagementInboundPortURI,
+				    RequestSubmissionInboundPortVMURI,
+				    RequestNotificationOutboundPortVMURI) ;
+			//this.addDeployedComponent(vm) ;
+
+			vm.toggleTracing() ;
+			vm.toggleLogging() ;
+			
+			// Create a mock up port to manage the AVM component (allocate cores).
+			ApplicationVMManagementOutboundPort avmPort = new ApplicationVMManagementOutboundPort(
+										ApplicationVMManagementOutboundPortURI,
+										vm) ;
+			avmPort.publishPort() ;
+			avmPort.
+					doConnection(
+						ApplicationVMManagementInboundPortURI,
+						ApplicationVMManagementConnector.class.getCanonicalName()) ;
+			
+			this.avmOutPort.add(avmPort);
+		}
+		
 
 		// this.addOfferedInterface(ComputerStaticStateDataI.class);
 		// or :
@@ -155,10 +181,6 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 		this.addPort(this.cdsdop);
 		this.cdsdop.publishPort();
 		*/
-		
-
-
-		
 		
 		this.rdmopList = new HashMap<String, RequestDispatcherManagementOutboundPort>();
 		
@@ -194,11 +216,15 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 			
 			dispatcherURI[0] = "RD_" + rdmopList.size();
 			dispatcherURI[1] = RequestSubmissionInboundPortURI+ rdmopList.size();
+
+			//TODO : SCHLAGOUILLE
+			ApplicationVMManagementOutboundPort vmPort = this.avmOutPort.get(0);
+				vmPort.allocateCores(allocatedCore);
+				ApplicationVM vm = (ApplicationVM) vmPort.getOwner(); 
+				rdmop.connectVirtualMachine("NAME VM URI", vm.findPortURIsFromInterface(RequestSubmissionI.class)[0]);
+				vmPort.connectWithRequestSubmissioner(dispatcherURI[0], RequestNotificationInboundPortURI+ rdmopList.size());
 			
 			rdmopList.put(appURI, rdmop);
-
-		
-			
 			
 		}else {
 			this.logMessage("Failed to allocates core for a new application.");

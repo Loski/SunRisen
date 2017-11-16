@@ -227,34 +227,7 @@ extends		AbstractCVM
 					ComputerDynamicStateDataInboundPortURI,
 					ControlledDataConnector.class.getCanonicalName()) ;
 		// --------------------------------------------------------------------
-
-		// --------------------------------------------------------------------
-		// Create an Application VM component
-		// --------------------------------------------------------------------
 		
-		
-		this.vm = new ApplicationVM("vm0",	// application vm component URI
-			    ApplicationVMManagementInboundPortURI,
-			    RequestSubmissionInboundPortVMURI,
-			    RequestNotificationOutboundPortVMURI) ;
-		this.addDeployedComponent(this.vm) ;
-
-		// Create a mock up port to manage the AVM component (allocate cores).
-		this.avmPort = new ApplicationVMManagementOutboundPort(
-									ApplicationVMManagementOutboundPortURI,
-									vm) ;
-		this.avmPort.publishPort() ;
-		this.avmPort.
-				doConnection(
-					ApplicationVMManagementInboundPortURI,
-					ApplicationVMManagementConnector.class.getCanonicalName()) ;
-
-		// Toggle on tracing and logging in the application virtual machine to
-		// follow the execution of individual requests.
-		this.vm.toggleTracing() ;
-		this.vm.toggleLogging() ;
-		// --------------------------------------------------------------------
-
 		//TODO
 	//	this.avmPort.connectWithRequestSubmissioner("rd0", RequestNotificationInboundPortDispatcherURI);
 
@@ -277,11 +250,6 @@ extends		AbstractCVM
 	public void			start() throws Exception
 	{
 		super.start() ;
-
-		// Allocate the 4 cores of the computer to the application virtual
-		// machine.
-		AllocatedCore[] ac = this.csPort.allocateCores(4) ;
-		this.avmPort.allocateCores(ac) ;
 	}
 
 	/**

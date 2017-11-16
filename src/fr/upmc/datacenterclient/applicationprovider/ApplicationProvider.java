@@ -106,17 +106,17 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
             rnipUri = rdUri[0] + rnipUri; 
             RequestGenerator rg = new RequestGenerator( rgUri , 500.0 , 6000000000L , rgmipUri , rsopUri , rnipUri );
             AbstractCVM.theCVM.addDeployedComponent( rg );
-           
-            RequestSubmissionOutboundPort rsop = ( RequestSubmissionOutboundPort ) rg.findPortFromURI( rsopUri );
-            RequestNotificationInboundPort rnip = ( RequestNotificationInboundPort ) rg.findPortFromURI( rnipUri );
-
-            rsop.doConnection( rdUri[indice_rdso_uri] , RequestSubmissionConnector.class.getCanonicalName() );
+            
+    		rg.doPortConnection(
+    				rsopUri,
+    				rdUri[indice_rdso_uri],
+    				RequestSubmissionConnector.class.getCanonicalName());
  
             rg.toggleTracing();
             rg.toggleLogging();
 
             rgmop = new RequestGeneratorManagementOutboundPort( rgmopUri , this );
-            rgmop.localPublishPort();
+            rgmop.publishPort();
             rgmop.doConnection( rgmipUri , RequestGeneratorManagementConnector.class.getCanonicalName() );
                
             this.asop.submitGenerator(rnipUri, apURI, rgUri);
