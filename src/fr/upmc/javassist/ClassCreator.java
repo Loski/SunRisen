@@ -6,12 +6,14 @@ import java.util.List;
 
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.connectors.AbstractConnector;
+import fr.upmc.components.ports.AbstractInboundPort;
 import fr.upmc.components.ports.AbstractOutboundPort;
 import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationI;
 import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
+import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
 import javassist.CannotCompileException;
 import javassist.ClassMap;
 import javassist.ClassPool;
@@ -39,6 +41,12 @@ public abstract class ClassCreator {
 				Constructor cons = myPort.getConstructor(type);
 				Object[] obj = {"uri",null};
 				System.out.println(cons.newInstance(obj));
+				
+				Class myPort2 = createInboundPortImplementingInterface("TestPort2",RequestNotificationI.class);
+				Class[] type2 = {String.class,ComponentI.class};
+				Constructor cons2 = myPort.getConstructor(type2);
+				Object[] obj2 = {"uri",null};
+				System.out.println(cons.newInstance(obj2));
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -101,7 +109,46 @@ public abstract class ClassCreator {
 		
 		CtClass test = createClass(className, interfaceToImplementClass,AbstractOutboundPort.class);
 		
-		//TODO : constructeurs
+		Constructor[] ctrs = TemplateOutboundPort.class.getConstructors();
+		for(Constructor ctr : ctrs)
+		{
+			CtConstructor ctrCopy = copyConstructor(ctr,test);
+			System.out.println("CTR COPIED :"+ctrCopy);
+			
+			if(ctr.getParameterTypes().length==2)
+				ctrCopy.setBody(String.format("super($1,%s,$2);",test.getName()+".class"));
+			else if(ctr.getParameterTypes().length==1)
+				ctrCopy.setBody(String.format("super(%s,$1);",test.getName()+".class"));
+			
+			test.addConstructor(ctrCopy);
+		}
+		
+		
+		for(Method m : interfaceToImplementClass.getDeclaredMethods())
+		{
+			System.out.println(m);
+			CtMethod method = copyMethodSignature(m,test);
+			
+			method.setBody(createBodyOfOutboundPort(interfaceToImplementClass.getCanonicalName(),method));	
+			System.out.println(method);
+		}
+		
+		CtMethod toString = new CtMethod(pool.get("java.lang.String"),"toString",null, test);
+		toString.setBody("return \"JAVASSIST MASTER RACE\";");
+		
+		test.addMethod(toString);
+		
+		Class<?> clazz = pool.toClass(test);
+		
+		return clazz;
+
+	}
+	
+	public static Class<?> createInboundPortImplementingInterface(String className,Class<?> interfaceToImplementClass) throws Exception
+	{
+		ClassPool pool = ClassPool.getDefault();
+		
+		CtClass test = createClass(className, interfaceToImplementClass,AbstractInboundPort.class);
 		
 		Constructor[] ctrs = TemplateOutboundPort.class.getConstructors();
 		for(Constructor ctr : ctrs)
@@ -109,9 +156,18 @@ public abstract class ClassCreator {
 			CtConstructor ctrCopy = copyConstructor(ctr,test);
 			System.out.println("CTR COPIED :"+ctrCopy);
 			
+			String s1 = "assert	$1 != null && $1 instanceof "+interfaceToImplementClass.getCanonicalName();
+			String s2 = "assert	$2 != null && $2 instanceof "+interfaceToImplementClass.getCanonicalName();
+			
+			System.out.println(String.format("{super($1,%s,$2); %s;}",interfaceToImplementClass.getName()+".class",s2));
+			
+			if(ctr.getParameterTypes().length==2)
+				ctrCopy.setBody(String.format("{super($1,%s,$2); %s;}",interfaceToImplementClass.getName()+".class",s2));
+			else if(ctr.getParameterTypes().length==1)
+				ctrCopy.setBody(String.format("{super(%s,$1); %s;}",interfaceToImplementClass.getName()+".class",s1));
+			
 			test.addConstructor(ctrCopy);
-		}
-		
+		}				
 		
 		for(Method m : interfaceToImplementClass.getDeclaredMethods())
 		{
@@ -151,11 +207,6 @@ public abstract class ClassCreator {
 		 }
 		
 		CtConstructor constructor = CtNewConstructor.make(parameters, null, test);
-		
-		if(parametersOfCtr.length==2)
-			constructor.setBody(String.format("super($1,%s,$2);",test.getName()+".class"));
-		else if(parametersOfCtr.length==1)
-			constructor.setBody(String.format("super(%s,$1);",test.getName()+".class"));
 		
 		System.out.println(constructor);
 		
@@ -219,4 +270,9 @@ public abstract class ClassCreator {
 	{
 		return createBodyOfConnectorOrOutboundPort(interfaceName,"this.connector",method);
 	}
+	
+	/*private static String createBodyOfInboundPort(String interfaceName,CtMethod method) throws NotFoundException
+	{
+		return createBodyOfConnectorOrOutboundPort(interfaceName,"",method);
+	}*/
 }
