@@ -192,7 +192,7 @@ implements
 		String portURI = "vmPort-"+this.requestSubmissionOutboundPortList.size();
 		RequestSubmissionOutboundPort port = new RequestSubmissionOutboundPort( portURI, this );
 		
-		this.requestSubmissionOutboundPortList.put("vmURI",port );
+		this.requestSubmissionOutboundPortList.put(vmURI,port );
 		this.addPort( port );
 		port.publishPort();
 		

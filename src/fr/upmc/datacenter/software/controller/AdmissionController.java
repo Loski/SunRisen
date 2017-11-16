@@ -64,8 +64,6 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 
 	
 	private static final int NB_CORES = 2;
-	private static final int NB_VMS = 5;
-
 
 	protected fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort ComputerServicesOutboundPort;
 	private AdmissionControllerManagementInboundPort acmip;
@@ -135,40 +133,6 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 		
 		this.avmOutPort = new LinkedList<ApplicationVMManagementOutboundPort>();
 		
-		for(int i=0;i<NB_VMS;i++)
-		{
-			// --------------------------------------------------------------------
-			// Create an Application VM component
-			// --------------------------------------------------------------------
-			
-			
-			String ApplicationVMManagementInboundPortURI = "avmibp-"+this.avmOutPort.size();
-			String RequestSubmissionInboundPortVMURI = "rsibpVM-"+this.avmOutPort.size();
-			String RequestNotificationOutboundPortVMURI = "rnobpVM-"+this.avmOutPort.size();
-			String ApplicationVMManagementOutboundPortURI = "avmobp-"+this.avmOutPort.size();
-			
-			ApplicationVM vm = new ApplicationVM("vm"+this.avmOutPort.size(),	// application vm component URI
-					ApplicationVMManagementInboundPortURI,
-				    RequestSubmissionInboundPortVMURI,
-				    RequestNotificationOutboundPortVMURI) ;
-			//this.addDeployedComponent(vm) ;
-
-			vm.toggleTracing() ;
-			vm.toggleLogging() ;
-			
-			// Create a mock up port to manage the AVM component (allocate cores).
-			ApplicationVMManagementOutboundPort avmPort = new ApplicationVMManagementOutboundPort(
-										ApplicationVMManagementOutboundPortURI,
-										vm) ;
-			avmPort.publishPort() ;
-			avmPort.
-					doConnection(
-						ApplicationVMManagementInboundPortURI,
-						ApplicationVMManagementConnector.class.getCanonicalName()) ;
-			
-			this.avmOutPort.add(avmPort);
-		}
-		
 
 		// this.addOfferedInterface(ComputerStaticStateDataI.class);
 		// or :
@@ -198,7 +162,8 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
 		String dispatcherURI[] = new String[4];
 
-		if(allocatedCore.length != 0) {
+		if(allocatedCore!=null && allocatedCore.length != 0) {
+			
 			RequestDispatcher rd = new RequestDispatcher("RD_" + rdmopList.size(), RequestDispatcherManagementInboundPortURI+ rdmopList.size(), RequestSubmissionInboundPortURI+ rdmopList.size(),
 				    RequestNotificationOutboundPortURI+ rdmopList.size(), RequestNotificationInboundPortURI+ rdmopList.size()) ;
 			
@@ -216,21 +181,54 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 			
 			dispatcherURI[0] = "RD_" + rdmopList.size();
 			dispatcherURI[1] = RequestSubmissionInboundPortURI+ rdmopList.size();
+			
+			for(int i=0;i<nbVM;i++)
+			{
+				// --------------------------------------------------------------------
+				// Create an Application VM component
+				// --------------------------------------------------------------------
+				
+				
+				String ApplicationVMManagementInboundPortURI = "avmibp-"+this.avmOutPort.size();
+				String RequestSubmissionInboundPortVMURI = "rsibpVM-"+this.avmOutPort.size();
+				String RequestNotificationOutboundPortVMURI = "rnobpVM-"+this.avmOutPort.size();
+				String ApplicationVMManagementOutboundPortURI = "avmobp-"+this.avmOutPort.size();
+				
+				ApplicationVM vm = new ApplicationVM("vm"+this.avmOutPort.size(),	// application vm component URI
+						ApplicationVMManagementInboundPortURI,
+					    RequestSubmissionInboundPortVMURI,
+					    RequestNotificationOutboundPortVMURI) ;
+				//this.addDeployedComponent(vm) ;
 
-			//TODO : SCHLAGOUILLE
-			ApplicationVMManagementOutboundPort vmPort = this.avmOutPort.get(0);
-				vmPort.allocateCores(allocatedCore);
-				ApplicationVM vm = (ApplicationVM) vmPort.getOwner(); 
-				rdmop.connectVirtualMachine("NAME VM URI", vm.findPortURIsFromInterface(RequestSubmissionI.class)[0]);
-				vmPort.connectWithRequestSubmissioner(dispatcherURI[0], RequestNotificationInboundPortURI+ rdmopList.size());
+				vm.toggleTracing() ;
+				vm.toggleLogging() ;
+				
+				// Create a mock up port to manage the AVM component (allocate cores).
+				ApplicationVMManagementOutboundPort avmPort = new ApplicationVMManagementOutboundPort(
+											ApplicationVMManagementOutboundPortURI,
+											vm) ;
+				avmPort.publishPort() ;
+				avmPort.
+						doConnection(
+							ApplicationVMManagementInboundPortURI,
+							ApplicationVMManagementConnector.class.getCanonicalName()) ;
+				
+				this.avmOutPort.add(avmPort);
+				
+				avmPort.allocateCores(allocatedCore);
+				
+				rdmop.connectVirtualMachine("vm"+this.avmOutPort.size(),RequestSubmissionInboundPortVMURI);
+				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], RequestNotificationInboundPortURI+ rdmopList.size());
+			}
 			
 			rdmopList.put(appURI, rdmop);
+			
+			return dispatcherURI;
 			
 		}else {
 			this.logMessage("Failed to allocates core for a new application.");
 			return null;
 		}
-		return dispatcherURI;
 	}
 
 	@Override
