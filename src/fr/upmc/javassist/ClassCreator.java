@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationI;
 import javassist.CannotCompileException;
+import javassist.ClassMap;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtConstructor;
@@ -17,51 +18,79 @@ public abstract class ClassCreator {
 	public static void main (String[] args)
 	{		
 		try {
-		
-		ClassPool pool = ClassPool.getDefault();
-		CtClass test = pool.makeClass("Test");
-		
-		CtConstructor constructor = new CtConstructor(new CtClass[0], test);
-		constructor.setBody("return $0;");
-		test.addConstructor(constructor);
-		
-		CtClass interfaceToImplement = pool.get(RequestNotificationI.class.getCanonicalName());
 
-		test.addInterface(interfaceToImplement);
-		
-		System.out.println(RequestNotificationI.class.getCanonicalName());
-		
-		Method m = RequestNotificationI.class.getDeclaredMethods()[0];
-		
-		System.out.println(m);
-		
-		 CtMethod method = new CtMethod(pool.get("void"),m.getName(),null, test);
-		 method.addParameter(pool.get(m.getParameterTypes()[0].getCanonicalName()));
-		 
-		 Class[] exceptionsToThrow = m.getExceptionTypes();
-		 
-		 CtClass[] exceptions = new CtClass[exceptionsToThrow.length];
-		 
-		 exceptions[0]=pool.get(exceptionsToThrow[0].getCanonicalName());
-		 
-		 method.setExceptionTypes(exceptions);
-		 
-		 System.out.println(method);
-
-	       method.setBody(String.format("return null;"));
-
-	       test.addMethod(method);
+		RequestNotificationI obj = (RequestNotificationI) createConnectorImplementingInterface("Test",RequestNotificationI.class).newInstance();
 			
-			Class<?> clazz = pool.toClass(test);
-		
-			RequestNotificationI obj = (RequestNotificationI) clazz.newInstance();
-			
-			System.out.println(obj);
+		System.out.println(obj);
 			
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public static Class<?> createConnectorImplementingInterface(String className,Class<?> interfaceToImplementClass) throws Exception
+	{
+		ClassPool pool = ClassPool.getDefault();
+		
+		CtClass test = pool.makeClass("Test");
+		
+		CtClass interfaceToImplement = pool.get(interfaceToImplementClass.getCanonicalName());
+		
+		test.addInterface(interfaceToImplement);
+		
+		CtConstructor constructor = new CtConstructor(new CtClass[0], test);
+		constructor.setBody("return $0;");//Mais que fais $0 ?
+		test.addConstructor(constructor);
+		
+		
+		for(Method m : interfaceToImplementClass.getDeclaredMethods())
+		{
+			System.out.println(m);
+			CtMethod method = copyMethodSignature(m,test);
+			
+			method.setBody(createBodyOfConnector());	
+		}
+		
+		CtMethod toString = new CtMethod(pool.get("java.lang.String"),"toString",null, test);
+		toString.setBody("return \"JAVASSIST MASTER RACE\";");
+		
+		test.addMethod(toString);
+		
+		Class<?> clazz = pool.toClass(test);
+
+		return clazz;
+
+	}
+	
+	private static CtMethod copyMethodSignature(Method m,CtClass clazz) throws Exception
+	{
+		ClassPool pool = ClassPool.getDefault();
+		
+		 CtMethod method = new CtMethod(pool.get("void"),m.getName(),null, clazz);
+		 method.addParameter(pool.get(m.getParameterTypes()[0].getCanonicalName()));
+		 
+		 Class[] exceptionsToThrow = m.getExceptionTypes();
+		 
+		 CtClass[] exceptions = new CtClass[exceptionsToThrow.length];
+		 
+		 int i = 0;
+		 for(Class clazzException:exceptionsToThrow)
+		 {
+			 exceptions[i]=pool.get(clazzException.getCanonicalName());
+			 i++;
+		 }
+		 
+		 method.setExceptionTypes(exceptions);
+		 
+		 System.out.println(method);
+		 
+		 return method;
+	}
+	
+	private static String createBodyOfConnector()
+	{
+		return "return null;";
 	}
 }
