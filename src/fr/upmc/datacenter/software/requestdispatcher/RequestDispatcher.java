@@ -223,7 +223,10 @@ implements
 
 	@Override
 	public void disconnectRequestGenerator() throws Exception {
-		// TODO Auto-generated method stub
+		if(this.requestNotificationOutboundPort.connected())
+		{
+			this.requestNotificationOutboundPort.doDisconnection();
+		}
 	}
 
 }

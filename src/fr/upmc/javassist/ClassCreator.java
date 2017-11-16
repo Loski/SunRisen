@@ -22,6 +22,7 @@ import javassist.CtConstructor;
 import javassist.CtMethod;
 import javassist.CtNewConstructor;
 import javassist.CtNewMethod;
+import javassist.CtPrimitiveType;
 import javassist.NotFoundException;
 import javassist.bytecode.LocalVariableAttribute;
 import javassist.bytecode.MethodInfo;
@@ -129,6 +130,8 @@ public abstract class ClassCreator {
 			System.out.println(m);
 			CtMethod method = copyMethodSignature(m,test);
 			
+			System.out.println("YOLO: "+stringOfMethodCall(method));
+			
 			method.setBody(createBodyOfOutboundPort(interfaceToImplementClass.getCanonicalName(),method));	
 			System.out.println(method);
 		}
@@ -156,8 +159,11 @@ public abstract class ClassCreator {
 			CtConstructor ctrCopy = copyConstructor(ctr,test);
 			System.out.println("CTR COPIED :"+ctrCopy);
 			
-			String s1 = "assert	$1 != null && $1 instanceof "+interfaceToImplementClass.getCanonicalName();
-			String s2 = "assert	$2 != null && $2 instanceof "+interfaceToImplementClass.getCanonicalName();
+			/*String s1 = "assert	$1 != null && $1 instanceof "+interfaceToImplementClass.getCanonicalName();
+			String s2 = "assert	$2 != null && $2 instanceof "+interfaceToImplementClass.getCanonicalName();*/
+			
+			String s1="";
+			String s2="";
 			
 			System.out.println(String.format("{super($1,%s,$2); %s;}",interfaceToImplementClass.getName()+".class",s2));
 			
@@ -174,7 +180,7 @@ public abstract class ClassCreator {
 			System.out.println(m);
 			CtMethod method = copyMethodSignature(m,test);
 			
-			method.setBody(createBodyOfOutboundPort(interfaceToImplementClass.getCanonicalName(),method));	
+			method.setBody(createBodyOfInboundPort(interfaceToImplementClass.getCanonicalName(),method));	
 			System.out.println(method);
 		}
 		
@@ -215,9 +221,9 @@ public abstract class ClassCreator {
 
 	private static CtMethod copyMethodSignature(Method m,CtClass clazz) throws Exception
 	{
-		ClassPool pool = ClassPool.getDefault();
+		 ClassPool pool = ClassPool.getDefault();
 		
-		 CtMethod method = new CtMethod(pool.get("void"),m.getName(),null, clazz);
+		 CtMethod method = new CtMethod(pool.get(m.getReturnType().getName()),m.getName(),null, clazz);
 		 
 		 for(Class clazzParameter : m.getParameterTypes())
 		 {
@@ -240,6 +246,23 @@ public abstract class ClassCreator {
 		 return method;
 	}
 	
+	private static String stringOfMethodCall(CtMethod method) throws Exception
+	{
+		String s = method.getName()+"(";
+		
+		 for(int i=0;i<method.getParameterTypes().length;i++)
+		 {
+			 s+= "arg"+i;
+			 
+			 if(i+1<method.getParameterTypes().length)
+				 s+=", ";
+		 }
+		 
+		 s+=");";
+				 
+		return s;
+	}
+	
 	private static String createBodyOfConnectorOrOutboundPort(String interfaceName,String variableName,CtMethod method) throws NotFoundException
 	{
 		//TODO : "return" if not void
@@ -248,11 +271,9 @@ public abstract class ClassCreator {
 		
 		 for(int i=1;i<=method.getParameterTypes().length;i++)
 		 {
-			 
 			 s+= "$"+i;
-			 i++;
 			 
-			 if(i<=method.getParameterTypes().length)
+			 if(i<method.getParameterTypes().length)
 				 s+=", ";
 		 }
 		 
@@ -271,8 +292,34 @@ public abstract class ClassCreator {
 		return createBodyOfConnectorOrOutboundPort(interfaceName,"this.connector",method);
 	}
 	
-	/*private static String createBodyOfInboundPort(String interfaceName,CtMethod method) throws NotFoundException
+	private static String createBodyOfInboundPort(String interfaceName,CtMethod method) throws NotFoundException
 	{
-		return createBodyOfConnectorOrOutboundPort(interfaceName,"",method);
-	}*/
+		StringBuilder builder = new StringBuilder();
+		
+		String returnType = getWrapperClass(method.getReturnType());
+		
+		builder.append(String.format("{final %s object = ( %s ) this.owner;",interfaceName,interfaceName));
+		builder.append("this.owner.handleRequestSync(");
+		builder.append(String.format("new fr.upmc.components.ComponentI.ComponentService<%s>() {",returnType));
+		builder.append(String.format("public %s call() throws Exception{",returnType));
+		
+		
+		builder.append(String.format("return %s ;","null")); //TODO : gérer autre type
+		builder.append("}");
+		builder.append("}) ;}");
+		
+		System.out.println(builder.toString());
+		
+		return builder.toString();
+	}
+	
+	private static String getWrapperClass(CtClass clazz)
+	{
+		if (clazz.isPrimitive()) {
+		   CtPrimitiveType primitive = (CtPrimitiveType) clazz;
+		  return primitive.getWrapperName();
+		} else {
+			return clazz.getName();
+		 }
+	}
 }
