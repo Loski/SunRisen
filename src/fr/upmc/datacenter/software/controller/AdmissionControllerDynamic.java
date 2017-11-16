@@ -51,7 +51,7 @@ import fr.upmc.datacenter.interfaces.ControlledDataRequiredI;
  * 
  * @author	Maxime LAVASTE Lo�c LAFONTAINE
  */
-public class AdmissionController extends AbstractComponent implements ApplicationSubmissionI{
+public class AdmissionControllerDynamic extends AbstractComponent implements ApplicationSubmissionI{
 
 	protected String acURI;
 
@@ -94,7 +94,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	
 	ComputerServicesOutboundPort csop;
 	
-	public AdmissionController(String acURI, String applicationSubmissionInboundPortURI,
+	public AdmissionControllerDynamic(String acURI, String applicationSubmissionInboundPortURI,
 			String AdmissionControllerManagementInboundPortURI,
 			String computerServiceOutboundPortURI, String ComputerServicesInboundPortURI,
 			String computerURI,
