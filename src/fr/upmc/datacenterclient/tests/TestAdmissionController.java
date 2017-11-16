@@ -153,6 +153,7 @@ extends		AbstractCVM
 
 	protected AdmissionController ac;
 	protected ApplicationProvider ap;
+	protected ApplicationProvider ap2;
 	private String applicationSubmissionInboundPortURI = "asip";
 	private String AdmissionControllerManagementInboundPortURI = "acmip";
 
@@ -238,7 +239,8 @@ extends		AbstractCVM
 		this.ap = new ApplicationProvider("moteurWalidien", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI, applicationManagementInboundPort);
 				// complete the deployment at the component virtual machine level.
 		
-		
+		this.ap2 = new ApplicationProvider("moteurWalidien2", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI+"-2", applicationManagementInboundPort+"-2");
+
 		
 		super.deploy();
 	}
@@ -278,6 +280,7 @@ extends		AbstractCVM
 	public void			testScenario() throws Exception
 	{
 		this.ap.createAndSendApplication();
+		this.ap2.createAndSendApplication();
 	}
 
 	/**
