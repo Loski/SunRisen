@@ -40,6 +40,7 @@ import org.apache.commons.math3.random.RandomDataGenerator;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.components.ports.PortI;
+import fr.upmc.components.pre.reflection.ports.ReflectionOutboundPort;
 import fr.upmc.datacenter.TimeManagement;
 import fr.upmc.datacenter.software.interfaces.RequestI;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationHandlerI;
@@ -98,9 +99,8 @@ implements	RequestNotificationHandlerI
 		// TODO Auto-generated method stub
 		return super.findPortFromURI(portURI);
 	}
-
 	public static int	DEBUG_LEVEL = 1 ;
-
+	ReflectionOutboundPort rop;
 	// -------------------------------------------------------------------------
 	// Constants and instance variables
 	// -------------------------------------------------------------------------
