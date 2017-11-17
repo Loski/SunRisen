@@ -19,6 +19,7 @@ import javassist.ClassMap;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtConstructor;
+import javassist.CtField;
 import javassist.CtMethod;
 import javassist.CtNewConstructor;
 import javassist.CtNewMethod;
@@ -45,9 +46,9 @@ public abstract class ClassCreator {
 				
 				Class myPort2 = createInboundPortImplementingInterface("TestPort2",RequestNotificationI.class);
 				Class[] type2 = {String.class,ComponentI.class};
-				Constructor cons2 = myPort.getConstructor(type2);
+				Constructor cons2 = myPort2.getConstructor(type2);
 				Object[] obj2 = {"uri",null};
-				System.out.println(cons.newInstance(obj2));
+				System.out.println(cons2.newInstance(obj2));
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -59,13 +60,17 @@ public abstract class ClassCreator {
 	{
 		ClassPool pool = ClassPool.getDefault();
 		
-		CtClass extendsClass = pool.getCtClass(superClass.getName());
-		
 		CtClass test = pool.makeClass(className);
 		
-		test.setSuperclass(extendsClass);
+		CtClass extendsClass = null;
 		
-		CtClass interfaceToImplement = pool.get(interfaceToImplementClass.getCanonicalName());
+		if(superClass!=null)
+		{
+			extendsClass = pool.getCtClass(superClass.getName());
+			test.setSuperclass(extendsClass);
+		}
+		
+		CtClass interfaceToImplement = pool.get(interfaceToImplementClass.getName());
 		
 		test.addInterface(interfaceToImplement);
 		
@@ -180,7 +185,7 @@ public abstract class ClassCreator {
 			System.out.println(m);
 			CtMethod method = copyMethodSignature(m,test);
 			
-			method.setBody(createBodyOfInboundPort(interfaceToImplementClass.getCanonicalName(),method));	
+			method.setBody(createBodyOfInboundPort(interfaceToImplementClass,method));	
 			System.out.println(method);
 		}
 		
@@ -197,8 +202,6 @@ public abstract class ClassCreator {
 	
 	private static CtConstructor copyConstructor(Constructor ctr, CtClass test) throws Exception {
 		
-		//TODO : Exceptions
-		
 		ClassPool pool = ClassPool.getDefault();
 		
 		 Class[] parametersOfCtr = ctr.getParameterTypes();
@@ -211,8 +214,19 @@ public abstract class ClassCreator {
 			 parameters[i]=pool.get(parameterClass.getCanonicalName());
 			 i++;
 		 }
+		 
+		 Class[] exceptionsToThrow = ctr.getExceptionTypes();
+		 
+		 CtClass[] exceptions = new CtClass[exceptionsToThrow.length];
+		 
+		 i = 0;
+		 for(Class clazzException:exceptionsToThrow)
+		 {
+			 exceptions[i]=pool.get(clazzException.getCanonicalName());
+			 i++;
+		 }
 		
-		CtConstructor constructor = CtNewConstructor.make(parameters, null, test);
+		CtConstructor constructor = CtNewConstructor.make(parameters, exceptions, test);
 		
 		System.out.println(constructor);
 		
@@ -265,9 +279,12 @@ public abstract class ClassCreator {
 	
 	private static String createBodyOfConnectorOrOutboundPort(String interfaceName,String variableName,CtMethod method) throws NotFoundException
 	{
-		//TODO : "return" if not void
+		String s = "";
 		
-		String s = String.format("( ( %s ) %s).%s(",interfaceName,variableName,method.getName());
+		if(method.getReturnType().getSimpleName()!="void")
+			s+="return ";
+		
+		s += String.format("( ( %s ) %s).%s(",interfaceName,variableName,method.getName());
 		
 		 for(int i=1;i<=method.getParameterTypes().length;i++)
 		 {
@@ -292,21 +309,49 @@ public abstract class ClassCreator {
 		return createBodyOfConnectorOrOutboundPort(interfaceName,"this.connector",method);
 	}
 	
-	private static String createBodyOfInboundPort(String interfaceName,CtMethod method) throws NotFoundException
+	private static void implementComponentService(CtClass clazz) throws NotFoundException
 	{
+		 ClassPool pool = ClassPool.getDefault();
+		
+		//TODO : gérer autre type que Void
+		 CtMethod method = new CtMethod(pool.get("void"),"call",null, clazz);
+	}
+	
+	private static String createBodyOfInboundPort(Class<?> interfaceToImplementClass,CtMethod method) throws Exception
+	{
+		ClassPool pool = ClassPool.getDefault();
+		
 		StringBuilder builder = new StringBuilder();
+		
+		builder.append("{");
+		
+		if(method.getReturnType().getSimpleName()!="void")
+			builder.append("return ");
 		
 		String returnType = getWrapperClass(method.getReturnType());
 		
-		builder.append(String.format("{final %s object = ( %s ) this.owner;",interfaceName,interfaceName));
-		builder.append("this.owner.handleRequestSync(");
-		builder.append(String.format("new fr.upmc.components.ComponentI.ComponentService<%s>() {",returnType));
-		builder.append(String.format("public %s call() throws Exception{",returnType));
+		CtClass anonymousClass = createClass("ComponentAnonymousDynamic", ComponentI.ComponentService.class,null);
+		CtClass[] parameters = new CtClass[1];
 		
 		
-		builder.append(String.format("return %s ;","null")); //TODO : gérer autre type
-		builder.append("}");
-		builder.append("}) ;}");
+		//TODO : à tester en multi-JVM
+		CtClass interfaceToImplement = pool.get(interfaceToImplementClass.getCanonicalName());
+		
+		parameters[0] = interfaceToImplement;
+		
+		anonymousClass.addField(new CtField(interfaceToImplement, "operator", anonymousClass));
+		
+		CtConstructor constructor = CtNewConstructor.make(parameters,null,anonymousClass);
+		constructor.setBody("this.operator=$1;");
+		
+		anonymousClass.addConstructor(constructor);
+		
+		implementComponentService(anonymousClass);
+		
+		Class<?> instanciatedClass = pool.toClass(anonymousClass);
+		
+		builder.append(String.format("final %s aaa = new %s(( %s ) this.owner);",instanciatedClass.getCanonicalName(),instanciatedClass.getCanonicalName(),interfaceToImplementClass.getCanonicalName()));
+		builder.append("this.owner.handleRequestAsync(aaa);}");
 		
 		System.out.println(builder.toString());
 		
