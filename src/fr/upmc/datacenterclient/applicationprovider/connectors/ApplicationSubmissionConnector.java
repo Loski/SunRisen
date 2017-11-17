@@ -2,7 +2,13 @@ package fr.upmc.datacenterclient.applicationprovider.connectors;
 
 import fr.upmc.components.connectors.AbstractConnector;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationSubmissionI;
-
+/**
+ *   * The class <code>ApplicationSubmissionConnector</code> implements the
+ * connector between outbound and inboud ports implementing the interface
+ * <code>ApplicationSubmissionI</code>.
+ * @author Maxime Lavaste
+ *
+ */
 public class ApplicationSubmissionConnector extends	AbstractConnector
 implements	ApplicationSubmissionI {
 

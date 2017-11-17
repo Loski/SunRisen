@@ -11,6 +11,7 @@ import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.components.exceptions.ComponentStartException;
 import fr.upmc.components.interfaces.DataRequiredI;
 import fr.upmc.components.ports.PortI;
+import fr.upmc.components.pre.reflection.ports.ReflectionOutboundPort;
 import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagementConnector;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
@@ -45,8 +46,8 @@ import fr.upmc.datacenter.interfaces.ControlledDataRequiredI;
  * 
  * The Admission Controller receive new Request Generator through the <code>ApplicationSubmissionI</code> Interface.
  * When receiving a new request generator, it check if he has enough Virtual Machine at disposition and create
- * a Request Dispatcher linked to the request generator and a Controller linked to the request Dispatcher.
- * He then bind the Virtual Machine to the request Dispatcher.
+ * a Request Dispatcher linked to the request generator.
+ * He then bind the Virtual Machine to the request Dispatcher via a RequestSubmissionIConnector.
  * 
  * 
  * @author	Maxime LAVASTE Lo�c LAFONTAINE
@@ -62,7 +63,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	private static final String RequestNotificationOutboundPortURI = "rnop";
 	private static final String RequestDispatcherManagementOutboundPortURI = "rdmop";
 
-	
+	 
 	private static final int NB_CORES = 2;
 
 	protected fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort ComputerServicesOutboundPort;

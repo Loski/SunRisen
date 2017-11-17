@@ -18,7 +18,13 @@ import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
 import fr.upmc.datacenterclient.requestgenerator.connectors.RequestGeneratorManagementConnector;
 import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementInboundPort;
 import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementOutboundPort;
-
+/**
+ * Application provider is responsible to create and connect a requestGenerator to a requestDispatcher.
+ * He needs to submit an application to the admissionController and receive the requestDispatcher create by the admissionController.
+ * 
+ * @author maxime Lavaste
+ *
+ */
 public class ApplicationProvider extends AbstractComponent implements ApplicationProviderManagementI{
 
 	
@@ -65,7 +71,14 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
     private static int indice_rdso_uri = 1;
 
 
-
+    /**
+     * Create an application
+     * @param apURI URI of the app
+     * @param applicationSubmissionInboundPortURI Port to submit application to the administration controller.
+     * @param applicationSubmissionOutboundPortURI URI port of the administration controller. Receive app from the application Provider.
+     * @param applicationManagementInboundPort URI port to receive orders from the main class.
+     * @throws Exception
+     */
 	public ApplicationProvider(String apURI,  String applicationSubmissionInboundPortURI, String applicationSubmissionOutboundPortURI, String applicationManagementInboundPort)  throws Exception{
 		super(1, 1);
         
@@ -94,6 +107,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
         this.asop.doConnection(applicationSubmissionInboundPortURI, ApplicationSubmissionConnector.class.getCanonicalName());        
 	}
 	
+
 	@Override
 	public void createAndSendApplication() throws Exception {
 		System.out.println("Send request ...");

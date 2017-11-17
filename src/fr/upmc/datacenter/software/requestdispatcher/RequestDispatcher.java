@@ -1,6 +1,7 @@
 package fr.upmc.datacenter.software.requestdispatcher;
 
 import java.util.ArrayList;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -22,6 +23,12 @@ import fr.upmc.datacenter.software.ports.RequestSubmissionInboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementInboundPort;
+
+/**
+ * The class <code>RequestDispatcher</code> is a component receiving request submissions from
+ * a given application, and dispatching these requests to the different virtual machines
+ * allocated for this application by the admissionController.
+ * */
 
 public class RequestDispatcher 
 extends		AbstractComponent
@@ -52,8 +59,17 @@ implements
 	/** Inbound port offering the management interface.						*/
 	protected RequestDispatcherManagementInboundPort requestDispatcherManagementInboundPort ;
 	
+	/**
+	 * Construct a <code>RequestDispatcher</code>.
+	 * @param requestDispatcherURI the request dispatcher URI.
+	 * @param requestDispatcherManagementInboundPortURI the request dispatcher management inbound port URI.
+	 * @param requestSubmissionInboundPortURI the request submission inbound port URI.
+	 * @param requestNotificationInboundPortURI the request notification inbound port URI.
+	 * @param requestNotificationOutboundPortURI the request notification outbound port URI.
+	 * @throws Exception
+	 */
 	public RequestDispatcher(
-			String uri, 
+			String requestDispatcherURI, 
 			String requestDispatcherManagementInboundPortURI, 
 			String requestSubmissionInboundPortURI, 
 			String requestNotificationOutboundPortURI, 
@@ -65,14 +81,14 @@ implements
 				super(1,1);
 		
 				// Preconditions
-				assert	uri != null ;
+				assert	requestDispatcherURI != null ;
 				assert	requestDispatcherManagementInboundPortURI != null ;
 				assert	requestSubmissionInboundPortURI != null ;
 				assert	requestNotificationOutboundPortURI != null ;
 				assert	requestNotificationInboundPortURI != null;
 				//assert	requestSubmissionOutboundPortList != null;
 				
-				this.rdURI=uri;
+				this.rdURI=requestDispatcherURI;
 				
 				// Interfaces and ports
 
