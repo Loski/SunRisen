@@ -188,9 +188,10 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 			
 			
 			String applicationVM[] = new String[5];
-			rop.doConnection(dispatcherURI[0], ReflectionConnector.class.getCanonicalName());
-			for(int i=0;i<1;i++)
+			for(int i=0;i<nbVM;i++)
 			{
+				rop.doConnection(dispatcherURI[0], ReflectionConnector.class.getCanonicalName());
+
 				// --------------------------------------------------------------------
 				// Create an Application VM component
 				// --------------------------------------------------------------------
@@ -216,8 +217,14 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 				avmPort.doConnection(applicationVM[1],
 							ApplicationVMManagementConnector.class.getCanonicalName()) ;
 				this.avmOutPort.add(avmPort);
+				
 				avmPort.allocateCores(allocatedCore);
-				rdmop.connectVirtualMachine(applicationVM[0], applicationVM[2], dispatcherURI[5]);
+				
+				String RequestSubmissionOutboundPortURIDyna = RequestSubmissionOutboundPortURI + "_"+ appURI+ "_" +this.avmOutPort.size();
+				rdmop.connectVirtualMachine(applicationVM[0], applicationVM[2], RequestSubmissionOutboundPortURIDyna);
+				
+				
+				//rdmop.connectVirtualMachine(applicationVM[0], applicationVM[2], dispatcherURI[5]);
 				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], dispatcherURI[3]);		
 				
 
@@ -227,7 +234,7 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 								
 			
 				rop.doPortConnection(
-						dispatcherURI[5],
+						RequestSubmissionOutboundPortURIDyna,
 						applicationVM[2],
 						RequestSubmissionConnector.class.getCanonicalName()
 				);
