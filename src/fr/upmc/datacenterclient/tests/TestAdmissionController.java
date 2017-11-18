@@ -152,7 +152,7 @@ extends		AbstractCVM
 	protected ApplicationVMManagementOutboundPort	avmPort ;
 
 
-	protected AdmissionControllerDynamic ac;
+	protected AdmissionController ac;
 	protected ApplicationProvider ap;
 	protected ApplicationProvider ap2;
 	private String applicationSubmissionInboundPortURI = "asip";
@@ -232,7 +232,7 @@ extends		AbstractCVM
 		
 		//TODO
 	//	this.avmPort.connectWithRequestSubmissioner("rd0", RequestNotificationInboundPortDispatcherURI);
-		this.ac = new AdmissionControllerDynamic("AdmCtrl", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI, ComputerServicesInboundPortURI, computerURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI);
+		this.ac = new AdmissionController("AdmCtrl", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI, ComputerServicesInboundPortURI, computerURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI);
 		
 		this.ap = new ApplicationProvider("moteurWalidien", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI, applicationManagementInboundPort);
 				// complete the deployment at the component virtual machine level.

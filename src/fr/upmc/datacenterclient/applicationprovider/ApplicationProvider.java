@@ -71,7 +71,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
     
     
     private static int indice_rd_uri = 0;
-    private static int indice_rdso_uri = 2;
+    private static int indice_rdso_uri = 1;
 
 
     /**

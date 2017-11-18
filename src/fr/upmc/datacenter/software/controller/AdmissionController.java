@@ -226,8 +226,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 											ApplicationVMManagementOutboundPortURI,
 											this) ;
 				avmPort.publishPort() ;
-				avmPort.
-						doConnection(
+				avmPort.doConnection(
 							ApplicationVMManagementInboundPortURI,
 							ApplicationVMManagementConnector.class.getCanonicalName()) ;
 				
@@ -235,7 +234,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 				
 				avmPort.allocateCores(allocatedCore);
 				
-			//	rdmop.connectVirtualMachine("vm"+this.avmOutPort.size(),RequestSubmissionInboundPortVMURI);
+				rdmop.connectVirtualMachine("vm"+this.avmOutPort.size(),RequestSubmissionInboundPortVMURI, RequestSubmissionOutboundPortURI+"-"+i);
 				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], RequestNotificationInboundPortURI+ rdmopList.size());
 			}
 			
