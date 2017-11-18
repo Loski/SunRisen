@@ -291,7 +291,7 @@ extends		AbstractCVM
 	public static void	main(String[] args)
 	{
 		// Uncomment next line to execute components in debug mode.
-		// AbstractCVM.toggleDebugMode() ;
+		 AbstractCVM.toggleDebugMode() ;
 		try {
 			final TestAdmissionController trd = new TestAdmissionController() ;
 			// Deploy the components

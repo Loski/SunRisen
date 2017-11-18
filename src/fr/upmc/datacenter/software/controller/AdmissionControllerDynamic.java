@@ -51,124 +51,33 @@ import fr.upmc.datacenter.interfaces.ControlledDataRequiredI;
  * 
  * @author	Maxime LAVASTE Lo�c LAFONTAINE
  */
-public class AdmissionControllerDynamic extends AbstractComponent implements ApplicationSubmissionI{
+public class AdmissionControllerDynamic extends AdmissionController implements ApplicationSubmissionI{
 
-	protected String acURI;
-
-
-	private static final String RequestDispatcherManagementInboundPortURI = "rdmi";
-	private static final String RequestNotificationInboundPortURI = "rnip";
-	private static final String RequestSubmissionInboundPortURI = "rsip";
-	private static final String RequestNotificationOutboundPortURI = "rnop";
-	private static final String RequestDispatcherManagementOutboundPortURI = "rdmop";
-
-	
-	private static final int NB_CORES = 2;
-
-	protected fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort ComputerServicesOutboundPort;
-	private AdmissionControllerManagementInboundPort acmip;
-	protected ApplicationSubmissionInboundPort asip;
-	
-	
-	protected List<ApplicationVMManagementOutboundPort> avmOutPort;
-
-	
-	protected ComputerServicesOutboundPort csPort;
-	protected ComputerStaticStateDataOutboundPort cssdop;
-	protected ComputerDynamicStateDataOutboundPort cdsdop;
-	
-	
-
-	 // Map between RequestDispatcher URIs and the outbound ports to call them.
-	protected Map<String, RequestDispatcherManagementOutboundPort> rdmopList;
-	
-	// Map between RequestSubmissionInboundPort URIs and the inboundPort
-	protected Map<String, RequestSubmissionInboundPort> rsipList;
-	
-	
-	// Map between RequestSubmissionInboundPort URIs and the inboundPort
-	protected Map<String, RequestSubmissionOutboundPort> rsopList;
-	
-	
-	protected String computerURI;
-	
-	ComputerServicesOutboundPort csop;
-	
 	public AdmissionControllerDynamic(String acURI, String applicationSubmissionInboundPortURI,
-			String AdmissionControllerManagementInboundPortURI,
-			String computerServiceOutboundPortURI, String ComputerServicesInboundPortURI,
-			String computerURI,
-			int nbAvailableCores, String computerStaticStateDataOutboundPortURI) throws Exception {
-
+			String AdmissionControllerManagementInboundPortURI, String computerServiceOutboundPortURI,
+			String ComputerServicesInboundPortURI, String computerURI, int nbAvailableCores,
+			String computerStaticStateDataOutboundPortURI) throws Exception {
+		super(acURI, applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI,
+				computerServiceOutboundPortURI, ComputerServicesInboundPortURI, computerURI, nbAvailableCores,
+				computerStaticStateDataOutboundPortURI);
 		
-		super(2, 2);
-		this.toggleLogging();
-		this.toggleTracing();
-		this.acURI = acURI;
-		this.addOfferedInterface(ApplicationSubmissionI.class);
-		this.asip = new ApplicationSubmissionInboundPort(applicationSubmissionInboundPortURI, this);
-		this.addPort(asip);
-		this.asip.publishPort();
-
-		this.addOfferedInterface(AdmissionControllerManagementI.class);
-		this.acmip = new AdmissionControllerManagementInboundPort(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementI.class, this);
-		this.addPort(acmip);
-		this.acmip.publishPort();
- 
-		this.csop = new ComputerServicesOutboundPort(computerServiceOutboundPortURI, this);
-		this.addPort(csop);
-		this.csop.localPublishPort();
-		
-		this.csop.doConnection(
-				ComputerServicesInboundPortURI,
-				ComputerServicesConnector.class.getCanonicalName()) ;
-		
-		
-		this.computerURI = computerURI;
-		
-		this.cssdop = new ComputerStaticStateDataOutboundPort(computerStaticStateDataOutboundPortURI, this, computerURI);
-		this.addPort(this.cssdop);
-		this.cssdop.publishPort();
-		
-		
-		this.avmOutPort = new LinkedList<ApplicationVMManagementOutboundPort>();
-		
-
-		// this.addOfferedInterface(ComputerStaticStateDataI.class);
-		// or :
-	/*	this.addOfferedInterface(DataRequiredI.PushI.class);
-		this.addRequiredInterface(DataRequiredI.PullI.class);
-		
-		*
-		*		this.addRequiredInterface(ControlledDataRequiredI.ControlledPullI.class);
-		this.cdsdop = new ComputerDynamicStateDataOutboundPort(computerDynamicStateDataOutboundPortURI, this, computerURI);
-		this.addPort(this.cdsdop);
-		this.cdsdop.publishPort();
-		*/
-		
-		this.rdmopList = new HashMap<String, RequestDispatcherManagementOutboundPort>();
-		
-		//Pour l'allocation de core.
-		this.addRequiredInterface(ComputerServicesI.class);
 	}
 
 	@Override
 	public void start() throws ComponentStartException {
+		// TODO Auto-generated method stub
 		super.start();
 	}
 
-	/**
-	 * @see fr.upmc.datacenter.admissioncontroller.interfaces.ApplicationSubmissionI#submitApplication(java.lang.Integer, java.lang.String, java.lang.String, java.lang.String)
-	 */
 	@Override
 	public String[] submitApplication(String appURI, int nbVM) throws Exception {
+		
 		
 		this.logMessage("New Application received.\n Waiting for evaluation.");
 		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
 		String dispatcherURI[] = new String[4];
 
 		if(allocatedCore!=null && allocatedCore.length != 0) {
-			
 			RequestDispatcher rd = new RequestDispatcher("RD_" + rdmopList.size(), RequestDispatcherManagementInboundPortURI+ rdmopList.size(), RequestSubmissionInboundPortURI+ rdmopList.size(),
 				    RequestNotificationOutboundPortURI+ rdmopList.size(), RequestNotificationInboundPortURI+ rdmopList.size()) ;
 			
@@ -204,7 +113,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 					    RequestSubmissionInboundPortVMURI,
 					    RequestNotificationOutboundPortVMURI) ;
 				//this.addDeployedComponent(vm) ;
-
+	
 				vm.toggleTracing() ;
 				vm.toggleLogging() ;
 				
@@ -230,39 +139,32 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 			
 			return dispatcherURI;
 			
-		}else {
-			this.logMessage("Failed to allocates core for a new application.");
-			return null;
-		}
+	}else {
+		this.logMessage("Failed to allocates core for a new application.");
+		return null;
+	}
 	}
 
 	@Override
 	public void submitGenerator(String RequestSubmissionInboundPort, String appUri, String rgURI) throws Exception {
-		this.rdmopList.get(appUri).connectWithRequestGenerator(rgURI, RequestSubmissionInboundPort);	
+		// TODO Auto-generated method stub
+		super.submitGenerator(RequestSubmissionInboundPort, appUri, rgURI);
 	}
 
-	
-
-	
 	@Override
 	public void shutdown() throws ComponentShutdownException {
-		
-		try {			
-			if (this.csop.connected()) {
-				this.csop.doDisconnection();
-			}
-			if (this.cssdop.connected()) {
-				this.cssdop.doDisconnection();
-			}
-			if (this.cdsdop.connected()) {
-				this.cdsdop.doDisconnection();
-			}
-		} catch (Exception e) {
-			throw new ComponentShutdownException("Port disconnection error", e);
-		}
-
+		// TODO Auto-generated method stub
 		super.shutdown();
 	}
+
+	@Override
+	public String[] submitApplication(String appURI, int nbVM, Class interfaceToImplement) throws Exception {
+		// TODO Auto-generated method stub
+		return super.submitApplication(appURI, nbVM, interfaceToImplement);
+	}
+	
+	
+	
 
 
 }

@@ -59,14 +59,14 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	protected String acURI;
 
 
-	private static final String RequestDispatcherManagementInboundPortURI = "rdmi";
-	private static final String RequestNotificationInboundPortURI = "rnip";
-	private static final String RequestSubmissionInboundPortURI = "rsip";
-	private static final String RequestNotificationOutboundPortURI = "rnop";
-	private static final String RequestDispatcherManagementOutboundPortURI = "rdmop";
+	protected static final String RequestDispatcherManagementInboundPortURI = "rdmi";
+	protected static final String RequestNotificationInboundPortURI = "rnip";
+	protected static final String RequestSubmissionInboundPortURI = "rsip";
+	protected static final String RequestNotificationOutboundPortURI = "rnop";
+	protected static final String RequestDispatcherManagementOutboundPortURI = "rdmop";
 
 	 
-	private static final int NB_CORES = 2;
+	protected static final int NB_CORES = 2;
 
 	protected fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort ComputerServicesOutboundPort;
 	private AdmissionControllerManagementInboundPort acmip;
