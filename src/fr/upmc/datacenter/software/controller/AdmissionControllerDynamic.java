@@ -179,7 +179,7 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 				dispatcherURI[1],
 				RequestDispatcherManagementConnector.class.getCanonicalName());
 			
-			String applicationVM[] = new String[4];
+			String applicationVM[] = new String[5];
 
 			for(int i=0;i<nbVM;i++)
 			{
@@ -202,19 +202,17 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 				});					
 				// Create a mock up port to manage the AVM component (allocate cores).
 				ApplicationVMManagementOutboundPort avmPort = new ApplicationVMManagementOutboundPort(
-						applicationVM[4], vm) ;
+						applicationVM[4], this) ;
 				
 				avmPort.publishPort() ;
-				avmPort.
-						doConnection(
-							ApplicationVMManagementInboundPortURI,
+				avmPort.doConnection(applicationVM[0],
 							ApplicationVMManagementConnector.class.getCanonicalName()) ;
 				
 				this.avmOutPort.add(avmPort);
 				
 				avmPort.allocateCores(allocatedCore);
 				
-				rdmop.connectVirtualMachine("vm"+this.avmOutPort.size(),RequestSubmissionInboundPortVMURI);
+				rdmop.connectVirtualMachine("vm"+this.avmOutPort.size(),applicationVM[2]);
 				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], RequestNotificationInboundPortURI+ rdmopList.size());
 			}
 			
