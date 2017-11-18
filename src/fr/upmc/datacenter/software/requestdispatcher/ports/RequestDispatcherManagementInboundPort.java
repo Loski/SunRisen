@@ -52,7 +52,7 @@ implements	RequestDispatcherManagementI
 	}
 
 	@Override
-	public void disconnectVirtualMachine() throws Exception {
+	public void disconnectVirtualMachine(String vmURI) throws Exception {
 		
 		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
 		
@@ -60,7 +60,7 @@ implements	RequestDispatcherManagementI
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
-						rdm.disconnectVirtualMachine();
+						rdm.disconnectVirtualMachine(vmURI);
 						return null;
 					}
 				}) ;
