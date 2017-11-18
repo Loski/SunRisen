@@ -19,6 +19,7 @@ import fr.upmc.components.pre.reflection.ports.ReflectionOutboundPort;
 import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagementConnector;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
+import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenter.software.controller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.datacenter.software.controller.ports.AdmissionControllerManagementInboundPort;
@@ -187,8 +188,8 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 			
 			
 			String applicationVM[] = new String[5];
-
-			for(int i=0;i<nbVM;i++)
+			rop.doConnection(dispatcherURI[0], ReflectionConnector.class.getCanonicalName());
+			for(int i=0;i<1;i++)
 			{
 				// --------------------------------------------------------------------
 				// Create an Application VM component
@@ -219,9 +220,7 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 				rdmop.connectVirtualMachine(applicationVM[0], applicationVM[2], dispatcherURI[5]);
 				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], dispatcherURI[3]);		
 				
-				System.out.println("walid");
-				rop.doConnection(dispatcherURI[0], ReflectionConnector.class.getCanonicalName());
-				System.out.println("walid2");
+
 
 				rop.toggleLogging();
 				rop.toggleTracing();
@@ -235,18 +234,20 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 				
 				rop.doDisconnection();														
 				// --------------------------------------------------------------------
-			//	rop.doConnection("vm0", ReflectionConnector.class.getCanonicalName());
+				System.out.println("walid");
+				rop.doConnection(applicationVM[0], ReflectionConnector.class.getCanonicalName());
 
-/*				RequestDispatcher.DEBUG_LEVEL = 1;
 				rop.toggleTracing();
 				rop.toggleLogging();
 				
 				rop.doPortConnection(
-						AVM_REQUEST_NOTIFICATION_OUT_PORT_URI,
-						RD_REQUEST_NOTIFICATION_IN_PORT_URI,
-						Javassist.getRequestNotificationConnectorClassName());
-				
-				rop.doDisconnection();*/
+						applicationVM[3],
+						dispatcherURI[3],
+						RequestNotificationConnector.class.getCanonicalName()
+				);
+				System.out.println("walid2");
+
+				rop.doDisconnection();
 			}
 			
 			rdmopList.put(appURI, rdmop);
