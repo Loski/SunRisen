@@ -1,5 +1,7 @@
 package fr.upmc.datacenter.software.controller;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -7,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import fr.upmc.components.AbstractComponent;
+import fr.upmc.components.ComponentI;
 import fr.upmc.components.cvm.pre.dcc.ports.DynamicComponentCreationOutboundPort;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.components.exceptions.ComponentStartException;
@@ -283,14 +286,21 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 
 		if(allocatedCore!=null && allocatedCore.length != 0) {
 						
-			Class dispa = RequestDispatcherCreator.createRequestDispatcher("DynamicDispatcher_2"+rdmopList.size(),RequestDispatcher.class, interfaceToImplement);
+			Class dispa = RequestDispatcherCreator.createRequestDispatcher("DynamicDispatcher"+rdmopList.size(),RequestDispatcher.class, interfaceToImplement);
 			interface_dispatcher_map.put(interfaceToImplement, dispa);
 			
-			RequestDispatcher rd = new RequestDispatcher("RD_" + rdmopList.size(), RequestDispatcherManagementInboundPortURI+ rdmopList.size(), RequestSubmissionInboundPortURI+ rdmopList.size(),
-				    RequestNotificationOutboundPortURI+ rdmopList.size(), RequestNotificationInboundPortURI+ rdmopList.size()) ;
+			Class[] type = {String.class,String.class,String.class,String.class,String.class};
+			Constructor cons = dispa.getConstructor(type);
 			
-			rd.toggleLogging();
-			rd.toggleTracing();
+			Object[] obj = {"RD_" + rdmopList.size(), RequestDispatcherManagementInboundPortURI+ rdmopList.size(), RequestSubmissionInboundPortURI+ rdmopList.size(),
+				    RequestNotificationOutboundPortURI+ rdmopList.size(), RequestNotificationInboundPortURI+ rdmopList.size()} ;
+			
+			ComponentI rd = (ComponentI) cons.newInstance(obj);
+			
+			rd.getClass().getMethod("toggleLogging").invoke(rd);
+			rd.getClass().getMethod("toggleTracing").invoke(rd);
+			
+			System.out.println("MY CONNECTOR : "+rd.getClass().getMethod("getConnectorClassName").invoke(rd));
 			
 			RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
 					RequestDispatcherManagementOutboundPortURI + rdmopList.size(),

@@ -214,15 +214,26 @@ implements
 		this.doPortConnection(
 				port.getPortURI(),
 				requestSubmissionInboundPortURI,
-				RequestSubmissionConnector.class.getCanonicalName());
+				getConnectorClassName());
 		
 		System.out.println(String.format("[RequestSubmissionConnector] Connecting %s with %s using %s -> %s", this.rdURI,vmURI,port.getPortURI(),requestSubmissionInboundPortURI));
 
 	}
 
 	@Override
-	public void disconnectVirtualMachine() throws Exception {
+	public void disconnectVirtualMachine(String vmURI) throws Exception {
 		
+		RequestSubmissionOutboundPort port = this.requestSubmissionOutboundPortList.get(vmURI);
+		
+		if(port!=null && port.connected())
+		{
+			port.doDisconnection();
+		}
+	}
+	
+	public String getConnectorClassName()
+	{
+		return RequestSubmissionConnector.class.getCanonicalName();
 	}
 
 	@Override
@@ -231,7 +242,8 @@ implements
 		this.doPortConnection(
 				this.requestNotificationOutboundPort.getPortURI(),
 				requestNotificationInboundPortURI,
-				RequestNotificationConnector.class.getCanonicalName());
+				RequestNotificationConnector.class.getCanonicalName()
+				);
 		
 		System.out.println(String.format("[RequestNotificationConnector] Connecting %s with %s using %s -> %s", this.rdURI,rgURI,this.requestNotificationOutboundPort.getPortURI(),requestNotificationInboundPortURI));
 	}

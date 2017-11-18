@@ -17,8 +17,8 @@ implements	RequestDispatcherManagementI
 	}
 
 	@Override
-	public void disconnectVirtualMachine() throws Exception {
-		( ( RequestDispatcherManagementI ) this.offering ).disconnectVirtualMachine();
+	public void disconnectVirtualMachine(String vmURI) throws Exception {
+		( ( RequestDispatcherManagementI ) this.offering ).disconnectVirtualMachine(vmURI);
 		
 	}
 
@@ -31,6 +31,6 @@ implements	RequestDispatcherManagementI
 	@Override
 	public void disconnectRequestGenerator() throws Exception {
 		// TODO Auto-generated method stub
-		
+		( ( RequestDispatcherManagementI ) this.offering ).disconnectRequestGenerator();
 	}
 }
