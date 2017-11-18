@@ -20,6 +20,8 @@ public interface ApplicationSubmissionI {
 	 */
 	String[] submitApplication(String appURI, int nbVM) throws Exception;
 	
+	String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception;
+	
 	/**
 	 * Submit a generator to the administration controller.
 	 * submitApplication need to be called before. 

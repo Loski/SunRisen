@@ -1,4 +1,4 @@
-package fr.upmc.components;
+package fr.upmc.javassist;
 
 // Copyright Jacques Malenfant, Univ. Pierre et Marie Curie.
 // 
@@ -41,6 +41,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import fr.upmc.components.ComponentStateI;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.components.exceptions.ComponentStartException;
 import fr.upmc.components.pre.plugins.PluginI;

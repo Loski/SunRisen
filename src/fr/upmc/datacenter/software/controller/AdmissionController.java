@@ -1,6 +1,7 @@
 package fr.upmc.datacenter.software.controller;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationSubmis
 import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationSubmissionInboundPort;
 import fr.upmc.datacenterclient.requestgenerator.connectors.RequestGeneratorManagementConnector;
 import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementOutboundPort;
+import fr.upmc.javassist.RequestDispatcherCreator;
 import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
 import fr.upmc.datacenter.hardware.computers.connectors.ComputerServicesConnector;
 import fr.upmc.datacenter.hardware.computers.interfaces.ComputerServicesI;
@@ -95,6 +97,8 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	
 	ComputerServicesOutboundPort csop;
 	
+	protected LinkedHashMap<Class,Class> interface_dispatcher_map;
+	
 	public AdmissionController(String acURI, String applicationSubmissionInboundPortURI,
 			String AdmissionControllerManagementInboundPortURI,
 			String computerServiceOutboundPortURI, String ComputerServicesInboundPortURI,
@@ -151,6 +155,8 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 		
 		//Pour l'allocation de core.
 		this.addRequiredInterface(ComputerServicesI.class);
+		
+		this.interface_dispatcher_map = new LinkedHashMap<>();
 	}
 
 	@Override
@@ -263,6 +269,85 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 		}
 
 		super.shutdown();
+	}
+	
+
+	public String[] submitApplication(String appURI, int nbVM,Class interfaceToImplement) throws Exception {
+		
+		this.logMessage("New Application received.\n Waiting for evaluation.");
+		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
+		String dispatcherURI[] = new String[4];
+
+		if(allocatedCore!=null && allocatedCore.length != 0) {
+						
+			Class dispa = RequestDispatcherCreator.createRequestDispatcher("DynamicDispatcher_2"+rdmopList.size(),RequestDispatcher.class, interfaceToImplement);
+			interface_dispatcher_map.put(interfaceToImplement, dispa);
+			
+			RequestDispatcher rd = new RequestDispatcher("RD_" + rdmopList.size(), RequestDispatcherManagementInboundPortURI+ rdmopList.size(), RequestSubmissionInboundPortURI+ rdmopList.size(),
+				    RequestNotificationOutboundPortURI+ rdmopList.size(), RequestNotificationInboundPortURI+ rdmopList.size()) ;
+			
+			rd.toggleLogging();
+			rd.toggleTracing();
+			
+			RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
+					RequestDispatcherManagementOutboundPortURI + rdmopList.size(),
+					rd) ;
+			rdmop.publishPort();
+			
+			rdmop.doConnection(
+				RequestDispatcherManagementInboundPortURI + rdmopList.size(),
+				RequestDispatcherManagementConnector.class.getCanonicalName());
+			
+			dispatcherURI[0] = "RD_" + rdmopList.size();
+			dispatcherURI[1] = RequestSubmissionInboundPortURI+ rdmopList.size();
+			
+			for(int i=0;i<nbVM;i++)
+			{
+				// --------------------------------------------------------------------
+				// Create an Application VM component
+				// --------------------------------------------------------------------
+				
+				
+				String ApplicationVMManagementInboundPortURI = "avmibp-"+this.avmOutPort.size();
+				String RequestSubmissionInboundPortVMURI = "rsibpVM-"+this.avmOutPort.size();
+				String RequestNotificationOutboundPortVMURI = "rnobpVM-"+this.avmOutPort.size();
+				String ApplicationVMManagementOutboundPortURI = "avmobp-"+this.avmOutPort.size();
+				
+				ApplicationVM vm = new ApplicationVM("vm"+this.avmOutPort.size(),	// application vm component URI
+						ApplicationVMManagementInboundPortURI,
+					    RequestSubmissionInboundPortVMURI,
+					    RequestNotificationOutboundPortVMURI) ;
+				//this.addDeployedComponent(vm) ;
+
+				vm.toggleTracing() ;
+				vm.toggleLogging() ;
+				
+				// Create a mock up port to manage the AVM component (allocate cores).
+				ApplicationVMManagementOutboundPort avmPort = new ApplicationVMManagementOutboundPort(
+											ApplicationVMManagementOutboundPortURI,
+											vm) ;
+				avmPort.publishPort() ;
+				avmPort.
+						doConnection(
+							ApplicationVMManagementInboundPortURI,
+							ApplicationVMManagementConnector.class.getCanonicalName()) ;
+				
+				this.avmOutPort.add(avmPort);
+				
+				avmPort.allocateCores(allocatedCore);
+				
+				rdmop.connectVirtualMachine("vm"+this.avmOutPort.size(),RequestSubmissionInboundPortVMURI);
+				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], RequestNotificationInboundPortURI+ rdmopList.size());
+			}
+			
+			rdmopList.put(appURI, rdmop);
+			
+			return dispatcherURI;
+			
+		}else {
+			this.logMessage("Failed to allocates core for a new application.");
+			return null;
+		}
 	}
 
 

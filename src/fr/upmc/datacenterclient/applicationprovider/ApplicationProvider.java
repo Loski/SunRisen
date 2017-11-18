@@ -4,6 +4,7 @@ import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.cvm.AbstractCVM;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
+import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 import fr.upmc.datacenter.software.ports.RequestNotificationInboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionInboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
@@ -176,6 +177,43 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 			throw new ComponentShutdownException("Port disconnection error", e);
 		}
 		super.shutdown();
+	}
+
+
+	public void createAndSendApplication(Class submissionInterface) throws Exception{
+
+		assert submissionInterface.isInterface();
+		System.out.println("Send request ...");
+		rdUri = this.asop.submitApplication(apURI,  2,submissionInterface);
+		System.out.println("Finish ...");
+
+        if ( rdUri != null ) {
+            // Creation dynamique du request generator
+            System.out.println( "creating RequestGenerator" );
+            rnipUri = rdUri[0] + rnipUri; 
+            RequestGenerator rg = new RequestGenerator( rgUri , 500.0 , 6000000000L , rgmipUri , rsopUri , rnipUri );
+            AbstractCVM.theCVM.addDeployedComponent( rg );
+            
+    		rg.doPortConnection(
+    				rsopUri,
+    				rdUri[indice_rdso_uri],
+    				RequestSubmissionConnector.class.getCanonicalName());
+ 
+            rg.toggleTracing();
+            rg.toggleLogging();
+
+            rgmop = new RequestGeneratorManagementOutboundPort( rgmopUri , this );
+            rgmop.publishPort();
+            rgmop.doConnection( rgmipUri , RequestGeneratorManagementConnector.class.getCanonicalName() );
+               
+            this.asop.submitGenerator(rnipUri, apURI, rgUri);
+                     
+            rg.start();
+            startApplication();
+        }
+        else
+            System.err.println("Pas de resources disponibles" );
+		
 	}
 
 

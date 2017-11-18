@@ -22,4 +22,9 @@ implements	ApplicationSubmissionI {
 	public void submitGenerator(String requestNotificationInboundPort, String appURI, String rgURI) throws Exception {
 		( ( ApplicationSubmissionI ) this.offering ).submitGenerator(requestNotificationInboundPort, appURI,  rgURI);	
 	}
+
+	@Override
+	public String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
+		return ( ( ApplicationSubmissionI ) this.offering ).submitApplication(appURI,nbVM,submissionInterface);
+	}
 }

@@ -20,4 +20,9 @@ public class ApplicationSubmissionOutboundPort extends AbstractOutboundPort impl
 	public void submitGenerator(String requestNotificationInboundPort, String appURI, String rgURI) throws Exception {
 	      ( ( ApplicationSubmissionI ) this.connector ).submitGenerator(requestNotificationInboundPort, appURI, rgURI );
 	}
+
+    @Override
+    public String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
+      return  ( ( ApplicationSubmissionI ) this.connector ).submitApplication(appURI, nbVM, submissionInterface);
+    }
 }

@@ -279,7 +279,7 @@ extends		AbstractCVM
 	 */
 	public void			testScenario() throws Exception
 	{
-		this.ap.createAndSendApplication();
+		this.ap.createAndSendApplication(RequestSubmissionI.class);
 		this.ap2.createAndSendApplication();
 	}
 

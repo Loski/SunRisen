@@ -32,7 +32,7 @@ public abstract class ClassCreator {
 
 	public static void main (String[] args)
 	{		
-		try {
+		/*try {
 				Constructor ctr = createConnectorImplementingInterface("Test",RequestNotificationI.class).getDeclaredConstructor();
 				AbstractConnector instance = (AbstractConnector) ctr.newInstance();
 			
@@ -44,23 +44,25 @@ public abstract class ClassCreator {
 				Object[] obj = {"uri",null};
 				System.out.println(cons.newInstance(obj));
 				
-				Class myPort2 = createInboundPortImplementingInterface("TestPort2",RequestNotificationI.class);
+				Class myPort2 = createInboundPortImplementingInterface("TestPortxxx",RequestNotificationI.class);
 				Class[] type2 = {String.class,ComponentI.class};
 				Constructor cons2 = myPort2.getConstructor(type2);
-				Object[] obj2 = {"uri",null};
+				Object[] obj2 = {"uri45",null};
 				System.out.println(cons2.newInstance(obj2));
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 	}
 	
-	private static CtClass createClass(String className,Class<?> interfaceToImplementClass, Class<?> superClass) throws Exception
-	{
+	protected static CtClass createClass(String className,Class<?> interfaceToImplementClass, Class<?> superClass) throws Exception
+	{		
 		ClassPool pool = ClassPool.getDefault();
 		
-		CtClass test = pool.makeClass(className);
+		CtClass test = null;
+		
+		test = pool.makeClass(className);
 		
 		CtClass extendsClass = null;
 		
@@ -74,40 +76,12 @@ public abstract class ClassCreator {
 		
 		test.addInterface(interfaceToImplement);
 		
+		System.out.println("My CLASS :"+test);
+		
 		return test;
 	}
 	
-	public static Class<?> createConnectorImplementingInterface(String className,Class<?> interfaceToImplementClass) throws Exception
-	{
-		ClassPool pool = ClassPool.getDefault();
-		
-		CtClass test = createClass(className, interfaceToImplementClass,AbstractConnector.class);
-		
-		/*CtConstructor constructor = CtNewConstructor.make(null, null, test);
-		constructor.setBody("{}");
-		System.out.println(constructor);
-		test.addConstructor(constructor);*/
-		
-		
-		for(Method m : interfaceToImplementClass.getDeclaredMethods())
-		{
-			System.out.println(m);
-			CtMethod method = copyMethodSignature(m,test);
-			
-			method.setBody(createBodyOfConnector(interfaceToImplementClass.getCanonicalName(),method));	
-			System.out.println(method);
-		}
-		
-		CtMethod toString = new CtMethod(pool.get("java.lang.String"),"toString",null, test);
-		toString.setBody("return \"JAVASSIST MASTER RACE\";");
-		
-		test.addMethod(toString);
-		
-		Class<?> clazz = pool.toClass(test);
-		
-		return clazz;
-
-	}
+	
 	
 	public static Class<?> createOutboundPortImplementingInterface(String className,Class<?> interfaceToImplementClass) throws Exception
 	{
@@ -180,17 +154,17 @@ public abstract class ClassCreator {
 			test.addConstructor(ctrCopy);
 		}				
 		
-		for(Method m : interfaceToImplementClass.getDeclaredMethods())
+		/*for(Method m : interfaceToImplementClass.getDeclaredMethods())
 		{
 			System.out.println(m);
 			CtMethod method = copyMethodSignature(m,test);
 			
 			method.setBody(createBodyOfInboundPort(interfaceToImplementClass,method));	
 			System.out.println(method);
-		}
+		}*/
 		
 		CtMethod toString = new CtMethod(pool.get("java.lang.String"),"toString",null, test);
-		toString.setBody("return \"JAVASSIST MASTER RACE\";");
+		toString.setBody("return \"JAVASSIST MASTER RACE 777\";");
 		
 		test.addMethod(toString);
 		
@@ -200,7 +174,7 @@ public abstract class ClassCreator {
 
 	}
 	
-	private static CtConstructor copyConstructor(Constructor ctr, CtClass test) throws Exception {
+	protected static CtConstructor copyConstructor(Constructor ctr, CtClass test) throws Exception {
 		
 		ClassPool pool = ClassPool.getDefault();
 		
@@ -233,7 +207,7 @@ public abstract class ClassCreator {
 		return constructor;
 	}
 
-	private static CtMethod copyMethodSignature(Method m,CtClass clazz) throws Exception
+	protected static CtMethod copyMethodSignature(Method m,CtClass clazz) throws Exception
 	{
 		 ClassPool pool = ClassPool.getDefault();
 		
@@ -260,7 +234,7 @@ public abstract class ClassCreator {
 		 return method;
 	}
 	
-	private static String stringOfMethodCall(CtMethod method) throws Exception
+	protected static String stringOfMethodCall(CtMethod method) throws Exception
 	{
 		String s = method.getName()+"(";
 		
@@ -277,7 +251,7 @@ public abstract class ClassCreator {
 		return s;
 	}
 	
-	private static String createBodyOfConnectorOrOutboundPort(String interfaceName,String variableName,CtMethod method) throws NotFoundException
+	protected static String createBodyOfConnectorOrOutboundPort(String interfaceName,String variableName,CtMethod method) throws NotFoundException
 	{
 		String s = "";
 		
@@ -299,25 +273,23 @@ public abstract class ClassCreator {
 		return s;
 	}
 	
-	private static String createBodyOfConnector(String interfaceName,CtMethod method) throws NotFoundException
-	{
-		return createBodyOfConnectorOrOutboundPort(interfaceName,"this.offering",method);
-	}
-	
-	private static String createBodyOfOutboundPort(String interfaceName,CtMethod method) throws NotFoundException
+	protected static String createBodyOfOutboundPort(String interfaceName,CtMethod method) throws NotFoundException
 	{
 		return createBodyOfConnectorOrOutboundPort(interfaceName,"this.connector",method);
 	}
 	
-	private static void implementComponentService(CtClass clazz) throws NotFoundException
+	protected static void implementComponentService(CtClass clazz,CtMethod methodTemplate) throws Exception
 	{
 		 ClassPool pool = ClassPool.getDefault();
 		
 		//TODO : gérer autre type que Void
 		 CtMethod method = new CtMethod(pool.get("void"),"call",null, clazz);
+		 method.setBody("operator.accept"+stringOfMethodCall(methodTemplate));
+		 
+		 clazz.addMethod(method);
 	}
 	
-	private static String createBodyOfInboundPort(Class<?> interfaceToImplementClass,CtMethod method) throws Exception
+	protected static String createBodyOfInboundPort(Class<?> interfaceToImplementClass,CtMethod method) throws Exception
 	{
 		ClassPool pool = ClassPool.getDefault();
 		
@@ -346,7 +318,7 @@ public abstract class ClassCreator {
 		
 		anonymousClass.addConstructor(constructor);
 		
-		implementComponentService(anonymousClass);
+		implementComponentService(anonymousClass,method);
 		
 		Class<?> instanciatedClass = pool.toClass(anonymousClass);
 		
@@ -358,7 +330,7 @@ public abstract class ClassCreator {
 		return builder.toString();
 	}
 	
-	private static String getWrapperClass(CtClass clazz)
+	protected static String getWrapperClass(CtClass clazz)
 	{
 		if (clazz.isPrimitive()) {
 		   CtPrimitiveType primitive = (CtPrimitiveType) clazz;

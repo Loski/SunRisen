@@ -41,4 +41,15 @@ public class ApplicationSubmissionInboundPort extends AbstractInboundPort implem
 					}
 				}) ;
 	}
+
+	@Override
+	public String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
+        final ApplicationSubmissionI aps = ( ApplicationSubmissionI ) this.owner;
+        return this.owner.handleRequestSync( new ComponentI.ComponentService<String[]>() {
+            @Override
+            public String[] call() throws Exception {
+                return aps.submitApplication(appURI, nbVM,submissionInterface );
+            }
+        } );
+	}
 }
