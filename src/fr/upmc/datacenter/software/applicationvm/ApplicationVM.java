@@ -670,7 +670,7 @@ implements	ProcessorServicesNotificationConsumerI,
 	@Override
 	public void			connectWithRequestSubmissioner(String rgURI, String RequestNotificationInboundPortURI)
 	throws Exception
-	{
+	{		
 		this.doPortConnection(
 				this.requestNotificationOutboundPort.getPortURI(),
 				RequestNotificationInboundPortURI,

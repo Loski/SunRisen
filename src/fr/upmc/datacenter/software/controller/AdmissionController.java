@@ -250,8 +250,8 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	}
 
 	@Override
-	public void submitGenerator(String RequestSubmissionInboundPort, String appUri, String rgURI) throws Exception {
-		this.rdmopList.get(appUri).connectWithRequestGenerator(rgURI, RequestSubmissionInboundPort);	
+	public void submitGenerator(String RequestNotificationInboundPort, String appUri, String rgURI) throws Exception {
+		this.rdmopList.get(appUri).connectWithRequestGenerator(rgURI, RequestNotificationInboundPort);	
 	}
 
 	

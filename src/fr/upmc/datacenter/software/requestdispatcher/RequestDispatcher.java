@@ -205,9 +205,12 @@ implements
 	@Override
 	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI, String RequestSubmissionOutboundPortURI) throws Exception {
 		
+		if(this.requestSubmissionOutboundPortList.get(vmURI)!=null && this.requestSubmissionOutboundPortList.get(vmURI).getPortURI().equals(RequestSubmissionOutboundPortURI))
+			throw new Exception("VM déjà connecté sur ce port");
+		
 		RequestSubmissionOutboundPort port = new RequestSubmissionOutboundPort( RequestSubmissionOutboundPortURI, this );
 		
-		this.requestSubmissionOutboundPortList.put(vmURI,port );
+		this.requestSubmissionOutboundPortList.put(vmURI,port);
 		this.addPort( port );
 		port.publishPort();
 		

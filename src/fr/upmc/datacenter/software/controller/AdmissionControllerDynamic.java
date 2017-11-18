@@ -158,8 +158,8 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 			dispatcherURI[0] = "RD_" + rdmopList.size()+"_"+appURI;
 			dispatcherURI[1] = RequestDispatcherManagementInboundPortURI + "_" + appURI;
 			dispatcherURI[2] = RequestSubmissionInboundPortURI +"_" + appURI;
-			dispatcherURI[3] = RequestNotificationInboundPortURI + "_"+ appURI;
-			dispatcherURI[4] = RequestNotificationOutboundPortURI + "_"+ appURI;
+			dispatcherURI[3] = RequestNotificationOutboundPortURI + "_"+ appURI;
+			dispatcherURI[4] = RequestNotificationInboundPortURI + "_"+ appURI;
 			dispatcherURI[5] = RequestSubmissionOutboundPortURI + "_"+ appURI;
 
 			
@@ -183,12 +183,13 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 			
 			ReflectionOutboundPort rop = new ReflectionOutboundPort(this);
 			this.addPort(rop);
-			rop.publishPort();	
+			rop.publishPort();
 			
 			
 			
 			String applicationVM[] = new String[5];
-			rop.doConnection(dispatcherURI[0], ReflectionConnector.class.getCanonicalName());
+			/*rop.doConnection(dispatcherURI[0], ReflectionConnector.class.getCanonicalName());
+			rop.doDisconnection();*/
 			for(int i=0;i<1;i++)
 			{
 				// --------------------------------------------------------------------
@@ -218,33 +219,16 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 				this.avmOutPort.add(avmPort);
 				avmPort.allocateCores(allocatedCore);
 				rdmop.connectVirtualMachine(applicationVM[0], applicationVM[2], dispatcherURI[5]);
-				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], dispatcherURI[3]);		
-				
-
-
-				rop.toggleLogging();
-				rop.toggleTracing();
-								
-			
-				rop.doPortConnection(
-						dispatcherURI[5],
-						applicationVM[2],
-						RequestSubmissionConnector.class.getCanonicalName()
-				);
-				
-				rop.doDisconnection();														
+				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], dispatcherURI[4]);		
+												
 				// --------------------------------------------------------------------
 				System.out.println("walid");
 				rop.doConnection(applicationVM[0], ReflectionConnector.class.getCanonicalName());
-
+				
 				rop.toggleTracing();
 				rop.toggleLogging();
 				
-				rop.doPortConnection(
-						applicationVM[3],
-						dispatcherURI[3],
-						RequestNotificationConnector.class.getCanonicalName()
-				);
+
 				System.out.println("walid2");
 
 				rop.doDisconnection();
