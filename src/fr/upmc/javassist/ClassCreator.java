@@ -258,7 +258,8 @@ public abstract class ClassCreator {
 		if(method.getReturnType().getSimpleName()!="void")
 			s+="return ";
 		
-		s += String.format("( ( %s ) %s).%s(",interfaceName,variableName,method.getName());
+		//s += String.format("( ( %s ) %s).%s(",interfaceName,variableName,method.getName());
+		s += String.format("( ( %s ) %s).%s(",interfaceName,variableName,"submitRequestAndNotify");
 		
 		 for(int i=1;i<=method.getParameterTypes().length;i++)
 		 {
