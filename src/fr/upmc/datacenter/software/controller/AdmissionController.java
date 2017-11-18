@@ -186,7 +186,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 			
 			RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
 					RequestDispatcherManagementOutboundPortURI + rdmopList.size(),
-					rd) ;
+					this) ;
 			rdmop.publishPort();
 			
 			rdmop.doConnection(
@@ -220,7 +220,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 				// Create a mock up port to manage the AVM component (allocate cores).
 				ApplicationVMManagementOutboundPort avmPort = new ApplicationVMManagementOutboundPort(
 											ApplicationVMManagementOutboundPortURI,
-											vm) ;
+											this) ;
 				avmPort.publishPort() ;
 				avmPort.
 						doConnection(
