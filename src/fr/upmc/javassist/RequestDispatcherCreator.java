@@ -43,7 +43,7 @@ public class RequestDispatcherCreator extends ClassCreator{
 		CtMethod method = test.getDeclaredMethod("getConnectorClassName");
 		method.setBody("{return \""+ connector.getCanonicalName()+"\";}");
 		
-		test.addField(new CtField(inport, "newInBoundPort_"+className, test));
+		//test.addField(new CtField(inport, "newInBoundPort_"+className, test));
 		test.setName(className);
 		
 		Class<?> clazz = pool.toClass(test);

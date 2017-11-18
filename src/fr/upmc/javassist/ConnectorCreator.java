@@ -29,6 +29,8 @@ public class ConnectorCreator extends ClassCreator{
 			
 			method.setBody(createBodyOfConnector(interfaceToImplementClass.getCanonicalName(),method));	
 			System.out.println(method);
+			
+			test.addMethod(method);
 		}
 		
 		CtMethod toString = new CtMethod(pool.get("java.lang.String"),"toString",null, test);
@@ -44,6 +46,7 @@ public class ConnectorCreator extends ClassCreator{
 	
 	protected static String createBodyOfConnector(String interfaceName,CtMethod method) throws NotFoundException
 	{
+		
 		return createBodyOfConnectorOrOutboundPort(interfaceName,"this.offering",method);
 	}
 	

@@ -219,7 +219,7 @@ implements
 				requestSubmissionInboundPortURI,
 				getConnectorClassName());
 		
-		System.out.println(String.format("[RequestSubmissionConnector] Connecting %s with %s using %s -> %s", this.rdURI,vmURI,port.getPortURI(),requestSubmissionInboundPortURI));
+		System.out.println(String.format("[%s] Connecting %s with %s using %s -> %s", getConnectorClassName(),this.rdURI,vmURI,port.getPortURI(),requestSubmissionInboundPortURI));
 
 	}
 
