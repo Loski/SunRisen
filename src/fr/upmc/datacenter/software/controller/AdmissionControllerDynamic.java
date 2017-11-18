@@ -1,16 +1,20 @@
 package fr.upmc.datacenter.software.controller;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import fr.upmc.components.AbstractComponent;
+import fr.upmc.components.cvm.AbstractCVM;
+import fr.upmc.components.cvm.pre.dcc.connectors.DynamicComponentCreationConnector;
 import fr.upmc.components.cvm.pre.dcc.ports.DynamicComponentCreationOutboundPort;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.components.exceptions.ComponentStartException;
 import fr.upmc.components.interfaces.DataRequiredI;
 import fr.upmc.components.ports.PortI;
+import fr.upmc.components.pre.reflection.ports.ReflectionOutboundPort;
 import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagementConnector;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
@@ -51,16 +55,86 @@ import fr.upmc.datacenter.interfaces.ControlledDataRequiredI;
  * 
  * @author	Maxime LAVASTE Loï¿½c LAFONTAINE
  */
-public class AdmissionControllerDynamic extends AdmissionController implements ApplicationSubmissionI{
+public class AdmissionControllerDynamic extends AdmissionController implements ApplicationSubmissionI, AdmissionControllerManagementI{
 
+	private DynamicComponentCreationOutboundPort portToRequestDispatcherJVM;
+	private DynamicComponentCreationOutboundPort portToApplicationVMJVM;
+
+	protected static final String RequestDispatcher_JVM_URI = "" ;
+	protected static final String Application_VM_JVM_URI = "";
+	
+	
 	public AdmissionControllerDynamic(String acURI, String applicationSubmissionInboundPortURI,
 			String AdmissionControllerManagementInboundPortURI, String computerServiceOutboundPortURI,
 			String ComputerServicesInboundPortURI, String computerURI, int nbAvailableCores,
 			String computerStaticStateDataOutboundPortURI) throws Exception {
-		super(acURI, applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI,
-				computerServiceOutboundPortURI, ComputerServicesInboundPortURI, computerURI, nbAvailableCores,
-				computerStaticStateDataOutboundPortURI);
+		super(2, 2);
+		this.toggleLogging();
+		this.toggleTracing();
+		this.acURI = acURI;
+		this.addOfferedInterface(ApplicationSubmissionI.class);
+		this.asip = new ApplicationSubmissionInboundPort(applicationSubmissionInboundPortURI, this);
+		this.addPort(asip);
+		this.asip.publishPort();
+
+		this.addOfferedInterface(AdmissionControllerManagementI.class);
+		this.acmip = new AdmissionControllerManagementInboundPort(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementI.class, this);
+		this.addPort(acmip);
+		this.acmip.publishPort();
+ 
+		this.csop = new ComputerServicesOutboundPort(computerServiceOutboundPortURI, this);
+		this.addPort(csop);
+		this.csop.localPublishPort();
 		
+		this.csop.doConnection(
+				ComputerServicesInboundPortURI,
+				ComputerServicesConnector.class.getCanonicalName()) ;
+		
+		
+		this.computerURI = computerURI;
+		
+		this.cssdop = new ComputerStaticStateDataOutboundPort(computerStaticStateDataOutboundPortURI, this, computerURI);
+		this.addPort(this.cssdop);
+		this.cssdop.publishPort();
+		
+		ReflectionOutboundPort a;
+		this.avmOutPort = new LinkedList<ApplicationVMManagementOutboundPort>();
+		
+
+		// this.addOfferedInterface(ComputerStaticStateDataI.class);
+		// or :
+	/*	this.addOfferedInterface(DataRequiredI.PushI.class);
+		this.addRequiredInterface(DataRequiredI.PullI.class);
+		
+		*
+		*		this.addRequiredInterface(ControlledDataRequiredI.ControlledPullI.class);
+		this.cdsdop = new ComputerDynamicStateDataOutboundPort(computerDynamicStateDataOutboundPortURI, this, computerURI);
+		this.addPort(this.cdsdop);
+		this.cdsdop.publishPort();
+		*/
+		
+		this.rdmopList = new HashMap<String, RequestDispatcherManagementOutboundPort>();
+		
+		//Pour l'allocation de core.
+		this.addRequiredInterface(ComputerServicesI.class);
+		
+		this.interface_dispatcher_map = new LinkedHashMap<>();
+		this.portToApplicationVMJVM = new DynamicComponentCreationOutboundPort(this);
+		this.portToApplicationVMJVM.localPublishPort();
+		this.addPort(this.portToApplicationVMJVM);
+		
+		this.portToApplicationVMJVM.doConnection(					
+				this.Application_VM_JVM_URI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
+				DynamicComponentCreationConnector.class.getCanonicalName());
+		
+		this.portToRequestDispatcherJVM = new DynamicComponentCreationOutboundPort(this);
+		this.portToRequestDispatcherJVM.localPublishPort();
+		this.addPort(this.portToRequestDispatcherJVM);
+		
+		this.portToRequestDispatcherJVM.doConnection(					
+				this.RequestDispatcher_JVM_URI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
+				DynamicComponentCreationConnector.class.getCanonicalName());
+	
 	}
 
 	@Override
@@ -72,55 +146,64 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 	@Override
 	public String[] submitApplication(String appURI, int nbVM) throws Exception {
 		
-		
-		this.logMessage("New Application received.\n Waiting for evaluation.");
+		System.out.println("kill ùe in,sde");
+		this.logMessage("New Application received in dynamic controller .\n Waiting for evaluation.");
 		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
-		String dispatcherURI[] = new String[4];
+		String dispatcherURI[] = new String[5];
 
 		if(allocatedCore!=null && allocatedCore.length != 0) {
-			RequestDispatcher rd = new RequestDispatcher("RD_" + rdmopList.size(), RequestDispatcherManagementInboundPortURI+ rdmopList.size(), RequestSubmissionInboundPortURI+ rdmopList.size(),
-				    RequestNotificationOutboundPortURI+ rdmopList.size(), RequestNotificationInboundPortURI+ rdmopList.size()) ;
 			
-			rd.toggleLogging();
-			rd.toggleTracing();
+			dispatcherURI[0] = "RD_" + rdmopList.size()+"_"+appURI;
+			dispatcherURI[1] = RequestDispatcherManagementInboundPortURI + "_" + appURI;
+			dispatcherURI[2] = RequestSubmissionInboundPortURI +"_" + appURI;
+			dispatcherURI[3] = RequestNotificationInboundPortURI + "_"+ appURI;
+			dispatcherURI[4] = RequestNotificationOutboundPortURI + "_"+ appURI;
+			
+			this.portToRequestDispatcherJVM.createComponent(
+					RequestDispatcher.class.getCanonicalName(),
+					new Object[] {
+							dispatcherURI[0],							
+							dispatcherURI[1],
+							dispatcherURI[2],
+							dispatcherURI[3],
+							dispatcherURI[4]
+					});		
+		
 			
 			RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
 					RequestDispatcherManagementOutboundPortURI + rdmopList.size(),
-					rd) ;
+					this);
 			rdmop.publishPort();
 			
 			rdmop.doConnection(
-				RequestDispatcherManagementInboundPortURI + rdmopList.size(),
+				dispatcherURI[1],
 				RequestDispatcherManagementConnector.class.getCanonicalName());
 			
-			dispatcherURI[0] = "RD_" + rdmopList.size();
-			dispatcherURI[1] = RequestSubmissionInboundPortURI+ rdmopList.size();
-			
+			String applicationVM[] = new String[4];
+
 			for(int i=0;i<nbVM;i++)
 			{
 				// --------------------------------------------------------------------
 				// Create an Application VM component
 				// --------------------------------------------------------------------
+				applicationVM[0] = "avm-"+this.avmOutPort.size();
+				applicationVM[1] = "avmibp-"+this.avmOutPort.size();
+				applicationVM[2] = "rsibpVM-"+this.avmOutPort.size();
+				applicationVM[3] = "rnobpVM-"+this.avmOutPort.size();
+				applicationVM[4] = "avmobp-"+this.avmOutPort.size();
 				
-				
-				String ApplicationVMManagementInboundPortURI = "avmibp-"+this.avmOutPort.size();
-				String RequestSubmissionInboundPortVMURI = "rsibpVM-"+this.avmOutPort.size();
-				String RequestNotificationOutboundPortVMURI = "rnobpVM-"+this.avmOutPort.size();
-				String ApplicationVMManagementOutboundPortURI = "avmobp-"+this.avmOutPort.size();
-				
-				ApplicationVM vm = new ApplicationVM("vm"+this.avmOutPort.size(),	// application vm component URI
-						ApplicationVMManagementInboundPortURI,
-					    RequestSubmissionInboundPortVMURI,
-					    RequestNotificationOutboundPortVMURI) ;
-				//this.addDeployedComponent(vm) ;
-	
-				vm.toggleTracing() ;
-				vm.toggleLogging() ;
-				
+				this.portToRequestDispatcherJVM.createComponent(
+						ApplicationVM.class.getCanonicalName(),
+						new Object[] {
+								applicationVM[0],							
+								applicationVM[1],
+								applicationVM[2],
+								applicationVM[3]
+				});					
 				// Create a mock up port to manage the AVM component (allocate cores).
 				ApplicationVMManagementOutboundPort avmPort = new ApplicationVMManagementOutboundPort(
-											ApplicationVMManagementOutboundPortURI,
-											vm) ;
+						applicationVM[4], vm) ;
+				
 				avmPort.publishPort() ;
 				avmPort.
 						doConnection(

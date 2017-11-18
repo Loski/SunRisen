@@ -69,7 +69,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	protected static final int NB_CORES = 2;
 
 	protected fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort ComputerServicesOutboundPort;
-	private AdmissionControllerManagementInboundPort acmip;
+	protected AdmissionControllerManagementInboundPort acmip;
 	protected ApplicationSubmissionInboundPort asip;
 	
 	
@@ -98,7 +98,9 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	ComputerServicesOutboundPort csop;
 	
 	protected LinkedHashMap<Class,Class> interface_dispatcher_map;
-	
+	public AdmissionController(int n, int b) {
+		super(n,b);
+	}
 	public AdmissionController(String acURI, String applicationSubmissionInboundPortURI,
 			String AdmissionControllerManagementInboundPortURI,
 			String computerServiceOutboundPortURI, String ComputerServicesInboundPortURI,

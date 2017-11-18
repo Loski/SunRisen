@@ -45,6 +45,8 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
     protected ApplicationProviderManagementInboundPort apmip;
     
     
+    
+    
 
     // ------------------------------------------------------------------
     // REQUEST GENERATOR URIs
@@ -69,7 +71,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
     
     
     private static int indice_rd_uri = 0;
-    private static int indice_rdso_uri = 1;
+    private static int indice_rdso_uri = 2;
 
 
     /**
@@ -184,9 +186,9 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 
 		assert submissionInterface.isInterface();
 		System.out.println("Send request ...");
-		rdUri = this.asop.submitApplication(apURI,  2,submissionInterface);
+		rdUri = this.asop.submitApplication(apURI, 2, submissionInterface);
 		System.out.println("Finish ...");
-
+		
         if ( rdUri != null ) {
             // Creation dynamique du request generator
             System.out.println( "creating RequestGenerator" );

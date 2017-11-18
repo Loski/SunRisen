@@ -58,6 +58,7 @@ import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOu
 import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenter.software.controller.AdmissionController;
+import fr.upmc.datacenter.software.controller.AdmissionControllerDynamic;
 import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 import fr.upmc.datacenter.software.ports.RequestNotificationInboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionInboundPort;
@@ -151,7 +152,7 @@ extends		AbstractCVM
 	protected ApplicationVMManagementOutboundPort	avmPort ;
 
 
-	protected AdmissionController ac;
+	protected AdmissionControllerDynamic ac;
 	protected ApplicationProvider ap;
 	protected ApplicationProvider ap2;
 	private String applicationSubmissionInboundPortURI = "asip";
@@ -231,10 +232,7 @@ extends		AbstractCVM
 		
 		//TODO
 	//	this.avmPort.connectWithRequestSubmissioner("rd0", RequestNotificationInboundPortDispatcherURI);
-
-		this.ac = new AdmissionController("AdmCtrl", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI, ComputerServicesInboundPortURI, computerURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI);
-	
-		
+		this.ac = new AdmissionControllerDynamic("AdmCtrl", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI, ComputerServicesInboundPortURI, computerURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI);
 		
 		this.ap = new ApplicationProvider("moteurWalidien", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI, applicationManagementInboundPort);
 				// complete the deployment at the component virtual machine level.
@@ -279,8 +277,9 @@ extends		AbstractCVM
 	 */
 	public void			testScenario() throws Exception
 	{
-		this.ap.createAndSendApplication(RequestSubmissionI.class);
 		this.ap2.createAndSendApplication();
+	//	this.ap.createAndSendApplication(RequestSubmissionI.class);
+
 	}
 
 	/**
@@ -291,7 +290,7 @@ extends		AbstractCVM
 	public static void	main(String[] args)
 	{
 		// Uncomment next line to execute components in debug mode.
-		 AbstractCVM.toggleDebugMode() ;
+		// AbstractCVM.toggleDebugMode() ;
 		try {
 			final TestAdmissionController trd = new TestAdmissionController() ;
 			// Deploy the components
@@ -315,7 +314,7 @@ extends		AbstractCVM
 			Thread.sleep(90000L) ;
 			// Shut down the application.
 			System.out.println("shutting down...") ;
-			trd.shutdown() ;
+		//	trd.shutdown() ;
 			System.out.println("ending...") ;
 			// Exit from Java.
 			System.exit(0) ;
