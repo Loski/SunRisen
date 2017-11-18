@@ -147,7 +147,7 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 	@Override
 	public String[] submitApplication(String appURI, int nbVM) throws Exception {
 		
-		System.out.println("kill ùe in,sde");
+		System.out.println("kill ï¿½e in,sde");
 		this.logMessage("New Application received in dynamic controller .\n Waiting for evaluation.");
 		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
 		String dispatcherURI[] = new String[6];
@@ -182,7 +182,7 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 			
 			ReflectionOutboundPort rop = new ReflectionOutboundPort(this);
 			this.addPort(rop);
-			rop.localPublishPort();	
+			rop.publishPort();	
 			
 			
 			
