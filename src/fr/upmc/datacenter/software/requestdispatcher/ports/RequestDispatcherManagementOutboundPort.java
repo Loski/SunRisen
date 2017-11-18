@@ -28,8 +28,8 @@ implements	RequestDispatcherManagementI
 	}
 	
 	@Override
-	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception {
-		( ( RequestDispatcherManagementI ) this.connector ).connectVirtualMachine(vmURI, requestSubmissionInboundPortURI);
+	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI, String RequestSubmissionOutboundPortURI) throws Exception {
+		( ( RequestDispatcherManagementI ) this.connector ).connectVirtualMachine(vmURI, requestSubmissionInboundPortURI,RequestSubmissionOutboundPortURI);
 
 	}
 

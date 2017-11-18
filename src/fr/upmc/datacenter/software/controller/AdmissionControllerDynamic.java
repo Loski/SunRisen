@@ -14,6 +14,7 @@ import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.components.exceptions.ComponentStartException;
 import fr.upmc.components.interfaces.DataRequiredI;
 import fr.upmc.components.ports.PortI;
+import fr.upmc.components.pre.reflection.connectors.ReflectionConnector;
 import fr.upmc.components.pre.reflection.ports.ReflectionOutboundPort;
 import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagementConnector;
@@ -149,7 +150,7 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 		System.out.println("kill ùe in,sde");
 		this.logMessage("New Application received in dynamic controller .\n Waiting for evaluation.");
 		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
-		String dispatcherURI[] = new String[5];
+		String dispatcherURI[] = new String[6];
 
 		if(allocatedCore!=null && allocatedCore.length != 0) {
 			
@@ -158,6 +159,8 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 			dispatcherURI[2] = RequestSubmissionInboundPortURI +"_" + appURI;
 			dispatcherURI[3] = RequestNotificationInboundPortURI + "_"+ appURI;
 			dispatcherURI[4] = RequestNotificationOutboundPortURI + "_"+ appURI;
+			dispatcherURI[5] = RequestSubmissionOutboundPortURI + "_"+ appURI;
+
 			
 			this.portToRequestDispatcherJVM.createComponent(
 					RequestDispatcher.class.getCanonicalName(),
@@ -173,11 +176,15 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 			RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
 					RequestDispatcherManagementOutboundPortURI + rdmopList.size(),
 					this);
-			rdmop.publishPort();
 			
-			rdmop.doConnection(
-				dispatcherURI[1],
-				RequestDispatcherManagementConnector.class.getCanonicalName());
+			rdmop.publishPort();
+			rdmop.doConnection(dispatcherURI[1], RequestDispatcherManagementConnector.class.getCanonicalName());
+			
+			ReflectionOutboundPort rop = new ReflectionOutboundPort(this);
+			this.addPort(rop);
+			rop.localPublishPort();	
+			
+			
 			
 			String applicationVM[] = new String[5];
 
@@ -199,21 +206,47 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 								applicationVM[1],
 								applicationVM[2],
 								applicationVM[3]
-				});					
+				});
+				
 				// Create a mock up port to manage the AVM component (allocate cores).
 				ApplicationVMManagementOutboundPort avmPort = new ApplicationVMManagementOutboundPort(
 						applicationVM[4], this) ;
-				
 				avmPort.publishPort() ;
-				avmPort.doConnection(applicationVM[0],
+				avmPort.doConnection(applicationVM[1],
 							ApplicationVMManagementConnector.class.getCanonicalName()) ;
-				
 				this.avmOutPort.add(avmPort);
-				
 				avmPort.allocateCores(allocatedCore);
+				rdmop.connectVirtualMachine(applicationVM[0], applicationVM[2], dispatcherURI[5]);
+				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], dispatcherURI[3]);		
 				
-				rdmop.connectVirtualMachine("vm"+this.avmOutPort.size(),applicationVM[2]);
-				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], RequestNotificationInboundPortURI+ rdmopList.size());
+				System.out.println("walid");
+				rop.doConnection(dispatcherURI[0], ReflectionConnector.class.getCanonicalName());
+				System.out.println("walid2");
+
+				rop.toggleLogging();
+				rop.toggleTracing();
+								
+			
+				rop.doPortConnection(
+						dispatcherURI[5],
+						applicationVM[2],
+						RequestSubmissionConnector.class.getCanonicalName()
+				);
+				
+				rop.doDisconnection();														
+				// --------------------------------------------------------------------
+			//	rop.doConnection("vm0", ReflectionConnector.class.getCanonicalName());
+
+/*				RequestDispatcher.DEBUG_LEVEL = 1;
+				rop.toggleTracing();
+				rop.toggleLogging();
+				
+				rop.doPortConnection(
+						AVM_REQUEST_NOTIFICATION_OUT_PORT_URI,
+						RD_REQUEST_NOTIFICATION_IN_PORT_URI,
+						Javassist.getRequestNotificationConnectorClassName());
+				
+				rop.doDisconnection();*/
 			}
 			
 			rdmopList.put(appURI, rdmop);
@@ -243,6 +276,8 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 		// TODO Auto-generated method stub
 		return super.submitApplication(appURI, nbVM, interfaceToImplement);
 	}
+	
+	
 	
 	
 	

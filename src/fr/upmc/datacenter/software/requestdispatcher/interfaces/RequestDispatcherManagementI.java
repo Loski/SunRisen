@@ -19,7 +19,7 @@ extends		OfferedI,
 	 * @param requestSubmissionInboundPortURI uri of the vm requestSubmissionInboundPortURI
 	 * @throws Exception
 	 */
-	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception;
+	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI, String RequestSubmissionOutboundPortURI) throws Exception;
     
 	/**
      * Close the outbound port.

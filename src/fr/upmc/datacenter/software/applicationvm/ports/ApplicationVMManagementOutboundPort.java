@@ -95,8 +95,8 @@ implements	ApplicationVMManagementI
 	}
 
 	@Override
-	public void			connectWithRequestSubmissioner(String rgURI, String RequestNotificationInboundPortURI) throws Exception {
+	public void			connectWithRequestSubmissioner(String rdURI, String RequestNotificationInboundPortURI) throws Exception {
 		// TODO Auto-generated method stub
-		((ApplicationVMManagementI)this.connector).connectWithRequestSubmissioner(rgURI,RequestNotificationInboundPortURI) ;
+		((ApplicationVMManagementI)this.connector).connectWithRequestSubmissioner(rdURI,RequestNotificationInboundPortURI) ;
 	}
 }

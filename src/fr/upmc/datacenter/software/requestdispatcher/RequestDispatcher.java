@@ -203,10 +203,9 @@ implements
 	}
 
 	@Override
-	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception {
+	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI, String RequestSubmissionOutboundPortURI) throws Exception {
 		
-		String portURI = "vmPort-"+this.requestSubmissionOutboundPortList.size();
-		RequestSubmissionOutboundPort port = new RequestSubmissionOutboundPort( portURI, this );
+		RequestSubmissionOutboundPort port = new RequestSubmissionOutboundPort( RequestSubmissionOutboundPortURI, this );
 		
 		this.requestSubmissionOutboundPortList.put(vmURI,port );
 		this.addPort( port );

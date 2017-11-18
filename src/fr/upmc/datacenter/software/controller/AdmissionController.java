@@ -64,6 +64,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	protected static final String RequestSubmissionInboundPortURI = "rsip";
 	protected static final String RequestNotificationOutboundPortURI = "rnop";
 	protected static final String RequestDispatcherManagementOutboundPortURI = "rdmop";
+	protected static final String RequestSubmissionOutboundPortURI = "rsop";
 
 	 
 	protected static final int NB_CORES = 2;
@@ -231,7 +232,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 				
 				avmPort.allocateCores(allocatedCore);
 				
-				rdmop.connectVirtualMachine("vm"+this.avmOutPort.size(),RequestSubmissionInboundPortVMURI);
+			//	rdmop.connectVirtualMachine("vm"+this.avmOutPort.size(),RequestSubmissionInboundPortVMURI);
 				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], RequestNotificationInboundPortURI+ rdmopList.size());
 			}
 			
@@ -338,7 +339,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 				
 				avmPort.allocateCores(allocatedCore);
 				
-				rdmop.connectVirtualMachine("vm"+this.avmOutPort.size(),RequestSubmissionInboundPortVMURI);
+			//	rdmop.connectVirtualMachine("vm"+this.avmOutPort.size(),RequestSubmissionInboundPortVMURI);
 				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], RequestNotificationInboundPortURI+ rdmopList.size());
 			}
 			
