@@ -18,9 +18,9 @@ public interface ApplicationSubmissionI {
 	 * @return The requestDispatcherUri if success with his inboundPort.
 	 * @throws Exception
 	 */
-	String[] submitApplication(String appURI, int nbVM) throws Exception;
+	public String[] submitApplication(String appURI, int nbVM) throws Exception;
 	
-	String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception;
+	public String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception;
 	
 	/**
 	 * Submit a generator to the administration controller.
@@ -30,5 +30,5 @@ public interface ApplicationSubmissionI {
 	 * @param rgURI	URI of the requestGenerator.
 	 * @throws Exception
 	 */
-	void submitGenerator(String requestNotificationInboundPort, String appURI, String rgURI) throws Exception;
+	public void submitGenerator(String requestNotificationInboundPort, String appURI, String rgURI) throws Exception;
 }

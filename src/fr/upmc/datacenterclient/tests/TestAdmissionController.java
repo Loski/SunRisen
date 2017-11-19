@@ -199,17 +199,6 @@ extends		AbstractCVM
 							ComputerDynamicStateDataInboundPortURI) ;
 		this.addDeployedComponent(c) ;
 
-		// Create a mock-up computer services port to later allocate its cores
-		// to the application virtual machine.
-		this.csPort = new ComputerServicesOutboundPort(
-										ComputerServicesOutboundPortURI,
-										new AbstractComponent(0, 0) {}) ;
-		this.csPort.publishPort() ;
-		this.csPort.doConnection(
-						ComputerServicesInboundPortURI,
-						ComputerServicesConnector.class.getCanonicalName()) ;
-		// --------------------------------------------------------------------
-
 		// --------------------------------------------------------------------
 		// Create the computer monitor component and connect its to ports
 		// with the computer component.
@@ -277,8 +266,8 @@ extends		AbstractCVM
 	 */
 	public void			testScenario() throws Exception
 	{
-		//this.ap2.createAndSendApplication();
-		this.ap.createAndSendApplication(RequestSubmissionI.class);
+		this.ap2.createAndSendApplication();
+		//this.ap.createAndSendApplication(RequestSubmissionI.class);
 
 	}
 

@@ -112,7 +112,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 			int nbAvailableCores, String computerStaticStateDataOutboundPortURI) throws Exception {
 
 		
-		super(2, 2);
+		super(acURI,2, 2);
 		this.toggleLogging();
 		this.toggleTracing();
 		this.acURI = acURI;
