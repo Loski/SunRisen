@@ -71,7 +71,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
     
     
     private static int indice_rd_uri = 0;
-    private static int indice_rdso_uri = 1;
+    private static int indice_rdsin_uri = 2;
 
 
     /**
@@ -126,7 +126,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
             
     		rg.doPortConnection(
     				rsopUri,
-    				rdUri[indice_rdso_uri],
+    				rdUri[indice_rdsin_uri],
     				RequestSubmissionConnector.class.getCanonicalName());
  
             rg.toggleTracing();
@@ -198,7 +198,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
             
     		rg.doPortConnection(
     				rsopUri,
-    				rdUri[indice_rdso_uri],
+    				rdUri[indice_rdsin_uri],
     				RequestSubmissionConnector.class.getCanonicalName());
  
             rg.toggleTracing();

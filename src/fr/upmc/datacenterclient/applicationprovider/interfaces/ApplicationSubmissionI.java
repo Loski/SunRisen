@@ -1,5 +1,7 @@
 package fr.upmc.datacenterclient.applicationprovider.interfaces;
 
+import fr.upmc.components.interfaces.OfferedI;
+import fr.upmc.components.interfaces.RequiredI;
 import fr.upmc.datacenter.hardware.tests.TestApplicationVM.Request;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenter.software.ports.RequestSubmissionInboundPort;
@@ -9,7 +11,7 @@ import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagemen
  * @author maxim
  *
  */
-public interface ApplicationSubmissionI {
+public interface ApplicationSubmissionI extends	OfferedI, RequiredI {
 	/**
 	 * Send an app to the administrationControler.
 	 * The Controller checks if he can accept this application

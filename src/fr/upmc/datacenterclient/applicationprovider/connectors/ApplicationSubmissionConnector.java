@@ -14,6 +14,7 @@ implements	ApplicationSubmissionI {
 
 	@Override
 	public String[] submitApplication(String appURI, int nbVM) throws Exception {
+		
 		return ( ( ApplicationSubmissionI ) this.offering ).submitApplication(appURI, nbVM);
 
 	}

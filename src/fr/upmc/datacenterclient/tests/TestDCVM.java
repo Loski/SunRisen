@@ -16,6 +16,7 @@ import fr.upmc.datacenter.hardware.processors.Processor;
 import fr.upmc.datacenter.hardware.tests.ComputerMonitor;
 import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
+import fr.upmc.datacenter.software.controller.AdmissionController;
 import fr.upmc.datacenter.software.controller.AdmissionControllerDynamic;
 import fr.upmc.datacenterclient.applicationprovider.ApplicationProvider;
 
@@ -34,8 +35,8 @@ public class TestDCVM extends AbstractDistributedCVM{
 	public static final String	ComputerDynamicStateDataOutboundPortURI = "cds-dop" ;
 	
 	
-	protected static ApplicationProvider ap;
-	protected static ApplicationProvider ap2;
+	protected ApplicationProvider ap;
+	protected ApplicationProvider ap2;
 	private String applicationSubmissionInboundPortURI = "asip";
 	private String AdmissionControllerManagementInboundPortURI = "acmip";
 	
@@ -47,7 +48,7 @@ public class TestDCVM extends AbstractDistributedCVM{
 	private int nbAvailableCores = 26;
 	private String applicationSubmissionOutboundPortURI = "asop";
 	private String applicationManagementInboundPort = " amip";
-	protected static AdmissionControllerDynamic ac;
+	protected AdmissionControllerDynamic ac;
 	@Override
 	public void instantiateAndPublish() throws Exception {
 
@@ -102,7 +103,7 @@ public class TestDCVM extends AbstractDistributedCVM{
 						ComputerDynamicStateDataInboundPortURI,
 						ControlledDataConnector.class.getCanonicalName()) ;
 			System.out.println("create controller");
-			this.ac =  new AdmissionControllerDynamic("AdmCtrl", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI+"-controller", ComputerServicesInboundPortURI, computerURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI+"-controller");
+			this.ac = new AdmissionControllerDynamic("AdmCtrl", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI+"-controller", ComputerServicesInboundPortURI, computerURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI+"-controller");
 			this.addDeployedComponent(this.ac);
 		//	this.cyclicBarrierClient.notifyAll();
 		}else if(thisJVMURI.equals(Application1)) {

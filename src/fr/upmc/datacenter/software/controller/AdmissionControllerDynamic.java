@@ -64,7 +64,7 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 	private DynamicComponentCreationOutboundPort portToRequestDispatcherJVM;
 	private DynamicComponentCreationOutboundPort portToApplicationVMJVM;
 
-	protected static final String RequestDispatcher_JVM_URI = "application1" ;
+	protected static final String RequestDispatcher_JVM_URI = "controller" ;
 	protected static final String Application_VM_JVM_URI = "controller";
 	
 	public AdmissionControllerDynamic(String acURI, String applicationSubmissionInboundPortURI,
@@ -78,7 +78,7 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 				computerStaticStateDataOutboundPortURI);
 		
 		this.portToApplicationVMJVM = new DynamicComponentCreationOutboundPort(this);
-		this.portToApplicationVMJVM.localPublishPort();
+		this.portToApplicationVMJVM.publishPort();
 		this.addPort(this.portToApplicationVMJVM);
 		
 		this.portToApplicationVMJVM.doConnection(					
@@ -86,7 +86,7 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 				DynamicComponentCreationConnector.class.getCanonicalName());
 		
 		this.portToRequestDispatcherJVM = new DynamicComponentCreationOutboundPort(this);
-		this.portToRequestDispatcherJVM.localPublishPort();
+		this.portToRequestDispatcherJVM.publishPort();
 		this.addPort(this.portToRequestDispatcherJVM);
 		
 		this.portToRequestDispatcherJVM.doConnection(					
