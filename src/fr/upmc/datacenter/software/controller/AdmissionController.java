@@ -55,7 +55,7 @@ import fr.upmc.datacenter.interfaces.ControlledDataRequiredI;
  * He then bind the Virtual Machine to the request Dispatcher via a RequestSubmissionIConnector.
  * 
  * 
- * @author	Maxime LAVASTE Lo�c LAFONTAINE
+ * @author	Maxime LAVASTE Loïc LAFONTAINE
  */
 public class AdmissionController extends AbstractComponent implements ApplicationSubmissionI{
 
