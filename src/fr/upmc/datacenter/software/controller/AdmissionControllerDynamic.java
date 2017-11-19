@@ -102,7 +102,7 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 	}
 
 	@Override
-	public String[] submitApplication(String appURI, int nbVM) throws Exception {
+	public synchronized String[] submitApplication(String appURI, int nbVM) throws Exception {
 		
 		System.out.println("kill �e in,sde");
 		this.logMessage("New Application received in dynamic controller .\n Waiting for evaluation.");
@@ -216,7 +216,7 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 	
 	
 	@Override
-	public String[] submitApplication(String appURI, int nbVM,Class submissionInterface) throws Exception {
+	public synchronized String[] submitApplication(String appURI, int nbVM,Class submissionInterface) throws Exception {
 		
 		System.out.println("kill �e in,sde");
 		this.logMessage("New Application received in dynamic controller .\n Waiting for evaluation.");
