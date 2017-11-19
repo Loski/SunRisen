@@ -298,68 +298,65 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 			
 			rd.getClass().getMethod("toggleLogging").invoke(rd);
 			rd.getClass().getMethod("toggleTracing").invoke(rd);
-			
-			System.out.println("MY CONNECTOR : "+rd.getClass().getMethod("getConnectorClassName").invoke(rd));
-			
-			RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
-					RequestDispatcherManagementOutboundPortURI + rdmopList.size(),
-					rd) ;
-			rdmop.publishPort();
-			
-			rdmop.doConnection(
-				RequestDispatcherManagementInboundPortURI + rdmopList.size(),
-				RequestDispatcherManagementConnector.class.getCanonicalName());
-			
-			dispatcherURI[0] = "RD_" + rdmopList.size();
-			dispatcherURI[1] = RequestSubmissionInboundPortURI+ rdmopList.size();
-			
-			for(int i=0;i<nbVM;i++)
-			{
-				// --------------------------------------------------------------------
-				// Create an Application VM component
-				// --------------------------------------------------------------------
 				
+				RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
+						RequestDispatcherManagementOutboundPortURI + rdmopList.size(),
+						this) ;
+				rdmop.publishPort();
 				
-				String ApplicationVMManagementInboundPortURI = "avmibp-"+this.avmOutPort.size();
-				String RequestSubmissionInboundPortVMURI = "rsibpVM-"+this.avmOutPort.size();
-				String RequestNotificationOutboundPortVMURI = "rnobpVM-"+this.avmOutPort.size();
-				String ApplicationVMManagementOutboundPortURI = "avmobp-"+this.avmOutPort.size();
+				rdmop.doConnection(
+					RequestDispatcherManagementInboundPortURI + rdmopList.size(),
+					RequestDispatcherManagementConnector.class.getCanonicalName());
 				
-				ApplicationVM vm = new ApplicationVM("vm"+this.avmOutPort.size(),	// application vm component URI
-						ApplicationVMManagementInboundPortURI,
-					    RequestSubmissionInboundPortVMURI,
-					    RequestNotificationOutboundPortVMURI) ;
-				//this.addDeployedComponent(vm) ;
-
-				vm.toggleTracing() ;
-				vm.toggleLogging() ;
+				dispatcherURI[0] = "RD_" + rdmopList.size();
+				dispatcherURI[1] = RequestSubmissionInboundPortURI+ rdmopList.size();
 				
-				// Create a mock up port to manage the AVM component (allocate cores).
-				ApplicationVMManagementOutboundPort avmPort = new ApplicationVMManagementOutboundPort(
-											ApplicationVMManagementOutboundPortURI,
-											vm) ;
-				avmPort.publishPort() ;
-				avmPort.
-						doConnection(
+				for(int i=0;i<nbVM;i++)
+				{
+					// --------------------------------------------------------------------
+					// Create an Application VM component
+					// --------------------------------------------------------------------
+					
+					
+					String ApplicationVMManagementInboundPortURI = "avmibp-"+this.avmOutPort.size();
+					String RequestSubmissionInboundPortVMURI = "rsibpVM-"+this.avmOutPort.size();
+					String RequestNotificationOutboundPortVMURI = "rnobpVM-"+this.avmOutPort.size();
+					String ApplicationVMManagementOutboundPortURI = "avmobp-"+this.avmOutPort.size();
+					
+					ApplicationVM vm = new ApplicationVM("vm"+this.avmOutPort.size(),	// application vm component URI
 							ApplicationVMManagementInboundPortURI,
-							ApplicationVMManagementConnector.class.getCanonicalName()) ;
+						    RequestSubmissionInboundPortVMURI,
+						    RequestNotificationOutboundPortVMURI) ;
+					//this.addDeployedComponent(vm) ;
+
+					vm.toggleTracing() ;
+					vm.toggleLogging() ;
+					
+					// Create a mock up port to manage the AVM component (allocate cores).
+					ApplicationVMManagementOutboundPort avmPort = new ApplicationVMManagementOutboundPort(
+												ApplicationVMManagementOutboundPortURI,
+												this) ;
+					avmPort.publishPort() ;
+					avmPort.doConnection(
+								ApplicationVMManagementInboundPortURI,
+								ApplicationVMManagementConnector.class.getCanonicalName()) ;
+					
+					this.avmOutPort.add(avmPort);
+					
+					avmPort.allocateCores(allocatedCore);
+					
+					rdmop.connectVirtualMachine("vm"+this.avmOutPort.size(),RequestSubmissionInboundPortVMURI, RequestSubmissionOutboundPortURI+"-"+i);
+					avmPort.connectWithRequestSubmissioner(dispatcherURI[0], RequestNotificationInboundPortURI+ rdmopList.size());
+				}
 				
-				this.avmOutPort.add(avmPort);
+				rdmopList.put(appURI, rdmop);
 				
-				avmPort.allocateCores(allocatedCore);
+				return dispatcherURI;
 				
-			//	rdmop.connectVirtualMachine("vm"+this.avmOutPort.size(),RequestSubmissionInboundPortVMURI);
-				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], RequestNotificationInboundPortURI+ rdmopList.size());
+			}else {
+				this.logMessage("Failed to allocates core for a new application.");
+				return null;
 			}
-			
-			rdmopList.put(appURI, rdmop);
-			
-			return dispatcherURI;
-			
-		}else {
-			this.logMessage("Failed to allocates core for a new application.");
-			return null;
-		}
 	}
 
 
