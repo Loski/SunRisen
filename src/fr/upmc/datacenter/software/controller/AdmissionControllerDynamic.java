@@ -64,8 +64,8 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 	private DynamicComponentCreationOutboundPort portToRequestDispatcherJVM;
 	private DynamicComponentCreationOutboundPort portToApplicationVMJVM;
 
-	protected static final String RequestDispatcher_JVM_URI = "" ;
-	protected static final String Application_VM_JVM_URI = "";
+	protected static final String RequestDispatcher_JVM_URI = "application1" ;
+	protected static final String Application_VM_JVM_URI = "controller";
 	
 	
 	public AdmissionControllerDynamic(String acURI, String applicationSubmissionInboundPortURI,
@@ -97,10 +97,10 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 		
 		this.computerURI = computerURI;
 		
-		this.cssdop = new ComputerStaticStateDataOutboundPort(computerStaticStateDataOutboundPortURI, this, computerURI);
+		/*this.cssdop = new ComputerStaticStateDataOutboundPort(computerStaticStateDataOutboundPortURI, this, computerURI);
 		this.addPort(this.cssdop);
 		this.cssdop.publishPort();
-		
+		*/
 		ReflectionOutboundPort a;
 		this.avmOutPort = new LinkedList<ApplicationVMManagementOutboundPort>();
 		

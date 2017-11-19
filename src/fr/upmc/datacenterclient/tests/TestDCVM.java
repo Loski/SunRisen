@@ -21,9 +21,9 @@ import fr.upmc.datacenterclient.applicationprovider.ApplicationProvider;
 
 public class TestDCVM extends AbstractDistributedCVM{
 	
-	protected static String		AdmissionController = "admission-jvm" ;
-	protected static String		Application1 = "app-1-jvm" ;
-	protected static String		Application2 = "app-2-jvm" ;
+	protected static String		AdmissionController = "controller" ;
+	protected static String		Application1 = "application1" ;
+	protected static String		Application2 = "application2" ;
 	
 	
 	public static final String	ComputerServicesInboundPortURI = "cs-ibp" ;
@@ -48,28 +48,29 @@ public class TestDCVM extends AbstractDistributedCVM{
 	public static final String	RequestGeneratorManagementOutboundPortURI = "rgmop" ;
 	
 	
-	protected ApplicationProvider ap;
-	protected ApplicationProvider ap2;
+	protected static ApplicationProvider ap;
+	protected static ApplicationProvider ap2;
 	private String applicationSubmissionInboundPortURI = "asip";
 	private String AdmissionControllerManagementInboundPortURI = "acmip";
 	
 	/** Port connected to the computer component to access its services.	*/
-	protected ComputerServicesOutboundPort			csPort ;
+	protected static ComputerServicesOutboundPort			csPort ;
 	/** 	Computer monitor component.										*/
-	protected ComputerMonitor						cm ;
+	protected static ComputerMonitor						cm ;
 	/** 	Application virtual machine component.							*/
-	protected ApplicationVM							vm ;
+	protected static ApplicationVM							vm ;
 
 	/** Port connected to the AVM component to allocate it cores.			*/
-	protected ApplicationVMManagementOutboundPort	avmPort ;
+	protected static ApplicationVMManagementOutboundPort	avmPort ;
 
 	private int nbAvailableCores = 26;
 	private String applicationSubmissionOutboundPortURI = "asop";
 	private String applicationManagementInboundPort = " amip";
-	protected AdmissionControllerDynamic ac;
+	protected static AdmissionControllerDynamic ac;
 	@Override
 	public void instantiateAndPublish() throws Exception {
 
+		
 		if (thisJVMURI.equals(AdmissionController)) {
 			AbstractComponent.configureLogging("", "", 0, '|') ;
 			Processor.DEBUG = true ;
@@ -100,18 +101,6 @@ public class TestDCVM extends AbstractDistributedCVM{
 								ComputerStaticStateDataInboundPortURI,
 								ComputerDynamicStateDataInboundPortURI) ;
 			this.addDeployedComponent(c) ;
-
-			// Create a mock-up computer services port to later allocate its cores
-			// to the application virtual machine.
-			this.csPort = new ComputerServicesOutboundPort(
-											ComputerServicesOutboundPortURI,
-											new AbstractComponent(0, 0) {}) ;
-			this.csPort.publishPort() ;
-			this.csPort.doConnection(
-							ComputerServicesInboundPortURI,
-							ComputerServicesConnector.class.getCanonicalName()) ;
-			// --------------------------------------------------------------------
-
 			// --------------------------------------------------------------------
 			// Create the computer monitor component and connect its to ports
 			// with the computer component.
@@ -133,10 +122,11 @@ public class TestDCVM extends AbstractDistributedCVM{
 			System.out.println("create controller");
 			this.ac =  new AdmissionControllerDynamic("AdmCtrl", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI, ComputerServicesInboundPortURI, computerURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI);
 			this.addDeployedComponent(this.ac);
-			this.cyclicBarrierClient.notify();
+		//	this.cyclicBarrierClient.notifyAll();
 		}else if(thisJVMURI.equals(Application1)) {
 			System.out.println("Appli 1 ");
-			this.cyclicBarrierClient.wait();
+			Thread.sleep(500);
+			///this.cyclicBarrierClient.waitBarrier();
 			this.ap = new ApplicationProvider("moteurWalidien", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI, applicationManagementInboundPort);
 		}
 		super.instantiateAndPublish();
@@ -162,14 +152,15 @@ public class TestDCVM extends AbstractDistributedCVM{
 			trd.deploy() ;
 			System.out.println("starting...") ;
 			// Start them.
+			
+			
 			trd.start() ;
-			// Execute the chosen request generation test scenario in a
-			// separate thread.
+			
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
 					try {
-					//	trd.testScenario() ;
+						trd.testScenario() ;
 					} catch (Exception e) {
 						throw new RuntimeException(e) ;
 					}
@@ -185,6 +176,12 @@ public class TestDCVM extends AbstractDistributedCVM{
 			System.exit(0) ;
 		} catch (Exception e) {
 			throw new RuntimeException(e) ;
+		}
+	}
+
+	protected void testScenario() throws Exception {
+		if (thisJVMURI.equals(AdmissionController)) {}else if(thisJVMURI.equals(Application1)) {
+			this.ap.createAndSendApplication();
 		}
 	}
 }
