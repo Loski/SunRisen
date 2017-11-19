@@ -67,62 +67,16 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 	protected static final String RequestDispatcher_JVM_URI = "application1" ;
 	protected static final String Application_VM_JVM_URI = "controller";
 	
-	
 	public AdmissionControllerDynamic(String acURI, String applicationSubmissionInboundPortURI,
 			String AdmissionControllerManagementInboundPortURI, String computerServiceOutboundPortURI,
 			String ComputerServicesInboundPortURI, String computerURI, int nbAvailableCores,
 			String computerStaticStateDataOutboundPortURI) throws Exception {
-		super(2, 2);
-		this.toggleLogging();
-		this.toggleTracing();
-		this.acURI = acURI;
-		this.addOfferedInterface(ApplicationSubmissionI.class);
-		this.asip = new ApplicationSubmissionInboundPort(applicationSubmissionInboundPortURI, this);
-		this.addPort(asip);
-		this.asip.publishPort();
-
-		this.addOfferedInterface(AdmissionControllerManagementI.class);
-		this.acmip = new AdmissionControllerManagementInboundPort(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementI.class, this);
-		this.addPort(acmip);
-		this.acmip.publishPort();
- 
-		this.csop = new ComputerServicesOutboundPort(computerServiceOutboundPortURI, this);
-		this.addPort(csop);
-		this.csop.localPublishPort();
 		
-		this.csop.doConnection(
-				ComputerServicesInboundPortURI,
-				ComputerServicesConnector.class.getCanonicalName()) ;
+		super(acURI, applicationSubmissionInboundPortURI,
+				AdmissionControllerManagementInboundPortURI, computerServiceOutboundPortURI,
+				ComputerServicesInboundPortURI, computerURI, nbAvailableCores,
+				computerStaticStateDataOutboundPortURI);
 		
-		
-		this.computerURI = computerURI;
-		
-		/*this.cssdop = new ComputerStaticStateDataOutboundPort(computerStaticStateDataOutboundPortURI, this, computerURI);
-		this.addPort(this.cssdop);
-		this.cssdop.publishPort();
-		*/
-		ReflectionOutboundPort a;
-		this.avmOutPort = new LinkedList<ApplicationVMManagementOutboundPort>();
-		
-
-		// this.addOfferedInterface(ComputerStaticStateDataI.class);
-		// or :
-	/*	this.addOfferedInterface(DataRequiredI.PushI.class);
-		this.addRequiredInterface(DataRequiredI.PullI.class);
-		
-		*
-		*		this.addRequiredInterface(ControlledDataRequiredI.ControlledPullI.class);
-		this.cdsdop = new ComputerDynamicStateDataOutboundPort(computerDynamicStateDataOutboundPortURI, this, computerURI);
-		this.addPort(this.cdsdop);
-		this.cdsdop.publishPort();
-		*/
-		
-		this.rdmopList = new HashMap<String, RequestDispatcherManagementOutboundPort>();
-		
-		//Pour l'allocation de core.
-		this.addRequiredInterface(ComputerServicesI.class);
-		
-		this.interface_dispatcher_map = new LinkedHashMap<>();
 		this.portToApplicationVMJVM = new DynamicComponentCreationOutboundPort(this);
 		this.portToApplicationVMJVM.localPublishPort();
 		this.addPort(this.portToApplicationVMJVM);

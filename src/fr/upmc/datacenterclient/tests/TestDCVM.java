@@ -32,20 +32,6 @@ public class TestDCVM extends AbstractDistributedCVM{
 	public static final String	ComputerStaticStateDataOutboundPortURI = "css-dop" ;
 	public static final String	ComputerDynamicStateDataInboundPortURI = "cds-dip" ;
 	public static final String	ComputerDynamicStateDataOutboundPortURI = "cds-dop" ;
-	public static final String	ApplicationVMManagementInboundPortURI = "avm-ibp" ;
-	public static final String	ApplicationVMManagementOutboundPortURI = "avm-obp" ;
-	public static final String	RequestDispatcherManagementInboundPortURI = "rdm-ibp" ;
-	public static final String	RequestDispatcherManagementOutboundPortURI = "rdm-obp" ;
-	public static final String	RequestSubmissionInboundPortURI = "rsibp" ;
-	public static final String	RequestSubmissionOutboundPortURI = "rsobp" ;
-	public static final String	RequestSubmissionOutboundPortDispatcherURI = "rsobp-dispatcher" ;
-	public static final String	RequestNotificationInboundPortURI = "rnibp" ;
-	public static final String  RequestNotificationInboundPortDispatcherURI = "rnibp-dispatcher";
-	public static final String	RequestNotificationOutboundPortURI = "rnobp" ;
-	public static final String	RequestSubmissionInboundPortVMURI = "rsibpVM" ;
-	public static final String	RequestNotificationOutboundPortVMURI = "rnobpVM" ;
-	public static final String	RequestGeneratorManagementInboundPortURI = "rgmip" ;
-	public static final String	RequestGeneratorManagementOutboundPortURI = "rgmop" ;
 	
 	
 	protected static ApplicationProvider ap;
@@ -57,11 +43,6 @@ public class TestDCVM extends AbstractDistributedCVM{
 	protected static ComputerServicesOutboundPort			csPort ;
 	/** 	Computer monitor component.										*/
 	protected static ComputerMonitor						cm ;
-	/** 	Application virtual machine component.							*/
-	protected static ApplicationVM							vm ;
-
-	/** Port connected to the AVM component to allocate it cores.			*/
-	protected static ApplicationVMManagementOutboundPort	avmPort ;
 
 	private int nbAvailableCores = 26;
 	private String applicationSubmissionOutboundPortURI = "asop";
@@ -70,6 +51,7 @@ public class TestDCVM extends AbstractDistributedCVM{
 	@Override
 	public void instantiateAndPublish() throws Exception {
 
+		super.instantiateAndPublish();
 		
 		if (thisJVMURI.equals(AdmissionController)) {
 			AbstractComponent.configureLogging("", "", 0, '|') ;
@@ -120,7 +102,7 @@ public class TestDCVM extends AbstractDistributedCVM{
 						ComputerDynamicStateDataInboundPortURI,
 						ControlledDataConnector.class.getCanonicalName()) ;
 			System.out.println("create controller");
-			this.ac =  new AdmissionControllerDynamic("AdmCtrl", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI, ComputerServicesInboundPortURI, computerURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI);
+			this.ac =  new AdmissionControllerDynamic("AdmCtrl", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI+"-controller", ComputerServicesInboundPortURI, computerURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI+"-controller");
 			this.addDeployedComponent(this.ac);
 		//	this.cyclicBarrierClient.notifyAll();
 		}else if(thisJVMURI.equals(Application1)) {
@@ -128,8 +110,9 @@ public class TestDCVM extends AbstractDistributedCVM{
 			Thread.sleep(500);
 			///this.cyclicBarrierClient.waitBarrier();
 			this.ap = new ApplicationProvider("moteurWalidien", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI, applicationManagementInboundPort);
+			this.addDeployedComponent(this.ap) ;
 		}
-		super.instantiateAndPublish();
+		
 	}
 
 	@Override
