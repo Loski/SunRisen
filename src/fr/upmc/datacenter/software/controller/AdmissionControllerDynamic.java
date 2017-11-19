@@ -59,7 +59,7 @@ import fr.upmc.datacenter.interfaces.ControlledDataRequiredI;
  * 
  * @author	Maxime LAVASTE Loïc LAFONTAINE
  */
-public class AdmissionControllerDynamic extends AdmissionController implements ApplicationSubmissionI, AdmissionControllerManagementI{
+public class AdmissionControllerDynamic extends AdmissionController{
 
 	public static int	DEBUG_LEVEL = 1 ;
 	

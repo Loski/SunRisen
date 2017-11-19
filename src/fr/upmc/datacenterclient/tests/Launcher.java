@@ -7,15 +7,14 @@ public class Launcher {
 	
 	public static void main(String[] args) {
 		if(args[0].equals("barrier"))
-			DCVMCyclicBarrier.main(new String[] {"context.xml"});
+			DCVMCyclicBarrier.main(new String[] {"config.xml"});
 		else if(args[0].equals("registry"))
-			GlobalRegistry.main(new String[] {"context.xml"});
+			GlobalRegistry.main(new String[] {"config.xml"});
 		else if(args [0].equals("controller"))
-			TestDCVM.main(new String[] {"controller","context.xml"});
+			TestDCVM.main(new String[] {"controller","config.xml"});
 		else if(args [0].equals("application1"))
-			TestDCVM.main(new String[] {"application1","context.xml"});
+			TestDCVM.main(new String[] {"application1","config.xml"});
 		else if(args [0].equals("application2"))
-			TestDCVM.main(new String[] {"application2","context.xml"});
+			TestDCVM.main(new String[] {"application2","config.xml"});
 	}
-
 }
