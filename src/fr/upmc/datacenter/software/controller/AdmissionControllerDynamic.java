@@ -57,20 +57,25 @@ import fr.upmc.datacenter.interfaces.ControlledDataRequiredI;
  * He then bind the Virtual Machine to the request Dispatcher.
  * 
  * 
- * @author	Maxime LAVASTE Loïc LAFONTAINE
+ * @author	Maxime LAVASTE LoÃ¯c LAFONTAINE
  */
 public class AdmissionControllerDynamic extends AdmissionController implements ApplicationSubmissionI, AdmissionControllerManagementI{
 
+	public static int	DEBUG_LEVEL = 1 ;
+	
 	private DynamicComponentCreationOutboundPort portToRequestDispatcherJVM;
 	private DynamicComponentCreationOutboundPort portToApplicationVMJVM;
 
-	protected static final String RequestDispatcher_JVM_URI = "controller" ;
-	protected static final String Application_VM_JVM_URI = "controller";
+	/*protected static final String RequestDispatcher_JVM_URI = "controller" ;
+	protected static final String Application_VM_JVM_URI = "controller";*/
 	
 	public AdmissionControllerDynamic(String acURI, String applicationSubmissionInboundPortURI,
 			String AdmissionControllerManagementInboundPortURI, String computerServiceOutboundPortURI,
 			String ComputerServicesInboundPortURI, String computerURI, int nbAvailableCores,
-			String computerStaticStateDataOutboundPortURI) throws Exception {
+			String computerStaticStateDataOutboundPortURI,
+			String RequestDispatcher_JVM_URI,
+			String Application_VM_JVM_URI
+			) throws Exception {
 		
 		super(acURI, applicationSubmissionInboundPortURI,
 				AdmissionControllerManagementInboundPortURI, computerServiceOutboundPortURI,
@@ -82,7 +87,7 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 		this.addPort(this.portToApplicationVMJVM);
 		
 		this.portToApplicationVMJVM.doConnection(					
-				this.Application_VM_JVM_URI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
+				Application_VM_JVM_URI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
 				DynamicComponentCreationConnector.class.getCanonicalName());
 		
 		this.portToRequestDispatcherJVM = new DynamicComponentCreationOutboundPort(this);
@@ -90,7 +95,7 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 		this.addPort(this.portToRequestDispatcherJVM);
 		
 		this.portToRequestDispatcherJVM.doConnection(					
-				this.RequestDispatcher_JVM_URI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
+				RequestDispatcher_JVM_URI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
 				DynamicComponentCreationConnector.class.getCanonicalName());
 	
 	}
@@ -104,7 +109,7 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 	@Override
 	public synchronized String[] submitApplication(String appURI, int nbVM) throws Exception {
 		
-		this.logMessage("New Application received in dynamic controller .\n Waiting for evaluation.");
+		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
 		
 		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
 		String dispatcherURI[] = new String[6];
@@ -134,6 +139,8 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 					RequestDispatcherManagementOutboundPortURI + rdmopList.size(),
 					this);
 			
+			RequestDispatcher.DEBUG_LEVEL = 2;
+			
 			rdmop.publishPort();
 			rdmop.doConnection(dispatcherURI[1], RequestDispatcherManagementConnector.class.getCanonicalName());
 			
@@ -144,8 +151,14 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 			
 			
 			String applicationVM[] = new String[5];
-			/*rop.doConnection(dispatcherURI[0], ReflectionConnector.class.getCanonicalName());
-			rop.doDisconnection();*/
+			rop.doConnection(dispatcherURI[0], ReflectionConnector.class.getCanonicalName());
+			rop.toggleLogging();
+			rop.toggleTracing();
+			
+			rop.doDisconnection();
+			
+			
+			
 			for(int i=0;i<nbVM;i++)
 			{
 				// --------------------------------------------------------------------
@@ -203,7 +216,16 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 
 	@Override
 	public void shutdown() throws ComponentShutdownException {
-		// TODO Auto-generated method stub
+
+		try {
+			if(portToRequestDispatcherJVM.connected())
+				portToRequestDispatcherJVM.doDisconnection();
+			if(portToApplicationVMJVM.connected())
+				portToApplicationVMJVM.doDisconnection();
+		} catch (Exception e) {
+			throw new ComponentShutdownException("Port disconnection error", e);
+		}
+		
 		super.shutdown();
 	}
 	
@@ -211,7 +233,10 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 	@Override
 	public synchronized String[] submitApplication(String appURI, int nbVM,Class submissionInterface) throws Exception {
 		
-		this.logMessage("New Application received in dynamic controller .\n Waiting for evaluation.");
+		assert submissionInterface.isInterface();
+		
+		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
+		
 		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
 		String dispatcherURI[] = new String[6];
 
@@ -225,6 +250,7 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 			dispatcherURI[5] = RequestSubmissionOutboundPortURI + "_"+ appURI;
 
 			Class dispa = RequestDispatcherCreator.createRequestDispatcher("JAVASSIST-dispa",RequestDispatcher.class, submissionInterface);
+			interface_dispatcher_map.put(submissionInterface, dispa);
 			
 			this.portToRequestDispatcherJVM.createComponent(
 					dispa.getCanonicalName(),
@@ -251,8 +277,12 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 			
 			
 			String applicationVM[] = new String[5];
-			/*rop.doConnection(dispatcherURI[0], ReflectionConnector.class.getCanonicalName());
-			rop.doDisconnection();*/
+			RequestDispatcher.DEBUG_LEVEL = 2;
+			
+			rop.doConnection(dispatcherURI[0], ReflectionConnector.class.getCanonicalName());
+			rop.toggleLogging();
+			rop.toggleTracing();
+			rop.doDisconnection();
 			for(int i=0;i<nbVM;i++)
 			{
 				// --------------------------------------------------------------------

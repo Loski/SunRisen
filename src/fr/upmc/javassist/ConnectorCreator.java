@@ -10,11 +10,13 @@ import javassist.NotFoundException;
 
 public class ConnectorCreator extends ClassCreator{
 
-	public static Class<?> createConnectorImplementingInterface(String className,Class<?> interfaceToImplementClass) throws Exception
+	public static Class<?> createConnectorImplementingInterface(String className,Class<?> submissionInterface) throws Exception
 	{
+		System.out.println("CREATING NEW JAVASSIST CONNECTOR FOR :"+submissionInterface.getSimpleName());
+		
 		ClassPool pool = ClassPool.getDefault();
 		
-		CtClass test = createClass(className, interfaceToImplementClass,AbstractConnector.class);
+		CtClass test = createClass(className, submissionInterface,AbstractConnector.class);
 		
 		/*CtConstructor constructor = CtNewConstructor.make(null, null, test);
 		constructor.setBody("{}");
@@ -22,13 +24,11 @@ public class ConnectorCreator extends ClassCreator{
 		test.addConstructor(constructor);*/
 		
 		
-		for(Method m : interfaceToImplementClass.getDeclaredMethods())
+		for(Method m : submissionInterface.getDeclaredMethods())
 		{
-			System.out.println(m);
 			CtMethod method = copyMethodSignature(m,test);
 			
-			method.setBody(createBodyOfConnector(interfaceToImplementClass.getCanonicalName(),method));	
-			System.out.println(method);
+			method.setBody(createBodyOfConnector(submissionInterface.getCanonicalName(),method));	
 			
 			test.addMethod(method);
 		}

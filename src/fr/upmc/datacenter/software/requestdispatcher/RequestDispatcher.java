@@ -23,6 +23,7 @@ import fr.upmc.datacenter.software.ports.RequestSubmissionInboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementInboundPort;
+import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
 
 /**
  * The class <code>RequestDispatcher</code> is a component receiving request submissions from
@@ -38,6 +39,8 @@ implements
 			RequestDispatcherManagementI
 {
 
+	public static int	DEBUG_LEVEL = 1 ;
+	
 	/** URI of this request dispatcher */
 	protected String rdURI;
 	
@@ -163,7 +166,9 @@ implements
 		
 		RequestSubmissionOutboundPort port = getCurrentVMPort();
 		
-		System.out.println(String.format("%s transfers %s to %s using %s",this.rdURI,r.getRequestURI(),getCurrentVMURI(),port.getPortURI()));
+		if (RequestGenerator.DEBUG_LEVEL >= 1) 
+			this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,r.getRequestURI(),getCurrentVMURI(),port.getPortURI()));
+		
 		port.submitRequestAndNotify(r);
 		
 		this.nextVM();
@@ -174,7 +179,9 @@ implements
 		
 		assert r != null;
 		
-		System.out.println(String.format("RequestDispatcher [%s] notifies end of request %s",this.rdURI,r.getRequestURI()));
+		if (RequestGenerator.DEBUG_LEVEL >= 1) 
+			this.logMessage(String.format("RequestDispatcher [%s] notifies end of request %s",this.rdURI,r.getRequestURI()));
+		
 		this.requestNotificationOutboundPort.notifyRequestTermination( r );
 	}
 	
@@ -219,7 +226,8 @@ implements
 				requestSubmissionInboundPortURI,
 				getConnectorClassName());
 		
-		System.out.println(String.format("[%s] Connecting %s with %s using %s -> %s", getConnectorClassName(),this.rdURI,vmURI,port.getPortURI(),requestSubmissionInboundPortURI));
+		if (RequestGenerator.DEBUG_LEVEL >= 2)
+			this.logMessage(String.format("[%s] Connecting %s with %s using %s -> %s",getConnectorSimpleName(),this.rdURI,vmURI,port.getPortURI(),requestSubmissionInboundPortURI));
 
 	}
 
@@ -238,6 +246,11 @@ implements
 	{
 		return RequestSubmissionConnector.class.getCanonicalName();
 	}
+	
+	public String getConnectorSimpleName()
+	{
+		return RequestSubmissionConnector.class.getSimpleName();
+	}
 
 	@Override
 	public void connectWithRequestGenerator(String rgURI, String requestNotificationInboundPortURI) throws Exception {
@@ -248,7 +261,8 @@ implements
 				RequestNotificationConnector.class.getCanonicalName()
 				);
 		
-		System.out.println(String.format("[RequestNotificationConnector] Connecting %s with %s using %s -> %s", this.rdURI,rgURI,this.requestNotificationOutboundPort.getPortURI(),requestNotificationInboundPortURI));
+		if (RequestGenerator.DEBUG_LEVEL >= 2)
+			this.logMessage(String.format("[RequestNotificationConnector] Connecting %s with %s using %s -> %s", this.rdURI,rgURI,this.requestNotificationOutboundPort.getPortURI(),requestNotificationInboundPortURI));
 	}
 
 	@Override

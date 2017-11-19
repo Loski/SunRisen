@@ -18,6 +18,7 @@ import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
 import fr.upmc.datacenter.software.controller.AdmissionController;
 import fr.upmc.datacenter.software.controller.AdmissionControllerDynamic;
+import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 import fr.upmc.datacenterclient.applicationprovider.ApplicationProvider;
 
 public class TestDCVM extends AbstractDistributedCVM{
@@ -103,20 +104,20 @@ public class TestDCVM extends AbstractDistributedCVM{
 						ComputerDynamicStateDataInboundPortURI,
 						ControlledDataConnector.class.getCanonicalName()) ;
 			System.out.println("create controller");
-			this.ac = new AdmissionControllerDynamic("AdmCtrl", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI+"-controller", ComputerServicesInboundPortURI, computerURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI+"-controller");
+			this.ac = new AdmissionControllerDynamic("Controller", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI+"-controller", ComputerServicesInboundPortURI, computerURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI+"-controller",AdmissionController,AdmissionController);
 			this.addDeployedComponent(this.ac);
 		//	this.cyclicBarrierClient.notifyAll();
 		}else if(thisJVMURI.equals(Application1)) {
 			System.out.println("Appli 1 ");
 			Thread.sleep(500);
 			///this.cyclicBarrierClient.waitBarrier();
-			this.ap = new ApplicationProvider("moteurWalidien", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI, applicationManagementInboundPort);
+			this.ap = new ApplicationProvider("App1", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI, applicationManagementInboundPort);
 			this.addDeployedComponent(this.ap);
 		}else if(thisJVMURI.equals(Application2)) {
 			System.out.println("Appli 2 ");
 			Thread.sleep(500);
 			///this.cyclicBarrierClient.waitBarrier();
-			this.ap2 = new ApplicationProvider("moteurWalidien2", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI+"-2", applicationManagementInboundPort+"-2");
+			this.ap2 = new ApplicationProvider("App2", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI+"-2", applicationManagementInboundPort+"-2");
 			this.addDeployedComponent(this.ap2);
 		}
 		
@@ -174,7 +175,7 @@ public class TestDCVM extends AbstractDistributedCVM{
 		else if(thisJVMURI.equals(Application1)) {
 			this.ap.createAndSendApplication();
 		}else if(thisJVMURI.equals(Application2)) {
-			this.ap2.createAndSendApplication();
+			this.ap2.createAndSendApplication(RequestSubmissionI.class);
 		}
 	}
 }

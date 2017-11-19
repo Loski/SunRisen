@@ -19,6 +19,7 @@ import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
 import fr.upmc.datacenterclient.requestgenerator.connectors.RequestGeneratorManagementConnector;
 import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementInboundPort;
 import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementOutboundPort;
+import fr.upmc.javassist.ConnectorCreator;
 /**
  * Application provider is responsible to create and connect a requestGenerator to a requestDispatcher.
  * He needs to submit an application to the admissionController and receive the requestDispatcher create by the admissionController.
@@ -113,13 +114,13 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 
 	@Override
 	public void createAndSendApplication() throws Exception {
-		System.out.println("Send request ...");
+		System.out.println("Waiting acception of Application : "+this.apURI);
 		rdUri = this.asop.submitApplication(apURI,  2 );
-		System.out.println("Finish ...");
+		System.out.println("Request submitted, the reply is : ");
 
         if ( rdUri != null ) {
             // Creation dynamique du request generator
-            System.out.println( "creating RequestGenerator" );
+            System.out.println( this.apURI+" was accepted / creating RequestGenerator" );
             rnipUri = rdUri[0] + rnipUri; 
             RequestGenerator rg = new RequestGenerator( rgUri , 500.0 , 6000000000L , rgmipUri , rsopUri , rnipUri );
             AbstractCVM.theCVM.addDeployedComponent( rg );
@@ -131,6 +132,8 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
  
             rg.toggleTracing();
             rg.toggleLogging();
+            
+            rg.DEBUG_LEVEL=2;
 
             rgmop = new RequestGeneratorManagementOutboundPort( rgmopUri , this );
             rgmop.publishPort();
@@ -174,7 +177,6 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 			if (this.asop.connected()) {
 				this.asop.doDisconnection();
 			}
-			// tuer dispatcher???
 		} catch (Exception e) {
 			throw new ComponentShutdownException("Port disconnection error", e);
 		}
@@ -183,15 +185,16 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 
 
 	public void createAndSendApplication(Class submissionInterface) throws Exception{
-
+		
 		assert submissionInterface.isInterface();
-		System.out.println("Send request ...");
+		
+		System.out.println("Waiting acception of Application ["+this.apURI+"] with submissionInterface ["+submissionInterface.getCanonicalName()+"]");
 		rdUri = this.asop.submitApplication(apURI, 2, submissionInterface);
-		System.out.println("Finish ...");
+		System.out.println("Request submitted, the reply is : ");
 		
         if ( rdUri != null ) {
             // Creation dynamique du request generator
-            System.out.println( "creating RequestGenerator" );
+        	  System.out.println( this.apURI+" was accepted / creating RequestGenerator" );
             rnipUri = rdUri[0] + rnipUri; 
             RequestGenerator rg = new RequestGenerator( rgUri , 500.0 , 6000000000L , rgmipUri , rsopUri , rnipUri );
             AbstractCVM.theCVM.addDeployedComponent( rg );
@@ -199,10 +202,12 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
     		rg.doPortConnection(
     				rsopUri,
     				rdUri[indice_rdsin_uri],
-    				RequestSubmissionConnector.class.getCanonicalName());
+    				ConnectorCreator.createConnectorImplementingInterface("RG-Connector-Of-"+this.apURI, submissionInterface).getCanonicalName());
  
             rg.toggleTracing();
             rg.toggleLogging();
+            
+            rg.DEBUG_LEVEL=2;
 
             rgmop = new RequestGeneratorManagementOutboundPort( rgmopUri , this );
             rgmop.publishPort();

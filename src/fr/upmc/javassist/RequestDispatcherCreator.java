@@ -14,7 +14,7 @@ public class RequestDispatcherCreator extends ClassCreator{
 
 	public static Class<?> createRequestDispatcher(String className,Class<?> dispatcher,Class<?> submissionInterface) throws Exception{
 		
-		System.out.println("CREATING NEW JAVASSIST DISPATCHER FOR :"+submissionInterface.getName());
+		System.out.println("CREATING NEW JAVASSIST DISPATCHER FOR :"+submissionInterface.getSimpleName());
 		
 		ClassPool pool = ClassPool.getDefault();
 		
@@ -42,6 +42,9 @@ public class RequestDispatcherCreator extends ClassCreator{
 		
 		CtMethod method = test.getDeclaredMethod("getConnectorClassName");
 		method.setBody("{return \""+ connector.getCanonicalName()+"\";}");
+		
+		CtMethod methodCannonical = test.getDeclaredMethod("getConnectorSimpleName");
+		methodCannonical.setBody("{return \""+ connector.getSimpleName()+"\";}");
 		
 		//test.addField(new CtField(inport, "newInBoundPort_"+className, test));
 		test.setName(className);

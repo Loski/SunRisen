@@ -91,7 +91,6 @@ public abstract class ClassCreator {
 		for(Constructor ctr : ctrs)
 		{
 			CtConstructor ctrCopy = copyConstructor(ctr,test);
-			System.out.println("CTR COPIED :"+ctrCopy);
 			
 			if(ctr.getParameterTypes().length==2)
 				ctrCopy.setBody(String.format("super($1,%s,$2);",test.getName()+".class"));
@@ -104,13 +103,9 @@ public abstract class ClassCreator {
 		
 		for(Method m : interfaceToImplementClass.getDeclaredMethods())
 		{
-			System.out.println(m);
 			CtMethod method = copyMethodSignature(m,test);
 			
-			System.out.println("YOLO: "+stringOfMethodCall(method));
-			
 			method.setBody(createBodyOfOutboundPort(interfaceToImplementClass.getCanonicalName(),method));	
-			System.out.println(method);
 		}
 		
 		CtMethod toString = new CtMethod(pool.get("java.lang.String"),"toString",null, test);
@@ -134,16 +129,13 @@ public abstract class ClassCreator {
 		for(Constructor ctr : ctrs)
 		{
 			CtConstructor ctrCopy = copyConstructor(ctr,test);
-			System.out.println("CTR COPIED :"+ctrCopy);
 			
 			/*String s1 = "assert	$1 != null && $1 instanceof "+interfaceToImplementClass.getCanonicalName();
 			String s2 = "assert	$2 != null && $2 instanceof "+interfaceToImplementClass.getCanonicalName();*/
 			
 			String s1="";
 			String s2="";
-			
-			System.out.println(String.format("{super($1,%s,$2); %s;}",interfaceToImplementClass.getName()+".class",s2));
-			
+				
 			if(ctr.getParameterTypes().length==2)
 				ctrCopy.setBody(String.format("{super($1,%s,$2); %s;}",interfaceToImplementClass.getName()+".class",s2));
 			else if(ctr.getParameterTypes().length==1)
@@ -199,8 +191,6 @@ public abstract class ClassCreator {
 		 }
 		
 		CtConstructor constructor = CtNewConstructor.make(parameters, exceptions, test);
-		
-		System.out.println(constructor);
 		
 		return constructor;
 	}
@@ -322,8 +312,6 @@ public abstract class ClassCreator {
 		
 		builder.append(String.format("final %s aaa = new %s(( %s ) this.owner);",instanciatedClass.getCanonicalName(),instanciatedClass.getCanonicalName(),interfaceToImplementClass.getCanonicalName()));
 		builder.append("this.owner.handleRequestAsync(aaa);}");
-		
-		System.out.println(builder.toString());
 		
 		return builder.toString();
 	}
