@@ -39,7 +39,7 @@ implements
 			RequestDispatcherManagementI
 {
 
-	public static int	DEBUG_LEVEL = 1 ;
+	public static int	DEBUG_LEVEL = 2 ;
 	
 	/** URI of this request dispatcher */
 	protected String rdURI;

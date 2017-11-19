@@ -116,7 +116,7 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 
 		if(allocatedCore!=null && allocatedCore.length != 0) {
 			
-			dispatcherURI[0] = "RD_" + rdmopList.size()+"_"+appURI;
+			dispatcherURI[0] = "RD" + rdmopList.size()+"-"+appURI;
 			dispatcherURI[1] = RequestDispatcherManagementInboundPortURI + "_" + appURI;
 			dispatcherURI[2] = RequestSubmissionInboundPortURI +"_" + appURI;
 			dispatcherURI[3] = RequestNotificationOutboundPortURI + "_"+ appURI;
@@ -138,8 +138,6 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 			RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
 					RequestDispatcherManagementOutboundPortURI + rdmopList.size(),
 					this);
-			
-			RequestDispatcher.DEBUG_LEVEL = 2;
 			
 			rdmop.publishPort();
 			rdmop.doConnection(dispatcherURI[1], RequestDispatcherManagementConnector.class.getCanonicalName());
@@ -164,10 +162,10 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 				// --------------------------------------------------------------------
 				// Create an Application VM component
 				// --------------------------------------------------------------------
-				applicationVM[0] = "avm-"+this.avmOutPort.size();
+				applicationVM[0] = "vm-"+this.avmOutPort.size();
 				applicationVM[1] = "avmibp-"+this.avmOutPort.size();
-				applicationVM[2] = "rsibpVM-"+this.avmOutPort.size();
-				applicationVM[3] = "rnobpVM-"+this.avmOutPort.size();
+				applicationVM[2] = "rsibp-VM-"+this.avmOutPort.size();
+				applicationVM[3] = "rnobp-VM-"+this.avmOutPort.size();
 				applicationVM[4] = "avmobp-"+this.avmOutPort.size();
 				
 				this.portToRequestDispatcherJVM.createComponent(
@@ -277,7 +275,6 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 			
 			
 			String applicationVM[] = new String[5];
-			RequestDispatcher.DEBUG_LEVEL = 2;
 			
 			rop.doConnection(dispatcherURI[0], ReflectionConnector.class.getCanonicalName());
 			rop.toggleLogging();
