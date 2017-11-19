@@ -17,7 +17,9 @@ import fr.upmc.datacenter.hardware.tests.ComputerMonitor;
 import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
 import fr.upmc.datacenter.software.controller.AdmissionControllerDynamic;
+import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 import fr.upmc.datacenterclient.applicationprovider.ApplicationProvider;
+import fr.upmc.datacenterclient.applicationprovider.connectors.ApplicationSubmissionConnector;
 
 public class TestDCVM extends AbstractDistributedCVM{
 	
@@ -67,13 +69,14 @@ public class TestDCVM extends AbstractDistributedCVM{
 	private String applicationSubmissionOutboundPortURI = "asop";
 	private String applicationManagementInboundPort = " amip";
 	protected static AdmissionControllerDynamic ac;
+	
 	@Override
 	public void instantiateAndPublish() throws Exception {
 
 		
 		if (thisJVMURI.equals(AdmissionController)) {
-			AbstractComponent.configureLogging("", "", 0, '|') ;
-			Processor.DEBUG = true ;
+			System.err.println("je rentre");
+		
 
 			// --------------------------------------------------------------------
 			// Create and deploy a computer component with its 2 processors and
@@ -114,7 +117,7 @@ public class TestDCVM extends AbstractDistributedCVM{
 							ComputerStaticStateDataOutboundPortURI,
 							ComputerStaticStateDataInboundPortURI,
 							DataConnector.class.getCanonicalName()) ;
-
+			
 			this.cm.doPortConnection(
 						ComputerDynamicStateDataOutboundPortURI,
 						ComputerDynamicStateDataInboundPortURI,
@@ -124,12 +127,24 @@ public class TestDCVM extends AbstractDistributedCVM{
 			this.addDeployedComponent(this.ac);
 		//	this.cyclicBarrierClient.notifyAll();
 		}else if(thisJVMURI.equals(Application1)) {
-			System.out.println("Appli 1 ");
-			Thread.sleep(500);
+			
+			System.err.println("Appli 1 ");
+			Thread.sleep(1500);
 			///this.cyclicBarrierClient.waitBarrier();
 			this.ap = new ApplicationProvider("moteurWalidien", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI, applicationManagementInboundPort);
+			this.addDeployedComponent(this.ap);
+
 		}
 		super.instantiateAndPublish();
+	}
+
+	@Override
+	public void interconnect() throws Exception {
+		if (thisJVMURI.equals(AdmissionController)) 
+		{}else if(thisJVMURI.equals(Application1)) {
+			this.ap.doPortConnection(applicationSubmissionOutboundPortURI, applicationSubmissionInboundPortURI, ApplicationSubmissionConnector.class.getCanonicalName());
+		}
+		super.interconnect();
 	}
 
 	@Override
@@ -148,6 +163,7 @@ public class TestDCVM extends AbstractDistributedCVM{
 		// AbstractCVM.toggleDebugMode() ;
 		try {
 			final TestDCVM trd = new TestDCVM(args) ;
+			trd.toggleDebugMode();
 			// Deploy the components
 			trd.deploy() ;
 			System.out.println("starting...") ;
@@ -155,7 +171,7 @@ public class TestDCVM extends AbstractDistributedCVM{
 			
 			
 			trd.start() ;
-			
+			System.out.println("started");
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
