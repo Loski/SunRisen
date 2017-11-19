@@ -57,7 +57,7 @@ import fr.upmc.datacenter.interfaces.ControlledDataRequiredI;
  * He then bind the Virtual Machine to the request Dispatcher.
  * 
  * 
- * @author	Maxime LAVASTE Loï¿½c LAFONTAINE
+ * @author	Maxime LAVASTE Loïc LAFONTAINE
  */
 public class AdmissionControllerDynamic extends AdmissionController implements ApplicationSubmissionI, AdmissionControllerManagementI{
 
@@ -104,8 +104,8 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 	@Override
 	public String[] submitApplication(String appURI, int nbVM) throws Exception {
 		
-		System.out.println("kill ï¿½e in,sde");
 		this.logMessage("New Application received in dynamic controller .\n Waiting for evaluation.");
+		
 		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
 		String dispatcherURI[] = new String[6];
 
@@ -175,19 +175,12 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 				this.avmOutPort.add(avmPort);
 				
 				avmPort.allocateCores(allocatedCore);
-
 				rdmop.connectVirtualMachine(applicationVM[0], applicationVM[2], dispatcherURI[5]+"-"+i);
 				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], dispatcherURI[4]);		
-
-				// --------------------------------------------------------------------
-				System.out.println("walid");
 				rop.doConnection(applicationVM[0], ReflectionConnector.class.getCanonicalName());
 				
 				rop.toggleTracing();
 				rop.toggleLogging();
-				
-
-				System.out.println("walid2");
 
 				rop.doDisconnection();
 			}
@@ -218,7 +211,6 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 	@Override
 	public String[] submitApplication(String appURI, int nbVM,Class submissionInterface) throws Exception {
 		
-		System.out.println("kill ï¿½e in,sde");
 		this.logMessage("New Application received in dynamic controller .\n Waiting for evaluation.");
 		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
 		String dispatcherURI[] = new String[6];
@@ -294,15 +286,10 @@ public class AdmissionControllerDynamic extends AdmissionController implements A
 				rdmop.connectVirtualMachine(applicationVM[0], applicationVM[2], dispatcherURI[5]+"-"+i);
 				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], dispatcherURI[4]);		
 
-				// --------------------------------------------------------------------
-				System.out.println("walid");
 				rop.doConnection(applicationVM[0], ReflectionConnector.class.getCanonicalName());
 				
 				rop.toggleTracing();
 				rop.toggleLogging();
-				
-
-				System.out.println("walid2");
 
 				rop.doDisconnection();
 			}
