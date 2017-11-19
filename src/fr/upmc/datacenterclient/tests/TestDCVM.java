@@ -110,10 +110,8 @@ public class TestDCVM extends AbstractDistributedCVM{
 			Thread.sleep(500);
 			///this.cyclicBarrierClient.waitBarrier();
 			this.ap = new ApplicationProvider("moteurWalidien", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI, applicationManagementInboundPort);
-<<<<<<< HEAD
 			this.addDeployedComponent(this.ap);
-=======
->>>>>>> parent of 59f8ee5... try
+
 		}
 		
 	}
