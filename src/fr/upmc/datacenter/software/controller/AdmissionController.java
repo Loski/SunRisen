@@ -36,6 +36,7 @@ import fr.upmc.javassist.RequestDispatcherCreator;
 import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
 import fr.upmc.datacenter.hardware.computers.connectors.ComputerServicesConnector;
 import fr.upmc.datacenter.hardware.computers.interfaces.ComputerServicesI;
+import fr.upmc.datacenter.hardware.computers.interfaces.ComputerStaticStateDataI;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerDynamicStateDataOutboundPort;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerStaticStateDataOutboundPort;
@@ -126,9 +127,10 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 		this.addPort(acmip);
 		this.acmip.publishPort();
  
+		this.addRequiredInterface(ComputerServicesI.class);
 		this.csop = new ComputerServicesOutboundPort(computerServiceOutboundPortURI, this);
 		this.addPort(csop);
-		this.csop.localPublishPort();
+		this.csop.publishPort();
 		
 		this.csop.doConnection(
 				ComputerServicesInboundPortURI,
@@ -137,6 +139,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 		
 		this.computerURI = computerURI;
 		
+		this.addRequiredInterface(ComputerStaticStateDataI.class);
 		this.cssdop = new ComputerStaticStateDataOutboundPort(computerStaticStateDataOutboundPortURI, this, computerURI);
 		this.addPort(this.cssdop);
 		this.cssdop.publishPort();
@@ -158,10 +161,7 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 		*/
 		
 		this.rdmopList = new HashMap<String, RequestDispatcherManagementOutboundPort>();
-		
-		//Pour l'allocation de core.
-		this.addRequiredInterface(ComputerServicesI.class);
-		
+
 		this.interface_dispatcher_map = new LinkedHashMap<>();
 	}
 
