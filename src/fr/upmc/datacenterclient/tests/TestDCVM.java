@@ -112,7 +112,12 @@ public class TestDCVM extends AbstractDistributedCVM{
 			///this.cyclicBarrierClient.waitBarrier();
 			this.ap = new ApplicationProvider("moteurWalidien", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI, applicationManagementInboundPort);
 			this.addDeployedComponent(this.ap);
-
+		}else if(thisJVMURI.equals(Application2)) {
+			System.out.println("Appli 2 ");
+			Thread.sleep(500);
+			///this.cyclicBarrierClient.waitBarrier();
+			this.ap2 = new ApplicationProvider("moteurWalidien2", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI+"-2", applicationManagementInboundPort+"-2");
+			this.addDeployedComponent(this.ap2);
 		}
 		
 	}
@@ -165,8 +170,11 @@ public class TestDCVM extends AbstractDistributedCVM{
 	}
 
 	protected void testScenario() throws Exception {
-		if (thisJVMURI.equals(AdmissionController)) {}else if(thisJVMURI.equals(Application1)) {
+		if (thisJVMURI.equals(AdmissionController)) {}
+		else if(thisJVMURI.equals(Application1)) {
 			this.ap.createAndSendApplication();
+		}else if(thisJVMURI.equals(Application2)) {
+			this.ap2.createAndSendApplication();
 		}
 	}
 }
