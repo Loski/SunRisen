@@ -1,1 +1,0 @@
-java -ea -Djava.security.manager -Djava.security.policy=dcvm.policy -jar sunrisen.jar "application2"  context.xml

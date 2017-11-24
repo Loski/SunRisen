@@ -68,7 +68,6 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
     protected String rgmopUri;
     
     protected String[] rdUri;
-    RequestNotificationInboundPort rnip;
     
     
     private static int indice_rd_uri = 0;

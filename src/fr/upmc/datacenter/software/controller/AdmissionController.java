@@ -90,14 +90,8 @@ public class AdmissionController extends AbstractComponent implements Applicatio
 	 // Map between RequestDispatcher URIs and the outbound ports to call them.
 	protected Map<String, RequestDispatcherManagementOutboundPort> rdmopList;
 	
-	// Map between RequestSubmissionInboundPort URIs and the inboundPort
-	protected Map<String, RequestSubmissionInboundPort> rsipList;
-	
-	
-	// Map between RequestSubmissionInboundPort URIs and the inboundPort
-	protected Map<String, RequestSubmissionOutboundPort> rsopList;
-	
-	
+
+
 	protected String computerURI;
 	
 	ComputerServicesOutboundPort csop;
