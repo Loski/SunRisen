@@ -2,6 +2,7 @@ package fr.upmc.datacenterclient.applicationprovider.ports;
 
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ports.AbstractInboundPort;
+import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 import fr.upmc.datacenterclient.applicationprovider.ApplicationProvider;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationProviderManagementI;
 
@@ -48,4 +49,18 @@ public class ApplicationProviderManagementInboundPort extends AbstractInboundPor
         } );
 
 }
+
+	@Override
+	public void createAndSendApplication(Class<RequestSubmissionI> class1) throws Exception {
+		final ApplicationProviderManagementI apm = ( ApplicationProviderManagementI ) this.owner;
+        this.owner.handleRequestAsync( new ComponentI.ComponentService<Void>() {
+
+            @Override
+            public Void call() throws Exception {
+                apm.createAndSendApplication(class1);
+                return null;
+
+            }
+        } );
+	}
 }

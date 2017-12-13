@@ -4,18 +4,16 @@ import com.sun.glass.ui.Application;
 
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ports.AbstractOutboundPort;
+import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
+import fr.upmc.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.datacenterclient.applicationprovider.ApplicationProvider;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationProviderManagementI;
 import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
 
 public class ApplicationProviderManagementOutboundPort extends AbstractOutboundPort implements ApplicationProviderManagementI{
 
-	public ApplicationProviderManagementOutboundPort(Class<?> implementedInterface, ComponentI owner) throws Exception {
-		super(ApplicationProviderManagementI.class, owner);
-	}
-
-	public ApplicationProviderManagementOutboundPort(String uri, Class<?> implementedInterface, ComponentI owner)
-			throws Exception {
+	public	ApplicationProviderManagementOutboundPort(String uri, ComponentI owner) throws Exception
+	{
 		super(uri, ApplicationProviderManagementI.class, owner);
 	}
 
@@ -28,6 +26,10 @@ public class ApplicationProviderManagementOutboundPort extends AbstractOutboundP
 	@Override
 	public void stopApplication() throws Exception {
 		((ApplicationProviderManagementI)this.connector).stopApplication();
+	}
+
+	public void createAndSendApplication(Class<RequestSubmissionI> class1) throws Exception {
+		((ApplicationProviderManagementI)this.connector).createAndSendApplication(class1);
 	}
 
 }

@@ -1,6 +1,7 @@
 package fr.upmc.datacenterclient.applicationprovider.connectors;
 
 import fr.upmc.components.connectors.AbstractConnector;
+import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationProviderManagementI;
 import fr.upmc.datacenterclient.applicationprovider.interfaces.ApplicationSubmissionI;
 
@@ -22,6 +23,11 @@ implements	ApplicationProviderManagementI  {
 	@Override
 	public void stopApplication() throws Exception {
 		( ( ApplicationProviderManagementI ) this.offering ).stopApplication();
+	}
+
+	@Override
+	public void createAndSendApplication(Class<RequestSubmissionI> class1) throws Exception {
+		( ( ApplicationProviderManagementI ) this.offering ).createAndSendApplication(class1);
 	}
 
 }

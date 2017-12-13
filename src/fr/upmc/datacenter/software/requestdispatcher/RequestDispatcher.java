@@ -54,7 +54,8 @@ implements
 	protected RequestNotificationInboundPort  requestNotificationInboundPort;
 
 	/** List of OutboundPort to resend requests to VM */
-	protected LinkedHashMap<String,RequestSubmissionOutboundPort> requestSubmissionOutboundPortList;
+	protected List<RequestSubmissionOutboundPort> requestSubmissionOutboundPortList;
+	protected List<String> vmURIsList;
 	
 	/** index of the VM in the requestSubmissionOutboundPortList which will receive the next request*/
 	private int currentVM;
@@ -129,7 +130,8 @@ implements
 				this.addPort(this.requestNotificationOutboundPort) ;
 				this.requestNotificationOutboundPort.publishPort() ;
 				
-				this.requestSubmissionOutboundPortList = new LinkedHashMap<String,RequestSubmissionOutboundPort>();
+				this.requestSubmissionOutboundPortList = new ArrayList<RequestSubmissionOutboundPort>();
+				this.vmURIsList = new ArrayList<String>();
 				this.addRequiredInterface( RequestSubmissionI.class );
 	}
 	
@@ -140,12 +142,12 @@ implements
 
 	private RequestSubmissionOutboundPort getCurrentVMPort()
 	{
-		return (RequestSubmissionOutboundPort) this.requestSubmissionOutboundPortList.values().toArray()[this.currentVM];
+		return this.requestSubmissionOutboundPortList.get(this.currentVM);
 	}
 	
 	private String getCurrentVMURI()
-	{		
-		return (String) this.requestSubmissionOutboundPortList.keySet().toArray()[this.currentVM];
+	{
+		return this.vmURIsList.get(this.currentVM);
 	}
 	
 	@Override
@@ -193,9 +195,8 @@ implements
 	            if ( this.requestNotificationOutboundPort.connected() ) {
 	                this.requestNotificationOutboundPort.doDisconnection();
 	            }
-	            for (Entry<String, RequestSubmissionOutboundPort> entry : requestSubmissionOutboundPortList.entrySet())
+	            for (RequestSubmissionOutboundPort port : requestSubmissionOutboundPortList)
 	            {
-	            	RequestSubmissionOutboundPort port = entry.getValue();
 	            	if (port.connected() ) {
 	            		port.doDisconnection();
 	     	       }
@@ -212,12 +213,13 @@ implements
 	@Override
 	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI, String RequestSubmissionOutboundPortURI) throws Exception {
 		
-		if(this.requestSubmissionOutboundPortList.get(vmURI)!=null && this.requestSubmissionOutboundPortList.get(vmURI).getPortURI().equals(RequestSubmissionOutboundPortURI))
-			throw new Exception("VM déjà connecté sur ce port");
+		/*if(this.requestSubmissionOutboundPortList.get(indexVM)!=null && this.requestSubmissionOutboundPortList.get(indexVM).getPortURI().equals(RequestSubmissionOutboundPortURI))
+			throw new Exception("VM déjà connecté sur ce port");*/
 		
 		RequestSubmissionOutboundPort port = new RequestSubmissionOutboundPort( RequestSubmissionOutboundPortURI, this );
 		
-		this.requestSubmissionOutboundPortList.put(vmURI,port);
+		this.requestSubmissionOutboundPortList.add(port);
+		this.vmURIsList.add(vmURI);
 		this.addPort( port );
 		port.publishPort();
 		
@@ -234,12 +236,12 @@ implements
 	@Override
 	public void disconnectVirtualMachine(String vmURI) throws Exception {
 		
-		RequestSubmissionOutboundPort port = this.requestSubmissionOutboundPortList.get(vmURI);
+		/*RequestSubmissionOutboundPort port = this.requestSubmissionOutboundPortList.get(vmURI);
 		
 		if(port!=null && port.connected())
 		{
 			port.doDisconnection();
-		}
+		}*/
 	}
 	
 	public String getConnectorClassName()

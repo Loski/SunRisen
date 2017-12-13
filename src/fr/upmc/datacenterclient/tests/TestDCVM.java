@@ -20,6 +20,8 @@ import fr.upmc.datacenter.software.controller.AdmissionController;
 import fr.upmc.datacenter.software.controller.AdmissionControllerDynamic;
 import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 import fr.upmc.datacenterclient.applicationprovider.ApplicationProvider;
+import fr.upmc.datacenterclient.applicationprovider.connectors.ApplicationProviderManagementConnector;
+import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationProviderManagementOutboundPort;
 
 public class TestDCVM extends AbstractDistributedCVM{
 	
@@ -50,6 +52,8 @@ public class TestDCVM extends AbstractDistributedCVM{
 	private String applicationSubmissionOutboundPortURI = "asop";
 	private String applicationManagementInboundPort = " amip";
 	protected AdmissionControllerDynamic ac;
+	private ApplicationProviderManagementOutboundPort apmop;
+	private ApplicationProviderManagementOutboundPort apmop2;
 	@Override
 	public void instantiateAndPublish() throws Exception {
 
@@ -113,12 +117,18 @@ public class TestDCVM extends AbstractDistributedCVM{
 			///this.cyclicBarrierClient.waitBarrier();
 			this.ap = new ApplicationProvider("App1", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI, applicationManagementInboundPort);
 			this.addDeployedComponent(this.ap);
+			this.apmop = new ApplicationProviderManagementOutboundPort("apmop1", new AbstractComponent(0, 0) {});
+			this.apmop.publishPort();
+			this.apmop.doConnection(applicationManagementInboundPort, ApplicationProviderManagementConnector.class.getCanonicalName());
 		}else if(thisJVMURI.equals(Application2)) {
 			System.out.println("Appli 2 ");
 			Thread.sleep(500);
 			///this.cyclicBarrierClient.waitBarrier();
 			this.ap2 = new ApplicationProvider("App2", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI+"-2", applicationManagementInboundPort+"-2");
 			this.addDeployedComponent(this.ap2);
+			this.apmop2 = new ApplicationProviderManagementOutboundPort("apmop2", new AbstractComponent(0, 0) {});
+			this.apmop2.publishPort();
+			this.apmop2.doConnection(applicationManagementInboundPort+"-2", ApplicationProviderManagementConnector.class.getCanonicalName());
 		}
 		
 	}
@@ -173,9 +183,9 @@ public class TestDCVM extends AbstractDistributedCVM{
 	protected void testScenario() throws Exception {
 		if (thisJVMURI.equals(AdmissionController)) {}
 		else if(thisJVMURI.equals(Application1)) {
-			this.ap.createAndSendApplication();
+			this.apmop.createAndSendApplication();
 		}else if(thisJVMURI.equals(Application2)) {
-			this.ap2.createAndSendApplication(RequestSubmissionI.class);
+			this.apmop2.createAndSendApplication(RequestSubmissionI.class);
 		}
 	}
 }

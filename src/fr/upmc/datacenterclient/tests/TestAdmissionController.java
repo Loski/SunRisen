@@ -59,6 +59,7 @@ import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenter.software.controller.AdmissionController;
 import fr.upmc.datacenter.software.controller.AdmissionControllerDynamic;
+import fr.upmc.datacenter.software.controller.ports.AdmissionControllerManagementOutboundPort;
 import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 import fr.upmc.datacenter.software.ports.RequestNotificationInboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionInboundPort;
@@ -66,6 +67,8 @@ import fr.upmc.datacenter.software.requestdispatcher.RequestDispatcher;
 import fr.upmc.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
 import fr.upmc.datacenterclient.applicationprovider.ApplicationProvider;
+import fr.upmc.datacenterclient.applicationprovider.connectors.ApplicationProviderManagementConnector;
+import fr.upmc.datacenterclient.applicationprovider.ports.ApplicationProviderManagementOutboundPort;
 import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
 import fr.upmc.datacenterclient.requestgenerator.connectors.RequestGeneratorManagementConnector;
 import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementOutboundPort;
@@ -140,7 +143,6 @@ extends		AbstractCVM
 	public static final String	RequestNotificationOutboundPortVMURI = "rnobpVM" ;
 	public static final String	RequestGeneratorManagementInboundPortURI = "rgmip" ;
 	public static final String	RequestGeneratorManagementOutboundPortURI = "rgmop" ;
-
 	/** Port connected to the computer component to access its services.	*/
 	protected ComputerServicesOutboundPort			csPort ;
 	/** 	Computer monitor component.										*/
@@ -153,8 +155,11 @@ extends		AbstractCVM
 
 
 	protected AdmissionControllerDynamic ac;
+	protected AdmissionControllerManagementOutboundPort acmop;
 	protected ApplicationProvider ap;
 	protected ApplicationProvider ap2;
+	public ApplicationProviderManagementOutboundPort apmop, apmop2;
+
 	private String applicationSubmissionInboundPortURI = "asip";
 	private String AdmissionControllerManagementInboundPortURI = "acmip";
 
@@ -220,12 +225,18 @@ extends		AbstractCVM
 		// --------------------------------------------------------------------
 
 		this.ac = new AdmissionControllerDynamic("Controller", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI, ComputerServicesInboundPortURI, computerURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI,"","");
-		
+		this.acmop = new AdmissionControllerManagementOutboundPort("acmop", new AbstractComponent(0, 0) {});
+		this.acmop.publishPort();
+		this.acmop.doConnection(AdmissionControllerManagementInboundPortURI, Admission);
 		this.ap = new ApplicationProvider("App1", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI, applicationManagementInboundPort);
 				// complete the deployment at the component virtual machine level.
-		
+		this.apmop = new ApplicationProviderManagementOutboundPort("apmop1", new AbstractComponent(0, 0) {});
+		this.apmop.publishPort();
+		this.apmop.doConnection(applicationManagementInboundPort, ApplicationProviderManagementConnector.class.getCanonicalName());
 		this.ap2 = new ApplicationProvider("App2", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI+"-2", applicationManagementInboundPort+"-2");
-
+		this.apmop2 = new ApplicationProviderManagementOutboundPort("apmop2", new AbstractComponent(0, 0) {});
+		this.apmop2.publishPort();
+		this.apmop2.doConnection(applicationManagementInboundPort+"-2", ApplicationProviderManagementConnector.class.getCanonicalName());
 		super.deploy();
 	}
 
@@ -263,8 +274,8 @@ extends		AbstractCVM
 	 */
 	public void			testScenario() throws Exception
 	{
-		this.ap2.createAndSendApplication();
-		this.ap.createAndSendApplication(RequestSubmissionI.class);
+		this.apmop.createAndSendApplication();
+		this.apmop2.createAndSendApplication(RequestSubmissionI.class);
 
 	}
 
