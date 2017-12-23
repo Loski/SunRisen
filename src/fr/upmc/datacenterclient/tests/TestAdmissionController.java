@@ -57,8 +57,8 @@ import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagem
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
 import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
-import fr.upmc.datacenter.software.controller.AdmissionController;
 import fr.upmc.datacenter.software.controller.AdmissionControllerDynamic;
+import fr.upmc.datacenter.software.controller.connector.AdmissionControllerManagementConnector;
 import fr.upmc.datacenter.software.controller.ports.AdmissionControllerManagementOutboundPort;
 import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 import fr.upmc.datacenter.software.ports.RequestNotificationInboundPort;
@@ -227,7 +227,7 @@ extends		AbstractCVM
 		this.ac = new AdmissionControllerDynamic("Controller", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI, ComputerServicesInboundPortURI, computerURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI,"","");
 		this.acmop = new AdmissionControllerManagementOutboundPort("acmop", new AbstractComponent(0, 0) {});
 		this.acmop.publishPort();
-		this.acmop.doConnection(AdmissionControllerManagementInboundPortURI, Admission);
+		this.acmop.doConnection(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementConnector.class.getCanonicalName());
 		this.ap = new ApplicationProvider("App1", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI, applicationManagementInboundPort);
 				// complete the deployment at the component virtual machine level.
 		this.apmop = new ApplicationProviderManagementOutboundPort("apmop1", new AbstractComponent(0, 0) {});
