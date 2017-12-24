@@ -67,7 +67,7 @@ extends		AbstractControlledDataOutboundPort
 	// ------------------------------------------------------------------------
 
 	private static final long	serialVersionUID = 1L ;
-	protected String			computerURI ;
+	protected String			rdURI ;
 
 	// ------------------------------------------------------------------------
 	// Constructors
@@ -75,11 +75,11 @@ extends		AbstractControlledDataOutboundPort
 
 	public				RequestDispatcherDynamicStateDataOutboundPort(
 		ComponentI owner,
-		String computerURI
+		String rdURI
 		) throws Exception
 	{
 		super(owner) ;
-		this.computerURI = computerURI ;
+		this.rdURI = rdURI ;
 
 		assert	owner instanceof ComputerStateDataConsumerI ;
 	}
@@ -87,11 +87,11 @@ extends		AbstractControlledDataOutboundPort
 	public				RequestDispatcherDynamicStateDataOutboundPort(
 		String uri,
 		ComponentI owner,
-		String computerURI
+		String rdURI
 		) throws Exception
 	{
 		super(uri, owner);
-		this.computerURI = computerURI ;
+		this.rdURI = rdURI ;
 
 		assert	owner instanceof ComputerStateDataConsumerI ;
 	}
@@ -108,7 +108,7 @@ extends		AbstractControlledDataOutboundPort
 	throws Exception
 	{
 		((RequestDispatcherStateDataConsumerI)this.owner).
-						acceptRequestDispatcherDynamicData(this.computerURI,
+						acceptRequestDispatcherDynamicData(this.rdURI,
 												  (RequestDispatcherDynamicStateI) d) ;
 	}
 }
