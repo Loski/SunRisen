@@ -145,6 +145,7 @@ extends		AbstractCVM
 	public static final String	RequestGeneratorManagementInboundPortURI = "rgmip" ;
 	public static final String	RequestGeneratorManagementOutboundPortURI = "rgmop" ;
 	public static final int NB_COMPUTER = 5;
+	private static final int NB_APPLICATION = 3;
 	/** Port connected to the computer component to access its services.	*/
 	protected ComputerServicesOutboundPort			csPort ;
 	/** 	Computer monitor component.										*/
@@ -158,9 +159,8 @@ extends		AbstractCVM
 
 	protected AdmissionControllerDynamic ac;
 	protected AdmissionControllerManagementOutboundPort acmop;
-	protected ApplicationProvider ap;
-	protected ApplicationProvider ap2;
-	public ApplicationProviderManagementOutboundPort apmop, apmop2;
+	protected ApplicationProvider ap[];
+	public ApplicationProviderManagementOutboundPort apmop[];
 
 	private String applicationSubmissionInboundPortURI = "asip";
 	private String AdmissionControllerManagementInboundPortURI = "acmip";
@@ -173,12 +173,8 @@ extends		AbstractCVM
 	// Component virtual machine methods
 	// ------------------------------------------------------------------------
 
-	@Override
-	public void			deploy() throws Exception
-	{
-		AbstractComponent.configureLogging("", "", 0, '|') ;
-		Processor.DEBUG = true ;
-
+	private void createAdmissionController() throws Exception {
+		
 		int numberOfProcessors = 4;
         int numberOfCores = 12;
         Set<Integer> admissibleFrequencies = new HashSet<Integer>();
@@ -192,16 +188,17 @@ extends		AbstractCVM
         Map<String, String> pmipURIs = new HashMap<>();
         Map<String, String> processorCoordinators = new HashMap<>();
         
-        String csop[] = new String[NB_COMPUTER];
-        String csip[] = new String[NB_COMPUTER];
-        String computer[] = new String[NB_COMPUTER];
+        String csop[] = new String[NB_COMPUTER], csip[] = new String[NB_COMPUTER], cssdip[] = new String[NB_COMPUTER], computer[] = new String[NB_COMPUTER], cdsdip[] = new String[NB_COMPUTER];
         
         for (int i = 0; i < NB_COMPUTER; ++i) {
-            Computer c = new Computer("computer" + i, admissibleFrequencies, processingPower, 1500, 1500,
-                    numberOfProcessors, numberOfCores, "csip" + i, "cssdip" + i, "cdsdip" + i);
-            csop[i] = "csop"+i;
+        	csop[i] = "csop"+i;
             csip[i] = "csip"+i;
             computer[i] = "computer"+i;
+            cssdip[i] = "cssdip"+i;
+            cdsdip[i] = "cdsdip"+i;
+            Computer c = new Computer("computer" + i, admissibleFrequencies, processingPower, 1500, 1500,
+                    numberOfProcessors, numberOfCores, csip[i], cssdip[i], cdsdip[i]);
+            
             
             this.addDeployedComponent(c);
             Map<Integer, String> processorURIs = c.getStaticState().getProcessorURIs();
@@ -228,21 +225,30 @@ extends		AbstractCVM
         }
         
 		this.ac = new AdmissionControllerDynamic("Controller", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, csop, csip, nbAvailableCores, ComputerStaticStateDataOutboundPortURI,"","");
-	
-		
-		
 		this.acmop = new AdmissionControllerManagementOutboundPort("acmop", new AbstractComponent(0, 0) {});
 		this.acmop.publishPort();
 		this.acmop.doConnection(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementConnector.class.getCanonicalName());
-		this.ap = new ApplicationProvider("App1", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI, applicationManagementInboundPort);
-				// complete the deployment at the component virtual machine level.
-		this.apmop = new ApplicationProviderManagementOutboundPort("apmop1", new AbstractComponent(0, 0) {});
-		this.apmop.publishPort();
-		this.apmop.doConnection(applicationManagementInboundPort, ApplicationProviderManagementConnector.class.getCanonicalName());
-		this.ap2 = new ApplicationProvider("App2", applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI+"-2", applicationManagementInboundPort+"-2");
-		this.apmop2 = new ApplicationProviderManagementOutboundPort("apmop2", new AbstractComponent(0, 0) {});
-		this.apmop2.publishPort();
-		this.apmop2.doConnection(applicationManagementInboundPort+"-2", ApplicationProviderManagementConnector.class.getCanonicalName());
+	}
+	
+	private void createApplication(int nbApplication) throws Exception {
+		this.ap = new ApplicationProvider[nbApplication];
+		this.apmop = new ApplicationProviderManagementOutboundPort[nbApplication];
+		for(int i =0; i < nbApplication; i++) {
+			this.ap[i] = new ApplicationProvider("App"+"-"+i, applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI+"-"+i, applicationManagementInboundPort+"-"+i);
+			this.apmop[i] = new ApplicationProviderManagementOutboundPort("apmop"+"-"+i, new AbstractComponent(0, 0) {});
+			this.apmop[i].publishPort();
+			this.apmop[i].doConnection(applicationManagementInboundPort+"-"+i, ApplicationProviderManagementConnector.class.getCanonicalName());
+		}
+	}
+	
+	@Override
+	public void			deploy() throws Exception
+	{
+		AbstractComponent.configureLogging("", "", 0, '|') ;
+		Processor.DEBUG = true ;
+
+		createAdmissionController();
+		createApplication(NB_APPLICATION);
 		super.deploy();
 	}
 
@@ -264,8 +270,6 @@ extends		AbstractCVM
 		// disconnect all ports explicitly connected in the deploy phase.
 		this.csPort.doDisconnection() ;
 		this.avmPort.doDisconnection() ;
-
-
 		super.shutdown() ;
 	}
 
@@ -280,9 +284,13 @@ extends		AbstractCVM
 	 */
 	public void			testScenario() throws Exception
 	{
-		this.apmop.createAndSendApplication();
-		this.apmop2.createAndSendApplication(RequestSubmissionI.class);
-
+		for(int i = 0; i < this.apmop.length;i++) {
+			if(i%2 == 0) {
+				this.apmop[i].createAndSendApplication(RequestSubmissionI.class);
+			}else {
+				this.apmop[i].createAndSendApplication();
+			}
+		}
 	}
 
 	/**

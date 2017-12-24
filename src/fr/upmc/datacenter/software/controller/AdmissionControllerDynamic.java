@@ -131,13 +131,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.acmip = new AdmissionControllerManagementInboundPort(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementI.class, this);
 		this.addPort(acmip);
 		this.acmip.publishPort();
- 		
-		
-		
-		/*this.addRequiredInterface(ComputerStaticStateDataI.class);
-		this.cssdop = new ComputerStaticStateDataOutboundPort(computerStaticStateDataOutboundPortURI, this, computerURI);
-		this.addPort(this.cssdop);
-		this.cssdop.publishPort();*/
+
 		this.avmOutPort = new LinkedList<ApplicationVMManagementOutboundPort>();
 		this.rdmopMap = new HashMap<String, RequestDispatcherManagementOutboundPort>();
 		this.interface_dispatcher_map = new LinkedHashMap<>();
@@ -169,7 +163,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 			
 			this.csopTab[i].doConnection(
 					ComputerServicesInboundPortURI[i],
-					ComputerServicesConnector.class.getCanonicalName()) ;
+					ComputerServicesConnector.class.getCanonicalName());
+		
 		}
 	}
 
