@@ -185,42 +185,12 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		
 		if(allocatedCore!=null && allocatedCore.length != 0) {
 			System.out.println("Application accepted..");
-			dispatcherURI[0] = "RD" + rdmopMap.size()+"-"+appURI;
-			dispatcherURI[1] = RequestDispatcherManagementInboundPortURI + "_" + appURI;
-			dispatcherURI[2] = RequestSubmissionInboundPortURI +"_" + appURI;
-			dispatcherURI[3] = RequestNotificationOutboundPortURI + "_"+ appURI;
-			dispatcherURI[4] = RequestNotificationInboundPortURI + "_"+ appURI;
-			dispatcherURI[5] = RequestStaticDataInboundPortURI + "_"+ appURI;
-			dispatcherURI[6] = RequestDynamicDataInboundPortURI + "_"+ appURI;
-
 			
-			this.portToRequestDispatcherJVM.createComponent(
-					RequestDispatcher.class.getCanonicalName(),
-					new Object[] {
-							dispatcherURI[0],							
-							dispatcherURI[1],
-							dispatcherURI[2],
-							dispatcherURI[3],
-							dispatcherURI[4],
-							dispatcherURI[5],
-							dispatcherURI[6]
-					});		
-		
 			
-			RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
-					RequestDispatcherManagementOutboundPortURI + rdmopMap.size(),
-					this);
-			
-			rdmop.publishPort();
-			rdmop.doConnection(dispatcherURI[1], RequestDispatcherManagementConnector.class.getCanonicalName());
-			
+			String dispatcherUri[] = createDispatcher(appURI, RequestDispatcher.class.getCanonicalName());
 			ReflectionOutboundPort rop = new ReflectionOutboundPort(this);
 			this.addPort(rop);
 			rop.publishPort();
-			
-			
-			
-			String applicationVM[] = new String[5];
 			rop.doConnection(dispatcherURI[0], ReflectionConnector.class.getCanonicalName());
 			rop.toggleLogging();
 			rop.toggleTracing();
@@ -228,7 +198,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 			rop.doDisconnection();
 			
 			
-			
+			String applicationVM[] = new String[5];		
 			for(int i=0;i<nbVM;i++)
 			{
 				// --------------------------------------------------------------------
@@ -258,7 +228,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 				this.avmOutPort.add(avmPort);
 				
 				avmPort.allocateCores(allocatedCore);
-				rdmop.connectVirtualMachine(applicationVM[0], applicationVM[2], dispatcherURI[5]+"-"+i);
+				rdmopMap.get(appURI).connectVirtualMachine(applicationVM[0], applicationVM[2], dispatcherUri[7]+"-"+i);
 				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], dispatcherURI[4]);		
 				rop.doConnection(applicationVM[0], ReflectionConnector.class.getCanonicalName());
 				
@@ -268,7 +238,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 				rop.doDisconnection();
 			}
 			
-			rdmopMap.put(appURI, rdmop);
 			
 			return dispatcherURI;
 			
@@ -315,61 +284,68 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		super.shutdown();
 	}
 	
+	private String[] createDispatcher(String appURI, String className) throws Exception {
+		
+		String dispatcherURI[] = new String[8];
+		dispatcherURI[0] = "RD_" + rdmopMap.size()+"_"+appURI;
+		dispatcherURI[1] = RequestDispatcherManagementInboundPortURI + "_" + appURI;
+		dispatcherURI[2] = RequestSubmissionInboundPortURI +"_" + appURI;
+		dispatcherURI[3] = RequestNotificationOutboundPortURI + "_"+ appURI;
+		dispatcherURI[4] = RequestNotificationInboundPortURI + "_"+ appURI;
+		dispatcherURI[5] = RequestStaticDataInboundPortURI + "_"+ appURI;
+		dispatcherURI[6] = RequestDynamicDataInboundPortURI + "_"+ appURI;
+		dispatcherURI[7] = RequestSubmissionOutboundPortURI + "_"+ appURI;
+		
+		this.portToRequestDispatcherJVM.createComponent(
+				className,
+				new Object[] {
+						dispatcherURI[0],							
+						dispatcherURI[1],
+						dispatcherURI[2],
+						dispatcherURI[3],
+						dispatcherURI[4],
+						dispatcherURI[6]
+				});		
+	
+		RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
+				RequestDispatcherManagementOutboundPortURI + rdmopMap.size(),
+				this);
+
+		rdmop.publishPort();
+		rdmop.doConnection(dispatcherURI[1], RequestDispatcherManagementConnector.class.getCanonicalName());
+		rdmopMap.put(appURI, rdmop);
+		return dispatcherURI;
+	}
 	
 	@Override
-	public synchronized String[] submitApplication(String appURI, int nbVM,Class submissionInterface) throws Exception {
+	public synchronized String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
 		
 		assert submissionInterface.isInterface();
 		
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
 		
 		AllocatedCore[] allocatedCore = csopTab[0].allocateCores(NB_CORES);
-		String dispatcherURI[] = new String[6];
 		System.out.println(allocatedCore);
 		if(allocatedCore!=null && allocatedCore.length != 0) {
 			
-			dispatcherURI[0] = "RD_" + rdmopMap.size()+"_"+appURI;
-			dispatcherURI[1] = RequestDispatcherManagementInboundPortURI + "_" + appURI;
-			dispatcherURI[2] = RequestSubmissionInboundPortURI +"_" + appURI;
-			dispatcherURI[3] = RequestNotificationOutboundPortURI + "_"+ appURI;
-			dispatcherURI[4] = RequestNotificationInboundPortURI + "_"+ appURI;
-			dispatcherURI[5] = RequestSubmissionOutboundPortURI + "_"+ appURI;
-
 			Class dispa = RequestDispatcherCreator.createRequestDispatcher("JAVASSIST-dispa",RequestDispatcher.class, submissionInterface);
 			interface_dispatcher_map.put(submissionInterface, dispa);
 			
-			this.portToRequestDispatcherJVM.createComponent(
-					dispa.getCanonicalName(),
-					new Object[] {
-							dispatcherURI[0],							
-							dispatcherURI[1],
-							dispatcherURI[2],
-							dispatcherURI[3],
-							dispatcherURI[4],
-							dispatcherURI[5],
-							dispatcherURI[6]
-					});		
-		
-			
-			RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
-					RequestDispatcherManagementOutboundPortURI + rdmopMap.size(),
-					this);
-			
-			rdmop.publishPort();
-			rdmop.doConnection(dispatcherURI[1], RequestDispatcherManagementConnector.class.getCanonicalName());
-			
+			String dispatcherUri[] = createDispatcher(appURI, dispa.getCanonicalName());
+					
 			ReflectionOutboundPort rop = new ReflectionOutboundPort(this);
 			this.addPort(rop);
 			rop.publishPort();
 			
 			
-			
 			String applicationVM[] = new String[5];
 			
-			rop.doConnection(dispatcherURI[0], ReflectionConnector.class.getCanonicalName());
+			rop.doConnection(dispatcherUri[0], ReflectionConnector.class.getCanonicalName());
 			rop.toggleLogging();
 			rop.toggleTracing();
 			rop.doDisconnection();
+			
+			
 			for(int i=0; i<nbVM; i++)
 			{
 				// --------------------------------------------------------------------
@@ -400,8 +376,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 				
 				avmPort.allocateCores(allocatedCore);
 
-				rdmop.connectVirtualMachine(applicationVM[0], applicationVM[2], dispatcherURI[5]+"-"+i);
-				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], dispatcherURI[4]);		
+				rdmopMap.get(appURI).connectVirtualMachine(applicationVM[0], applicationVM[2], dispatcherUri[7]+"-"+i);
+				avmPort.connectWithRequestSubmissioner(dispatcherUri[0], dispatcherUri[4]);		
 
 				rop.doConnection(applicationVM[0], ReflectionConnector.class.getCanonicalName());
 				
@@ -411,9 +387,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 				rop.doDisconnection();
 			}
 			
-			rdmopMap.put(appURI, rdmop);
-			
-			return dispatcherURI;	
+			return dispatcherUri;	
 		}else {
 			this.logMessage("Failed to allocates core for a new application.");
 			return null;
