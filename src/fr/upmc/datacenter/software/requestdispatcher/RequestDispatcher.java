@@ -5,11 +5,19 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import fr.upmc.components.AbstractComponent;
+import fr.upmc.components.ComponentI;
 import fr.upmc.components.exceptions.ComponentShutdownException;
+import fr.upmc.datacenter.TimeManagement;
+import fr.upmc.datacenter.hardware.computers.Computer;
 import fr.upmc.datacenter.hardware.computers.ComputerDynamicState;
 import fr.upmc.datacenter.hardware.computers.interfaces.ComputerDynamicStateI;
+import fr.upmc.datacenter.hardware.computers.ports.ComputerDynamicStateDataInboundPort;
+import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
+import fr.upmc.datacenter.interfaces.PushModeControllingI;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMManagementI;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementInboundPort;
 import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
@@ -40,7 +48,8 @@ extends		AbstractComponent
 implements	
 			RequestSubmissionHandlerI,
 			RequestNotificationHandlerI,
-			RequestDispatcherManagementI
+			RequestDispatcherManagementI,
+			PushModeControllingI
 {
 
 	public static int	DEBUG_LEVEL = 2 ;
@@ -67,8 +76,11 @@ implements
 	/** Inbound port offering the management interface.						*/
 	protected RequestDispatcherManagementInboundPort requestDispatcherManagementInboundPort ;
 	
-	/** computer data inbound port through which it pushes its dynamic data.	*/
+	/** dispatcher data inbound port through which it pushes its dynamic data.	*/
 	protected RequestDispatcherDynamicStateDataInboundPort requestDispatcherDynamicStateDataInboundPort ;
+	
+	/** future of the task scheduled to push dynamic data.					*/
+	protected ScheduledFuture<?>			pushingFuture ;
 	
 	/**
 	 * Construct a <code>RequestDispatcher</code>.
@@ -85,7 +97,8 @@ implements
 			String requestSubmissionInboundPortURI, 
 			String requestNotificationOutboundPortURI, 
 			//List<String> requestSubmissionOutboundPortList, 
-			String requestNotificationInboundPortURI
+			String requestNotificationInboundPortURI,
+			String requestDispatcherDynamicStateDataInboundPortURI
 			) throws Exception 
 	{
 		
@@ -140,6 +153,13 @@ implements
 				this.requestSubmissionOutboundPortList = new ArrayList<RequestSubmissionOutboundPort>();
 				this.vmURIsList = new ArrayList<String>();
 				this.addRequiredInterface( RequestSubmissionI.class );
+				
+				this.addOfferedInterface(ControlledDataOfferedI.ControlledPullI.class) ;
+				this.requestDispatcherDynamicStateDataInboundPort =
+						new RequestDispatcherDynamicStateDataInboundPort(
+								requestDispatcherDynamicStateDataInboundPortURI, this) ;
+				this.addPort(this.requestDispatcherDynamicStateDataInboundPort) ;
+				this.requestDispatcherDynamicStateDataInboundPort.publishPort() ;
 	}
 	
 	private void nextVM()
@@ -208,6 +228,9 @@ implements
 	            		port.doDisconnection();
 	     	       }
 	            }
+	            if (this.requestDispatcherDynamicStateDataInboundPort.connected()) {
+					this.requestDispatcherDynamicStateDataInboundPort.doDisconnection() ;
+				}
 	               
 	        }
 	        catch ( Exception e ) {
@@ -285,6 +308,102 @@ implements
 	public RequestDispatcherDynamicStateI	getDynamicState() throws Exception
 	{
 		return new RequestDispatcherDynamicState(this.rdURI,0) ;
+	}
+	
+	public void			sendDynamicState() throws Exception
+	{
+		if (this.requestDispatcherDynamicStateDataInboundPort.connected()) {
+			RequestDispatcherDynamicStateI rdds = this.getDynamicState() ;
+			this.requestDispatcherDynamicStateDataInboundPort.send(rdds) ;
+		}
+	}
+	
+	public void			sendDynamicState( final int interval, int numberOfRemainingPushes) throws Exception
+	{
+		this.sendDynamicState() ;
+		
+		final int fNumberOfRemainingPushes = numberOfRemainingPushes - 1 ;
+		if (fNumberOfRemainingPushes > 0) {
+			final RequestDispatcher rd = this ;
+			this.pushingFuture =
+					this.scheduleTask(
+							new ComponentI.ComponentTask() {
+								@Override
+								public void run() {
+									try {
+										rd.sendDynamicState(
+												interval,
+												fNumberOfRemainingPushes) ;
+									} catch (Exception e) {
+										throw new RuntimeException(e) ;
+									}
+								}
+							},
+							TimeManagement.acceleratedDelay(interval),
+							TimeUnit.MILLISECONDS) ;
+		}
+	}
+
+	@Override
+	public void startUnlimitedPushing(int interval) throws Exception {
+		
+		// first, send the static state if the corresponding port is connected
+		//this.sendStaticState() ;
+
+		final RequestDispatcher rd = this;
+		this.pushingFuture =
+			this.scheduleTaskAtFixedRate(
+					new ComponentI.ComponentTask() {
+						@Override
+						public void run() {
+							try {
+								rd.sendDynamicState() ;
+							} catch (Exception e) {
+								throw new RuntimeException(e) ;
+							}
+						}
+					},
+					TimeManagement.acceleratedDelay(interval),
+					TimeManagement.acceleratedDelay(interval),
+					TimeUnit.MILLISECONDS) ;
+	}
+
+	@Override
+	public void startLimitedPushing(int interval, int n) throws Exception {
+		
+		assert	n > 0 ;
+
+		this.logMessage(this.rdURI + " startLimitedPushing with interval "
+									+ interval + " ms for " + n + " times.") ;
+
+		// first, send the static state if the corresponding port is connected
+		//this.sendStaticState() ;
+
+		final RequestDispatcher rd = this ;
+		this.pushingFuture =
+			this.scheduleTask(
+					new ComponentI.ComponentTask() {
+						@Override
+						public void run() {
+							try {
+								rd.sendDynamicState(interval, n) ;
+							} catch (Exception e) {
+								throw new RuntimeException(e) ;
+							}
+						}
+					},
+					TimeManagement.acceleratedDelay(interval),
+					TimeUnit.MILLISECONDS) ;
+	}
+
+	@Override
+	public void stopPushing() throws Exception {
+		
+		if (this.pushingFuture != null &&
+				!(this.pushingFuture.isCancelled() ||
+									this.pushingFuture.isDone())) {
+			this.pushingFuture.cancel(false) ;
+		}
 	}
 
 }
