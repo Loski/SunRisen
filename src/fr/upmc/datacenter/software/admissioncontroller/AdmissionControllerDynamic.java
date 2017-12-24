@@ -184,30 +184,31 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		String dispatcherURI[] = new String[7];
 		
 		if(allocatedCore!=null && allocatedCore.length != 0) {
-			System.out.println("Application accepted..");
-			
 			
 			String dispatcherUri[] = createDispatcher(appURI, RequestDispatcher.class.getCanonicalName());
+					
 			ReflectionOutboundPort rop = new ReflectionOutboundPort(this);
 			this.addPort(rop);
 			rop.publishPort();
-			rop.doConnection(dispatcherURI[0], ReflectionConnector.class.getCanonicalName());
+			
+			
+			String applicationVM[] = new String[5];
+			
+			rop.doConnection(dispatcherUri[0], ReflectionConnector.class.getCanonicalName());
 			rop.toggleLogging();
 			rop.toggleTracing();
-			
 			rop.doDisconnection();
 			
 			
-			String applicationVM[] = new String[5];		
-			for(int i=0;i<nbVM;i++)
+			for(int i=0; i<nbVM; i++)
 			{
 				// --------------------------------------------------------------------
 				// Create an Application VM component
 				// --------------------------------------------------------------------
-				applicationVM[0] = "vm-"+this.avmOutPort.size();
+				applicationVM[0] = "avm-"+this.avmOutPort.size();
 				applicationVM[1] = "avmibp-"+this.avmOutPort.size();
-				applicationVM[2] = "rsibp-VM-"+this.avmOutPort.size();
-				applicationVM[3] = "rnobp-VM-"+this.avmOutPort.size();
+				applicationVM[2] = "rsibpVM-"+this.avmOutPort.size();
+				applicationVM[3] = "rnobpVM-"+this.avmOutPort.size();
 				applicationVM[4] = "avmobp-"+this.avmOutPort.size();
 				
 				this.portToRequestDispatcherJVM.createComponent(
@@ -228,8 +229,10 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 				this.avmOutPort.add(avmPort);
 				
 				avmPort.allocateCores(allocatedCore);
+
 				rdmopMap.get(appURI).connectVirtualMachine(applicationVM[0], applicationVM[2], dispatcherUri[7]+"-"+i);
-				avmPort.connectWithRequestSubmissioner(dispatcherURI[0], dispatcherURI[4]);		
+				avmPort.connectWithRequestSubmissioner(dispatcherUri[0], dispatcherUri[4]);		
+
 				rop.doConnection(applicationVM[0], ReflectionConnector.class.getCanonicalName());
 				
 				rop.toggleTracing();
@@ -238,8 +241,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 				rop.doDisconnection();
 			}
 			
-			
-			return dispatcherURI;
+			return dispatcherUri;	
 			
 	}else {
 		this.logMessage("Failed to allocates core for a new application.");

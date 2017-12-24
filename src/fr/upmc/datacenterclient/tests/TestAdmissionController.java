@@ -285,11 +285,9 @@ extends		AbstractCVM
 	public void			testScenario() throws Exception
 	{
 		for(int i = 0; i < this.apmop.length;i++) {
-			if(i%2 == 0) {
-				this.apmop[i].createAndSendApplication(RequestSubmissionI.class);
-			}else {
+			
 				this.apmop[i].createAndSendApplication();
-			}
+			
 		}
 	}
 
