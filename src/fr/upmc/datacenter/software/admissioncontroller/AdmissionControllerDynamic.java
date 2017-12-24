@@ -76,6 +76,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	protected static final String RequestDispatcherManagementOutboundPortURI = "rdmop";
 	protected static final String RequestSubmissionOutboundPortURI = "rsop"; 
 	protected static final int NB_CORES = 2;
+	protected static final String RequestStaticDataInboundPortURI = "rsdip";
+	protected static final String RequestDynamicDataInboundPortURI = "rddip";
 
 	protected AdmissionControllerManagementInboundPort acmip;
 	protected ApplicationSubmissionInboundPort asip;
@@ -179,8 +181,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
 		
 		AllocatedCore[] allocatedCore = csopTab[0].allocateCores(NB_CORES);
-		String dispatcherURI[] = new String[6];
-
+		String dispatcherURI[] = new String[7];
+		
 		if(allocatedCore!=null && allocatedCore.length != 0) {
 			System.out.println("Application accepted..");
 			dispatcherURI[0] = "RD" + rdmopMap.size()+"-"+appURI;
@@ -188,7 +190,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 			dispatcherURI[2] = RequestSubmissionInboundPortURI +"_" + appURI;
 			dispatcherURI[3] = RequestNotificationOutboundPortURI + "_"+ appURI;
 			dispatcherURI[4] = RequestNotificationInboundPortURI + "_"+ appURI;
-			dispatcherURI[5] = RequestSubmissionOutboundPortURI + "_"+ appURI;
+			dispatcherURI[5] = RequestStaticDataInboundPortURI + "_"+ appURI;
+			dispatcherURI[6] = RequestDynamicDataInboundPortURI + "_"+ appURI;
 
 			
 			this.portToRequestDispatcherJVM.createComponent(
@@ -198,7 +201,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 							dispatcherURI[1],
 							dispatcherURI[2],
 							dispatcherURI[3],
-							dispatcherURI[4]
+							dispatcherURI[4],
+							dispatcherURI[5],
+							dispatcherURI[6]
 					});		
 		
 			
@@ -340,7 +345,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 							dispatcherURI[1],
 							dispatcherURI[2],
 							dispatcherURI[3],
-							dispatcherURI[4]
+							dispatcherURI[4],
+							dispatcherURI[5],
+							dispatcherURI[6]
 					});		
 		
 			
@@ -431,7 +438,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 			}*/
 		}
 		return index;
-}
+	}
 
 
 }
