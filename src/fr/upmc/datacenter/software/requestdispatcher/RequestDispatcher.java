@@ -23,8 +23,9 @@ import fr.upmc.datacenter.software.ports.RequestNotificationInboundPort;
 import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionInboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
+import fr.upmc.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI;
 import fr.upmc.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
-import fr.upmc.datacenter.software.requestdispatcher.ports.ComputerDynamicStateDataInboundPort;
+import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherDynamicStateDataInboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementInboundPort;
 import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
 
@@ -281,9 +282,9 @@ implements
 		}
 	}
 	
-	public ComputerDynamicStateI	getDynamicState() throws Exception
+	public RequestDispatcherDynamicStateI	getDynamicState() throws Exception
 	{
-		return new ComputerDynamicState(this.rdURI, this.reservedCores) ;
+		return new RequestDispatcherDynamicState(this.rdURI,0) ;
 	}
 
 }
