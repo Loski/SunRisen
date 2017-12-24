@@ -14,9 +14,9 @@ import fr.upmc.datacenter.hardware.computers.connectors.ComputerServicesConnecto
 import fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort;
 import fr.upmc.datacenter.hardware.processors.Processor;
 import fr.upmc.datacenter.hardware.tests.ComputerMonitor;
+import fr.upmc.datacenter.software.admissioncontroller.AdmissionControllerDynamic;
 import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
-import fr.upmc.datacenter.software.controller.AdmissionControllerDynamic;
 import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 import fr.upmc.datacenterclient.applicationprovider.ApplicationProvider;
 import fr.upmc.datacenterclient.applicationprovider.connectors.ApplicationProviderManagementConnector;

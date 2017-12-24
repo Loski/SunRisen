@@ -1,4 +1,4 @@
-package fr.upmc.datacenter.software.controller;
+package fr.upmc.datacenter.software.admissioncontroller;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -19,13 +19,13 @@ import fr.upmc.components.ports.AbstractOutboundPort;
 import fr.upmc.components.ports.PortI;
 import fr.upmc.components.pre.reflection.connectors.ReflectionConnector;
 import fr.upmc.components.pre.reflection.ports.ReflectionOutboundPort;
+import fr.upmc.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
+import fr.upmc.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementInboundPort;
 import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagementConnector;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
 import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
-import fr.upmc.datacenter.software.controller.interfaces.AdmissionControllerManagementI;
-import fr.upmc.datacenter.software.controller.ports.AdmissionControllerManagementInboundPort;
 import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 import fr.upmc.datacenter.software.ports.RequestSubmissionInboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
@@ -275,7 +275,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 
 	@Override
 	public void submitGenerator(String RequestNotificationInboundPort, String appUri, String rgURI) throws Exception {
-		this.rdmopMap.get(appUri).connectWithRequestGenerator(rgURI, RequestNotificationInboundPort);	
+		this.rdmopMap.get(appUri).connectWithRequestGenerator(rgURI, RequestNotificationInboundPort);
 	}
 
 	@Override
