@@ -8,6 +8,8 @@ import java.util.Map.Entry;
 
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.exceptions.ComponentShutdownException;
+import fr.upmc.datacenter.hardware.computers.ComputerDynamicState;
+import fr.upmc.datacenter.hardware.computers.interfaces.ComputerDynamicStateI;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMManagementI;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementInboundPort;
 import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
@@ -22,6 +24,7 @@ import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionInboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
+import fr.upmc.datacenter.software.requestdispatcher.ports.ComputerDynamicStateDataInboundPort;
 import fr.upmc.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementInboundPort;
 import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
 
@@ -62,6 +65,9 @@ implements
 	
 	/** Inbound port offering the management interface.						*/
 	protected RequestDispatcherManagementInboundPort requestDispatcherManagementInboundPort ;
+	
+	/** computer data inbound port through which it pushes its dynamic data.	*/
+	protected RequestDispatcherDynamicStateDataInboundPort requestDispatcherDynamicStateDataInboundPort ;
 	
 	/**
 	 * Construct a <code>RequestDispatcher</code>.
@@ -273,6 +279,11 @@ implements
 		{
 			this.requestNotificationOutboundPort.doDisconnection();
 		}
+	}
+	
+	public ComputerDynamicStateI	getDynamicState() throws Exception
+	{
+		return new ComputerDynamicState(this.rdURI, this.reservedCores) ;
 	}
 
 }
