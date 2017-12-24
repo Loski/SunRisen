@@ -53,10 +53,11 @@ public class TestDCVM extends AbstractDistributedCVM{
 	protected AdmissionControllerDynamic ac;
 	private ApplicationProviderManagementOutboundPort apmop;
 	private ApplicationProviderManagementOutboundPort apmop2;
+	
+	
 	@Override
 	public void instantiateAndPublish() throws Exception {
 
-		super.instantiateAndPublish();
 		
 		if (thisJVMURI.equals(AdmissionController)) {
 			AbstractComponent.configureLogging("", "", 0, '|') ;
@@ -107,7 +108,7 @@ public class TestDCVM extends AbstractDistributedCVM{
 						ComputerDynamicStateDataInboundPortURI,
 						ControlledDataConnector.class.getCanonicalName()) ;
 			System.out.println("create controller");
-			this.ac = new AdmissionControllerDynamic("Controller", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI+"-controller", ComputerServicesInboundPortURI, computerURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI+"-controller",AdmissionController,AdmissionController);
+			this.ac = new AdmissionControllerDynamic("Controller", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI+"-controller", ComputerServicesInboundPortURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI+"-controller",AdmissionController,AdmissionController);
 			this.addDeployedComponent(this.ac);
 		//	this.cyclicBarrierClient.notifyAll();
 		}else if(thisJVMURI.equals(Application1)) {
@@ -129,13 +130,25 @@ public class TestDCVM extends AbstractDistributedCVM{
 			this.apmop2.publishPort();
 			this.apmop2.doConnection(applicationManagementInboundPort+"-2", ApplicationProviderManagementConnector.class.getCanonicalName());
 		}
-		
+		super.instantiateAndPublish();
 	}
 
 	@Override
 	public void start() throws Exception {
 		// TODO Auto-generated method stub
 		super.start();
+	}
+
+	@Override
+	public void deploy() throws Exception {
+		// TODO Auto-generated method stub
+		super.deploy();
+	}
+
+	@Override
+	public void initialise() throws Exception {
+		// TODO Auto-generated method stub
+		super.initialise();
 	}
 
 	public TestDCVM(String[] args) throws Exception {

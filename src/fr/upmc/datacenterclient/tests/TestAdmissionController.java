@@ -51,6 +51,7 @@ import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
 import fr.upmc.datacenter.hardware.computers.connectors.ComputerServicesConnector;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort;
 import fr.upmc.datacenter.hardware.processors.Processor;
+import fr.upmc.datacenter.hardware.processors.Processor.ProcessorPortTypes;
 import fr.upmc.datacenter.hardware.tests.ComputerMonitor;
 import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagementConnector;
@@ -143,6 +144,7 @@ extends		AbstractCVM
 	public static final String	RequestNotificationOutboundPortVMURI = "rnobpVM" ;
 	public static final String	RequestGeneratorManagementInboundPortURI = "rgmip" ;
 	public static final String	RequestGeneratorManagementOutboundPortURI = "rgmop" ;
+	public static final int NB_COMPUTER = 5;
 	/** Port connected to the computer component to access its services.	*/
 	protected ComputerServicesOutboundPort			csPort ;
 	/** 	Computer monitor component.										*/
@@ -177,54 +179,58 @@ extends		AbstractCVM
 		AbstractComponent.configureLogging("", "", 0, '|') ;
 		Processor.DEBUG = true ;
 
-		// --------------------------------------------------------------------
-		// Create and deploy a computer component with its 2 processors and
-		// each with 2 cores.
-		// --------------------------------------------------------------------
-		String computerURI = "computer0" ;
-		int numberOfProcessors = 2 ;
-		int numberOfCores = 20;
-		Set<Integer> admissibleFrequencies = new HashSet<Integer>() ;
-		admissibleFrequencies.add(1500) ;	// Cores can run at 1,5 GHz
-		admissibleFrequencies.add(3000) ;	// and at 3 GHz
-		Map<Integer,Integer> processingPower = new HashMap<Integer,Integer>() ;
-		processingPower.put(1500, 1500000) ;	// 1,5 GHz executes 1,5 Mips
-		processingPower.put(3000, 3000000) ;	// 3 GHz executes 3 Mips
-		Computer c = new Computer(
-							computerURI,
-							admissibleFrequencies,
-							processingPower,  
-							1500,		// Test scenario 1, frequency = 1,5 GHz
-							// 3000,	// Test scenario 2, frequency = 3 GHz
-							1500,		// max frequency gap within a processor
-							numberOfProcessors,
-							numberOfCores,
-							ComputerServicesInboundPortURI,
-							ComputerStaticStateDataInboundPortURI,
-							ComputerDynamicStateDataInboundPortURI) ;
-		this.addDeployedComponent(c) ;
+		int numberOfProcessors = 4;
+        int numberOfCores = 12;
+        Set<Integer> admissibleFrequencies = new HashSet<Integer>();
+        admissibleFrequencies.add(1500); // Cores can run at 1,5 GHz
+        admissibleFrequencies.add(3000); // and at 3 GHz
+        Map<Integer, Integer> processingPower = new HashMap<Integer, Integer>();
+        processingPower.put(1500, 1500000); // 1,5 GHz executes 1,5 Mips
+        processingPower.put(3000, 3000000); // 3 GHz executes 3 Mips
 
-		// --------------------------------------------------------------------
-		// Create the computer monitor component and connect its to ports
-		// with the computer component.
-		// --------------------------------------------------------------------
-		this.cm = new ComputerMonitor(computerURI,
-									 true,
-									 ComputerStaticStateDataOutboundPortURI,
-									 ComputerDynamicStateDataOutboundPortURI) ;
-		this.addDeployedComponent(this.cm) ;
-		this.cm.doPortConnection(
-						ComputerStaticStateDataOutboundPortURI,
-						ComputerStaticStateDataInboundPortURI,
-						DataConnector.class.getCanonicalName()) ;
-
-		this.cm.doPortConnection(
-					ComputerDynamicStateDataOutboundPortURI,
-					ComputerDynamicStateDataInboundPortURI,
-					ControlledDataConnector.class.getCanonicalName()) ;
-		// --------------------------------------------------------------------
-
-		this.ac = new AdmissionControllerDynamic("Controller", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI, ComputerServicesInboundPortURI, computerURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI,"","");
+        // map associate processor uri with uri of inbound port
+        Map<String, String> pmipURIs = new HashMap<>();
+        Map<String, String> processorCoordinators = new HashMap<>();
+        
+        String csop[] = new String[NB_COMPUTER];
+        String csip[] = new String[NB_COMPUTER];
+        String computer[] = new String[NB_COMPUTER];
+        
+        for (int i = 0; i < NB_COMPUTER; ++i) {
+            Computer c = new Computer("computer" + i, admissibleFrequencies, processingPower, 1500, 1500,
+                    numberOfProcessors, numberOfCores, "csip" + i, "cssdip" + i, "cdsdip" + i);
+            csop[i] = "csop"+i;
+            csip[i] = "csip"+i;
+            computer[i] = "computer"+i;
+            
+            this.addDeployedComponent(c);
+            Map<Integer, String> processorURIs = c.getStaticState().getProcessorURIs();
+            for (Map.Entry<Integer, String> entry : processorURIs.entrySet()) {
+                Map<ProcessorPortTypes, String> pPortsList = c.getStaticState().getProcessorPortMap()
+                        .get(entry.getValue());
+                pmipURIs.put(entry.getValue(), pPortsList.get(Processor.ProcessorPortTypes.MANAGEMENT));
+            }
+            
+            
+            // --------------------------------------------------------------------
+            // Create and deploy Processors coordinator
+            // --------------------------------------------------------------------
+          
+          /*  int j = 0;
+            for ( Map.Entry<Integer , String> entry : processorURIs.entrySet() ) {
+                ProcessorCoordinator pc = new ProcessorCoordinator("pc" + i , pmipURIs.get(entry.getValue()),1500, 1500, numberOfCores );
+                processorCoordinators.put(entry.getValue(), "pc" + j);
+                this.addDeployedComponent(pc);
+                pc.toggleLogging();
+                pc.toggleTracing();
+            }
+            */
+        }
+        
+		this.ac = new AdmissionControllerDynamic("Controller", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, csop, csip, nbAvailableCores, ComputerStaticStateDataOutboundPortURI,"","");
+	
+		
+		
 		this.acmop = new AdmissionControllerManagementOutboundPort("acmop", new AbstractComponent(0, 0) {});
 		this.acmop.publishPort();
 		this.acmop.doConnection(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementConnector.class.getCanonicalName());

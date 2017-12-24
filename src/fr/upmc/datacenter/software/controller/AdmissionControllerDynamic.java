@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.AbstractExecutorService;
 
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.cvm.AbstractCVM;
@@ -13,6 +15,7 @@ import fr.upmc.components.cvm.pre.dcc.ports.DynamicComponentCreationOutboundPort
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.components.exceptions.ComponentStartException;
 import fr.upmc.components.interfaces.DataRequiredI;
+import fr.upmc.components.ports.AbstractOutboundPort;
 import fr.upmc.components.ports.PortI;
 import fr.upmc.components.pre.reflection.connectors.ReflectionConnector;
 import fr.upmc.components.pre.reflection.ports.ReflectionOutboundPort;
@@ -74,7 +77,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	protected static final String RequestSubmissionOutboundPortURI = "rsop"; 
 	protected static final int NB_CORES = 2;
 
-	protected fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort ComputerServicesOutboundPort;
 	protected AdmissionControllerManagementInboundPort acmip;
 	protected ApplicationSubmissionInboundPort asip;
 	
@@ -89,25 +91,25 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	
 
 	 // Map between RequestDispatcher URIs and the outbound ports to call them.
-	protected Map<String, RequestDispatcherManagementOutboundPort> rdmopList;
+	protected Map<String, RequestDispatcherManagementOutboundPort> rdmopMap;
 	
 
 
-	protected String computerURI;
 	
-	ComputerServicesOutboundPort csop;
+	protected ComputerServicesOutboundPort[] csopTab;
 	
 	private DynamicComponentCreationOutboundPort portToRequestDispatcherJVM;
 	private DynamicComponentCreationOutboundPort portToApplicationVMJVM;
 	protected LinkedHashMap<Class,Class> interface_dispatcher_map;
+	private int[] nbAvailablesCores;
 
 
 	/*protected static final String RequestDispatcher_JVM_URI = "controller" ;
 	protected static final String Application_VM_JVM_URI = "controller";*/
 	
 	public AdmissionControllerDynamic(String acURI, String applicationSubmissionInboundPortURI,
-			String AdmissionControllerManagementInboundPortURI, String computerServiceOutboundPortURI,
-			String ComputerServicesInboundPortURI, String computerURI, int nbAvailableCores,
+			String AdmissionControllerManagementInboundPortURI, String[] computerServiceOutboundPortURI,
+			String[] ComputerServicesInboundPortURI, int nbAvailableCores,
 			String computerStaticStateDataOutboundPortURI,
 			String RequestDispatcher_JVM_URI,
 			String Application_VM_JVM_URI
@@ -117,6 +119,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.toggleLogging();
 		this.toggleTracing();
 		this.acURI = acURI;
+		
+		
+		
 		this.addOfferedInterface(ApplicationSubmissionI.class);
 		this.asip = new ApplicationSubmissionInboundPort(applicationSubmissionInboundPortURI, this);
 		this.addPort(asip);
@@ -126,25 +131,15 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.acmip = new AdmissionControllerManagementInboundPort(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementI.class, this);
 		this.addPort(acmip);
 		this.acmip.publishPort();
- 
-		this.addRequiredInterface(ComputerServicesI.class);
-		this.csop = new ComputerServicesOutboundPort(computerServiceOutboundPortURI, this);
-		this.addPort(csop);
-		this.csop.publishPort();
-		
-		this.csop.doConnection(
-				ComputerServicesInboundPortURI,
-				ComputerServicesConnector.class.getCanonicalName()) ;
+ 		
 		
 		
-		this.computerURI = computerURI;
-		
-		this.addRequiredInterface(ComputerStaticStateDataI.class);
+		/*this.addRequiredInterface(ComputerStaticStateDataI.class);
 		this.cssdop = new ComputerStaticStateDataOutboundPort(computerStaticStateDataOutboundPortURI, this, computerURI);
 		this.addPort(this.cssdop);
-		this.cssdop.publishPort();
+		this.cssdop.publishPort();*/
 		this.avmOutPort = new LinkedList<ApplicationVMManagementOutboundPort>();
-		this.rdmopList = new HashMap<String, RequestDispatcherManagementOutboundPort>();
+		this.rdmopMap = new HashMap<String, RequestDispatcherManagementOutboundPort>();
 		this.interface_dispatcher_map = new LinkedHashMap<>();
 		
 		this.portToApplicationVMJVM = new DynamicComponentCreationOutboundPort(this);
@@ -162,12 +157,24 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.portToRequestDispatcherJVM.doConnection(					
 				RequestDispatcher_JVM_URI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
 				DynamicComponentCreationConnector.class.getCanonicalName());
-	
+		
+		this.csopTab = new ComputerServicesOutboundPort[computerServiceOutboundPortURI.length];
+
+		this.addRequiredInterface(ComputerServicesI.class);
+		
+		for (int i = 0; i < computerServiceOutboundPortURI.length; i++) {
+			this.csopTab[i] = new ComputerServicesOutboundPort(computerServiceOutboundPortURI[i], this);
+			this.addPort(this.csopTab[i]);
+			this.csopTab[i].publishPort();
+			
+			this.csopTab[i].doConnection(
+					ComputerServicesInboundPortURI[i],
+					ComputerServicesConnector.class.getCanonicalName()) ;
+		}
 	}
 
 	@Override
 	public void start() throws ComponentStartException {
-		// TODO Auto-generated method stub
 		super.start();
 	}
 
@@ -176,12 +183,12 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
 		
-		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
+		AllocatedCore[] allocatedCore = csopTab[0].allocateCores(NB_CORES);
 		String dispatcherURI[] = new String[6];
 
 		if(allocatedCore!=null && allocatedCore.length != 0) {
-			
-			dispatcherURI[0] = "RD" + rdmopList.size()+"-"+appURI;
+			System.out.println("Application accepted..");
+			dispatcherURI[0] = "RD" + rdmopMap.size()+"-"+appURI;
 			dispatcherURI[1] = RequestDispatcherManagementInboundPortURI + "_" + appURI;
 			dispatcherURI[2] = RequestSubmissionInboundPortURI +"_" + appURI;
 			dispatcherURI[3] = RequestNotificationOutboundPortURI + "_"+ appURI;
@@ -201,7 +208,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		
 			
 			RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
-					RequestDispatcherManagementOutboundPortURI + rdmopList.size(),
+					RequestDispatcherManagementOutboundPortURI + rdmopMap.size(),
 					this);
 			
 			rdmop.publishPort();
@@ -261,7 +268,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 				rop.doDisconnection();
 			}
 			
-			rdmopList.put(appURI, rdmop);
+			rdmopMap.put(appURI, rdmop);
 			
 			return dispatcherURI;
 			
@@ -273,21 +280,38 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 
 	@Override
 	public void submitGenerator(String RequestNotificationInboundPort, String appUri, String rgURI) throws Exception {
-		this.rdmopList.get(appUri).connectWithRequestGenerator(rgURI, RequestNotificationInboundPort);	
+		this.rdmopMap.get(appUri).connectWithRequestGenerator(rgURI, RequestNotificationInboundPort);	
 	}
 
 	@Override
 	public void shutdown() throws ComponentShutdownException {
-
-		try {
-			if(portToRequestDispatcherJVM.connected())
-				portToRequestDispatcherJVM.doDisconnection();
-			if(portToApplicationVMJVM.connected())
-				portToApplicationVMJVM.doDisconnection();
+		try {			
+			for(ComputerServicesOutboundPort csop : csopTab) {
+				if (csop.connected()) {
+					csop.doDisconnection();
+				}
+			}
+			if (this.cssdop.connected()) {
+				this.cssdop.doDisconnection();
+			}
+			if (this.cdsdop.connected()) {
+				this.cdsdop.doDisconnection();
+			}
+			for(Entry<String, RequestDispatcherManagementOutboundPort> entry : this.rdmopMap.entrySet()) {
+				if(entry.getValue().connected()) {
+					entry.getValue().doDisconnection();
+				}
+			}
+			if (this.portToApplicationVMJVM.connected()) {
+				this.portToApplicationVMJVM.doDisconnection();
+			}
+			if (this.portToRequestDispatcherJVM.connected()) {
+				this.portToRequestDispatcherJVM.doDisconnection();
+			}
 		} catch (Exception e) {
 			throw new ComponentShutdownException("Port disconnection error", e);
 		}
-		
+
 		super.shutdown();
 	}
 	
@@ -299,12 +323,12 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
 		
-		AllocatedCore[] allocatedCore = csop.allocateCores(NB_CORES);
+		AllocatedCore[] allocatedCore = csopTab[0].allocateCores(NB_CORES);
 		String dispatcherURI[] = new String[6];
-
+		System.out.println(allocatedCore);
 		if(allocatedCore!=null && allocatedCore.length != 0) {
 			
-			dispatcherURI[0] = "RD_" + rdmopList.size()+"_"+appURI;
+			dispatcherURI[0] = "RD_" + rdmopMap.size()+"_"+appURI;
 			dispatcherURI[1] = RequestDispatcherManagementInboundPortURI + "_" + appURI;
 			dispatcherURI[2] = RequestSubmissionInboundPortURI +"_" + appURI;
 			dispatcherURI[3] = RequestNotificationOutboundPortURI + "_"+ appURI;
@@ -326,7 +350,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		
 			
 			RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
-					RequestDispatcherManagementOutboundPortURI + rdmopList.size(),
+					RequestDispatcherManagementOutboundPortURI + rdmopMap.size(),
 					this);
 			
 			rdmop.publishPort();
@@ -344,7 +368,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 			rop.toggleLogging();
 			rop.toggleTracing();
 			rop.doDisconnection();
-			for(int i=0;i<nbVM;i++)
+			for(int i=0; i<nbVM; i++)
 			{
 				// --------------------------------------------------------------------
 				// Create an Application VM component
@@ -385,16 +409,34 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 				rop.doDisconnection();
 			}
 			
-			rdmopList.put(appURI, rdmop);
+			rdmopMap.put(appURI, rdmop);
 			
-			return dispatcherURI;
-			
-	}else {
-		this.logMessage("Failed to allocates core for a new application.");
-		return null;
-	}
+			return dispatcherURI;	
+		}else {
+			this.logMessage("Failed to allocates core for a new application.");
+			return null;
+		}
 	}
 	
+	/**
+	 * Return the index of the available core
+	 * @param nbCores
+	 * @return index 
+	 */
+	private Integer getAvailableCores(int nbCores) {
+		int max = 0;
+		Integer index = -1;
+		for (int i = 0; i < nbAvailablesCores.length; i++) {
+			if (nbAvailablesCores[i] == nbCores) {
+				return i;
+			}
+			/*if (nbAvailablesCores[i] > max) {
+				max = nbAvailablesCores[i];
+				index = i;
+			}*/
+		}
+		return index;
+}
 
 
 }
