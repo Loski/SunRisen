@@ -23,4 +23,11 @@ implements	fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interface
 	public boolean addCores(String rdURI, int nbCores) throws Exception {
 		return ( ( AdmissionControllerManagementI ) this.connector ).addCores(rdURI, nbCores);
 	}
+
+	@Override
+	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
+			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI)
+			throws Exception {
+		((AdmissionControllerManagementI)this.connector).linkComputer(computerURI, ComputerServicesInboundPortURI, ComputerStaticStateDataInboundPortURI, ComputerDynamicStateDataInboundPortURI);	
+	}
 }

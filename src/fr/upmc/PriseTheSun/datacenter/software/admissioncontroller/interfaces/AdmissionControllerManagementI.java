@@ -4,5 +4,7 @@ import fr.upmc.components.interfaces.OfferedI;
 import fr.upmc.components.interfaces.RequiredI;
 
 public interface AdmissionControllerManagementI extends	OfferedI, RequiredI{
-	 public boolean addCores(String rdURI, int nbCores ) throws Exception; 
-}
+	 public boolean addCores(String rdURI, int nbCores ) throws Exception;
+	 public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,String ComputerStaticStateDataInboundPortURI,
+			 String ComputerDynamicStateDataInboundPortURI) throws Exception;
+	 }

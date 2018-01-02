@@ -161,6 +161,13 @@ extends		AbstractCVM
 
 	private void createAdmissionController() throws Exception {
 		
+		
+		this.ac = new AdmissionControllerDynamic("AdmController", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, "","");
+		this.acmop = new AdmissionControllerManagementOutboundPort("acmop", new AbstractComponent(0, 0) {});
+		this.acmop.publishPort();
+		this.acmop.doConnection(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementConnector.class.getCanonicalName());
+		
+		
 		int numberOfProcessors = 4;
 		int numberOfCores = 8;
         Set<Integer> admissibleFrequencies = new HashSet<Integer>();
@@ -174,6 +181,7 @@ extends		AbstractCVM
         Map<String, String> pmipURIs = new HashMap<>();
         Map<String, String> processorCoordinators = new HashMap<>();
         
+        
         String csop[] = new String[NB_COMPUTER], csip[] = new String[NB_COMPUTER], cssdip[] = new String[NB_COMPUTER], computer[] = new String[NB_COMPUTER], cdsdip[] = new String[NB_COMPUTER];
         for (int i = 0; i < NB_COMPUTER; ++i) {
         	csop[i] = "csop"+i;
@@ -181,13 +189,15 @@ extends		AbstractCVM
             computer[i] = "computer"+i;
             cssdip[i] = "cssdip"+i;
             cdsdip[i] = "cdsdip"+i;
+            
             Computer c = new Computer(computer[i], admissibleFrequencies, processingPower, 1500, 1500,
                     numberOfProcessors, numberOfCores, csip[i], cssdip[i], cdsdip[i]);
-            
-            
             this.addDeployedComponent(c);
             
+            this.acmop.linkComputer(computer[i], csip[i], cssdip[i], cdsdip[i]);
+            
             Map<Integer, String> processorURIs = c.getStaticState().getProcessorURIs();
+            
             for (Map.Entry<Integer, String> entry : processorURIs.entrySet()) {
                 Map<ProcessorPortTypes, String> pPortsList = c.getStaticState().getProcessorPortMap()
                         .get(entry.getValue());
@@ -209,10 +219,7 @@ extends		AbstractCVM
             */
         }
         
-		this.ac = new AdmissionControllerDynamic("Controller", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, computer, csip, cdsdip, ComputerStaticStateDataOutboundPortURI,"","");
-		this.acmop = new AdmissionControllerManagementOutboundPort("acmop", new AbstractComponent(0, 0) {});
-		this.acmop.publishPort();
-		this.acmop.doConnection(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementConnector.class.getCanonicalName());
+		
 	}
 	
 	private void createApplication(int nbApplication) throws Exception {

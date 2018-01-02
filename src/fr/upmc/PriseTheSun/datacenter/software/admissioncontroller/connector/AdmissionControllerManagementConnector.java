@@ -13,5 +13,12 @@ public class AdmissionControllerManagementConnector extends	AbstractConnector im
 		return ( ( AdmissionControllerManagementI ) this.offering ).addCores( rdURI,  nbCores);
 
 	}
+
+	@Override
+	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
+			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI)
+			throws Exception {
+		 ( ( AdmissionControllerManagementI ) this.offering ).linkComputer(computerURI, ComputerServicesInboundPortURI, ComputerStaticStateDataInboundPortURI, ComputerDynamicStateDataInboundPortURI);
+	}
 	
 }
