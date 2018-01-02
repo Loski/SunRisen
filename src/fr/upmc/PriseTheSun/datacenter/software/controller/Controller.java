@@ -6,6 +6,9 @@ import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.Requ
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStaticStateI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherDynamicStateDataOutboundPort;
 import fr.upmc.components.AbstractComponent;
+import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
+import fr.upmc.datacenter.software.interfaces.RequestNotificationI;
+import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
 
 
 
@@ -19,18 +22,30 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	private int threesholdBottom;
 	private int threesholdTop;
 
+	public Controller(String controllerURI,String requestDispatcherDynamicStateDataOutboundPort,String rdURI) throws Exception
+	{
+		super(controllerURI,1,1);
+		
+		this.controllerURI = controllerURI;
+		
+		this.addRequiredInterface(ControlledDataOfferedI.ControlledPullI.class) ;
+		this.rddsdop =
+			new RequestDispatcherDynamicStateDataOutboundPort(requestDispatcherDynamicStateDataOutboundPort,this,rdURI) ;
+		this.addPort(this.rddsdop) ;
+		this.rddsdop.publishPort() ;
+	}
 	
 	@Override
 	public void acceptRequestDispatcherDynamicData(String dispatcherURI,
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
-		long time = currentDynamicState.getTimeStamp();
+		System.out.println(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,currentDynamicState.getAvgExecutionTime()));
 		
 	}
 	@Override
 	public void acceptRequestDispatcherStaticData(String dispatcherURI, RequestDispatcherStaticStateI staticState)
 			throws Exception {
 		// TODO Auto-generated method stub
-		
+		System.out.println("Dispatcher Static Data : ");
 	}
 	
 	

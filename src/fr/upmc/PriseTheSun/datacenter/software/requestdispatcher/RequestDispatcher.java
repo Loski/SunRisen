@@ -155,8 +155,7 @@ implements
 								requestDispatcherDynamicStateDataInboundPortURI, this) ;
 				this.addPort(this.requestDispatcherDynamicStateDataInboundPort) ;
 				this.requestDispatcherDynamicStateDataInboundPort.publishPort() ;
-				this.startUnlimitedPushing(2);
-				
+				this.startUnlimitedPushing(1000);
 	}
 	
 	private void nextVM()

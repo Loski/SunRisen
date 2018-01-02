@@ -12,9 +12,11 @@ import java.util.concurrent.AbstractExecutorService;
 
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementInboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.controller.Controller;
 import fr.upmc.PriseTheSun.datacenter.software.javassist.RequestDispatcherCreator;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatcher;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherDynamicStateDataOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.ports.ApplicationSubmissionInboundPort;
@@ -93,12 +95,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	 // Map between RequestDispatcher URIs and the outbound ports to call them.
 	protected Map<String, RequestDispatcherManagementOutboundPort> rdmopMap;
 	
-
-
-	
-	
 	private DynamicComponentCreationOutboundPort portToRequestDispatcherJVM;
 	private DynamicComponentCreationOutboundPort portToApplicationVMJVM;
+	private DynamicComponentCreationOutboundPort portTControllerJVM;
 	protected LinkedHashMap<Class,Class> interface_dispatcher_map;
 	
 	private int[] nbAvailablesCores;
@@ -112,11 +111,11 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			String applicationSubmissionInboundPortURI,
 			String AdmissionControllerManagementInboundPortURI,
 			String RequestDispatcher_JVM_URI,
-			String Application_VM_JVM_URI
+			String Application_VM_JVM_URI,
+			String Controller_JVM_URI
 			) throws Exception {
 		
 		super(acURI,2, 2);
-		
 		
 		this.computerUri = new ArrayList<String>();
 		
@@ -148,6 +147,14 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		
 		this.portToRequestDispatcherJVM.doConnection(					
 				RequestDispatcher_JVM_URI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
+				DynamicComponentCreationConnector.class.getCanonicalName());
+		
+		this.portTControllerJVM = new DynamicComponentCreationOutboundPort(this);
+		this.portTControllerJVM.publishPort();
+		this.addPort(this.portTControllerJVM);
+		
+		this.portTControllerJVM.doConnection(					
+				Controller_JVM_URI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
 				DynamicComponentCreationConnector.class.getCanonicalName());
 		
 
@@ -236,6 +243,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			
 			String dispatcherUri[] = createDispatcher(appURI, RequestDispatcher.class.getCanonicalName());
 			this.createVM(appURI, dispatcherUri, nbVM, allocatedCore);
+			this.createController(appURI,dispatcherUri[6],dispatcherUri[0]);
 			
 			return dispatcherUri;
 			
@@ -284,6 +292,30 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		}
 
 		super.shutdown();
+	}
+	
+	private String[] createController(String appURI,String requestDispatcherDynamicStateDataInboundPortURI,String rdURI) throws Exception
+	{
+		String controllerURIs[] = new String[2];
+		controllerURIs[0] = appURI+"-controller";
+		controllerURIs[1] = controllerURIs[0]+"-rddsdop";
+		
+		this.portTControllerJVM.createComponent(
+				Controller.class.getCanonicalName(),
+				new Object[] {
+						controllerURIs[0],
+						controllerURIs[1],
+						rdURI
+		});
+		
+		ReflectionOutboundPort rop = new ReflectionOutboundPort(this);
+		this.addPort(rop);
+		rop.publishPort();
+		rop.doConnection(controllerURIs[0], ReflectionConnector.class.getCanonicalName());
+		rop.doPortConnection(controllerURIs[1],requestDispatcherDynamicStateDataInboundPortURI, ControlledDataConnector.class.getCanonicalName());
+		rop.doDisconnection();
+		
+		return controllerURIs;
 	}
 	
 	private String[] createDispatcher(String appURI, String className) throws Exception {
