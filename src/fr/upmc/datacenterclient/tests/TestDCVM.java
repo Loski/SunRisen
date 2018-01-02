@@ -108,7 +108,9 @@ public class TestDCVM extends AbstractDistributedCVM{
 						ComputerDynamicStateDataInboundPortURI,
 						ControlledDataConnector.class.getCanonicalName()) ;
 			System.out.println("create controller");
-			this.ac = new AdmissionControllerDynamic("Controller", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI+"-controller", ComputerServicesInboundPortURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI+"-controller",AdmissionController,AdmissionController);
+			if(true)
+				throw new Exception("not implemented frere");
+			//this.ac = new AdmissionControllerDynamic("Controller", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI+"-controller", ComputerServicesInboundPortURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI+"-controller",AdmissionController,AdmissionController);
 			this.addDeployedComponent(this.ac);
 		//	this.cyclicBarrierClient.notifyAll();
 		}else if(thisJVMURI.equals(Application1)) {
