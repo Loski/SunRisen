@@ -1,4 +1,9 @@
-package fr.upmc.datacenter.software.ports;
+package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports;
+
+import fr.upmc.components.ComponentI;
+import fr.upmc.components.interfaces.DataOfferedI;
+import fr.upmc.datacenter.hardware.computers.Computer;
+import fr.upmc.datacenter.ports.AbstractControlledDataInboundPort;
 
 //Copyright Jacques Malenfant, Univ. Pierre et Marie Curie.
 //
@@ -34,51 +39,51 @@ package fr.upmc.datacenter.software.ports;
 //The fact that you are presently reading this means that you have had
 //knowledge of the CeCILL-C license and that you accept its terms.
 
-import fr.upmc.components.ComponentI;
-import fr.upmc.components.ports.AbstractOutboundPort;
-import fr.upmc.datacenter.software.interfaces.RequestI;
-import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
+
 
 /**
- * The class <code>RequestSubmissionOutboundPort</code> implements the
- * inbound port requiring the interface <code>RequestSubmissionI</code>.
+ * The class <code>ComputerDynamicStateDataInboundPort</code> implements a data
+ * inbound port offering the <code>ComputerDynamicStateDataI</code> interface.
  *
  * <p><strong>Description</strong></p>
  * 
  * <p><strong>Invariant</strong></p>
  * 
  * <pre>
- * invariant	true
+ * invariant		true
  * </pre>
  * 
- * <p>Created on : April 9, 2015</p>
+ * <p>Created on : April 15, 2015</p>
  * 
  * @author	<a href="mailto:Jacques.Malenfant@lip6.fr">Jacques Malenfant</a>
  * @version	$Name$ -- $Revision$ -- $Date$
  */
-public class				RequestSubmissionOutboundPort
-extends		AbstractOutboundPort
-implements	RequestSubmissionI
+public class				RequestDispatcherDynamicStateDataInboundPort
+extends		AbstractControlledDataInboundPort
 {
+	private static final long serialVersionUID = 1L;
+
 	// ------------------------------------------------------------------------
 	// Constructors
 	// ------------------------------------------------------------------------
 
-	public				RequestSubmissionOutboundPort(
+	public				RequestDispatcherDynamicStateDataInboundPort(
 		ComponentI owner
 		) throws Exception
 	{
-		super(RequestSubmissionI.class, owner);
+		super(owner) ;
+
+		assert owner instanceof Computer ;
 	}
 
-	public				RequestSubmissionOutboundPort(
+	public				RequestDispatcherDynamicStateDataInboundPort(
 		String uri,
 		ComponentI owner
 		) throws Exception
 	{
-		super(uri, RequestSubmissionI.class, owner) ;
+		super(uri, owner);
 
-		assert	uri != null ;
+		assert owner instanceof Computer ;
 	}
 
 	// ------------------------------------------------------------------------
@@ -86,21 +91,18 @@ implements	RequestSubmissionI
 	// ------------------------------------------------------------------------
 
 	/**
-	 * @see fr.upmc.datacenter.software.interfaces.RequestSubmissionI#submitRequest(fr.upmc.datacenter.software.interfaces.RequestI)
+	 * @see fr.upmc.components.interfaces.DataOfferedI.PullI#get()
 	 */
 	@Override
-	public void			submitRequest(final RequestI r) throws Exception
+	public DataOfferedI.DataI	get() throws Exception
 	{
-		((RequestSubmissionI)this.connector).submitRequest(r) ;
-	}
-
-	/**
-	 * @see fr.upmc.datacenter.software.interfaces.RequestSubmissionI#submitRequestAndNotify(fr.upmc.datacenter.software.interfaces.RequestI)
-	 */
-	@Override
-	public void			submitRequestAndNotify(RequestI r)
-	throws Exception
-	{
-		((RequestSubmissionI)this.connector).submitRequestAndNotify(r) ;
+		final Computer c = (Computer) this.owner ;
+		return c.handleRequestSync(
+					new ComponentI.ComponentService<DataOfferedI.DataI>() {
+						@Override
+						public DataOfferedI.DataI call() throws Exception {
+							return c.getDynamicState() ;
+						}
+					});
 	}
 }

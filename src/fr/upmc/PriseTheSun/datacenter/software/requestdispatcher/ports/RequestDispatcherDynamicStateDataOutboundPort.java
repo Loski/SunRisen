@@ -1,4 +1,7 @@
-package fr.upmc.datacenter.software.ports;
+package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports;
+
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStateDataConsumerI;
 
 //Copyright Jacques Malenfant, Univ. Pierre et Marie Curie.
 //
@@ -35,50 +38,64 @@ package fr.upmc.datacenter.software.ports;
 //knowledge of the CeCILL-C license and that you accept its terms.
 
 import fr.upmc.components.ComponentI;
-import fr.upmc.components.ports.AbstractOutboundPort;
-import fr.upmc.datacenter.software.interfaces.RequestI;
-import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
+import fr.upmc.components.interfaces.DataRequiredI;
+import fr.upmc.datacenter.hardware.computers.interfaces.ComputerDynamicStateI;
+import fr.upmc.datacenter.hardware.computers.interfaces.ComputerStateDataConsumerI;
+import fr.upmc.datacenter.ports.AbstractControlledDataOutboundPort;
+
 
 /**
- * The class <code>RequestSubmissionOutboundPort</code> implements the
- * inbound port requiring the interface <code>RequestSubmissionI</code>.
+ * The class <code>ComputerDynamicDataOutboundPort</code> implements a data
+ * outbound port requiring the <code>ComputerDynamicStateDataI</code> interface.
  *
  * <p><strong>Description</strong></p>
  * 
  * <p><strong>Invariant</strong></p>
  * 
  * <pre>
- * invariant	true
+ * invariant		true
  * </pre>
  * 
- * <p>Created on : April 9, 2015</p>
+ * <p>Created on : April 15, 2015</p>
  * 
  * @author	<a href="mailto:Jacques.Malenfant@lip6.fr">Jacques Malenfant</a>
  * @version	$Name$ -- $Revision$ -- $Date$
  */
-public class				RequestSubmissionOutboundPort
-extends		AbstractOutboundPort
-implements	RequestSubmissionI
+public class				RequestDispatcherDynamicStateDataOutboundPort
+extends		AbstractControlledDataOutboundPort
 {
+	// ------------------------------------------------------------------------
+	// Constants and instance variables
+	// ------------------------------------------------------------------------
+
+	private static final long	serialVersionUID = 1L ;
+	protected String			rdURI ;
+
 	// ------------------------------------------------------------------------
 	// Constructors
 	// ------------------------------------------------------------------------
 
-	public				RequestSubmissionOutboundPort(
-		ComponentI owner
+	public				RequestDispatcherDynamicStateDataOutboundPort(
+		ComponentI owner,
+		String rdURI
 		) throws Exception
 	{
-		super(RequestSubmissionI.class, owner);
+		super(owner) ;
+		this.rdURI = rdURI ;
+
+		assert	owner instanceof ComputerStateDataConsumerI ;
 	}
 
-	public				RequestSubmissionOutboundPort(
+	public				RequestDispatcherDynamicStateDataOutboundPort(
 		String uri,
-		ComponentI owner
+		ComponentI owner,
+		String rdURI
 		) throws Exception
 	{
-		super(uri, RequestSubmissionI.class, owner) ;
+		super(uri, owner);
+		this.rdURI = rdURI ;
 
-		assert	uri != null ;
+		assert	owner instanceof ComputerStateDataConsumerI ;
 	}
 
 	// ------------------------------------------------------------------------
@@ -86,21 +103,14 @@ implements	RequestSubmissionI
 	// ------------------------------------------------------------------------
 
 	/**
-	 * @see fr.upmc.datacenter.software.interfaces.RequestSubmissionI#submitRequest(fr.upmc.datacenter.software.interfaces.RequestI)
+	 * @see fr.upmc.components.interfaces.DataRequiredI.PushI#receive(fr.upmc.components.interfaces.DataRequiredI.DataI)
 	 */
 	@Override
-	public void			submitRequest(final RequestI r) throws Exception
-	{
-		((RequestSubmissionI)this.connector).submitRequest(r) ;
-	}
-
-	/**
-	 * @see fr.upmc.datacenter.software.interfaces.RequestSubmissionI#submitRequestAndNotify(fr.upmc.datacenter.software.interfaces.RequestI)
-	 */
-	@Override
-	public void			submitRequestAndNotify(RequestI r)
+	public void			receive(DataRequiredI.DataI d)
 	throws Exception
 	{
-		((RequestSubmissionI)this.connector).submitRequestAndNotify(r) ;
+		((RequestDispatcherStateDataConsumerI)this.owner).
+						acceptRequestDispatcherDynamicData(this.rdURI,
+												  (RequestDispatcherDynamicStateI) d) ;
 	}
 }
