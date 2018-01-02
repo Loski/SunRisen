@@ -195,7 +195,6 @@ extends		AbstractCVM
                 pmipURIs.put(entry.getValue(), pPortsList.get(Processor.ProcessorPortTypes.MANAGEMENT));
             }
             
-            
             // --------------------------------------------------------------------
             // Create and deploy Processors coordinator
             // --------------------------------------------------------------------

@@ -168,6 +168,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	
 	private void createVM(String appURI, String[] dispatcherUri, int nbVM, AllocatedCore[] allocatedCore) throws Exception {
 		
+		//TODO : a surveiller
 		ReflectionOutboundPort rop = null;
 		try {
 			rop = new ReflectionOutboundPort(this);
