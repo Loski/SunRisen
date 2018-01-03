@@ -87,12 +87,17 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	protected ArrayList<ComputerServicesOutboundPort> csops;
 	protected ArrayList<ComputerStaticStateDataOutboundPort> cssdops;
 	protected ArrayList<ComputerDynamicStateDataOutboundPort> cdsdops;
+	protected ArrayList<Integer> nbAvailablesCores;
+
 	protected ArrayList<String> computerUri;
 	
 
-	 // Map between RequestDispatcher URIs and the outbound ports to call them.
+	 // Map between RequestDispatcher URIs and the management ports to call them.
 	protected Map<String, RequestDispatcherManagementOutboundPort> rdmopMap;
 	
+	//Map Between a vm and his computer
+	protected Map<String, ComputerServicesOutboundPort> csopMap;
+
 
 
 	
@@ -101,8 +106,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	private DynamicComponentCreationOutboundPort portToApplicationVMJVM;
 	protected LinkedHashMap<Class,Class> interface_dispatcher_map;
 	
-	private int[] nbAvailablesCores;
-	private Map<String, boolean[][]> reservedCores;
 
 
 	/*protected static final String RequestDispatcher_JVM_URI = "controller" ;
@@ -159,7 +162,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		this.csops = new ArrayList<ComputerServicesOutboundPort>();
 		this.cssdops = new ArrayList<ComputerStaticStateDataOutboundPort>();
 		this.cdsdops = new ArrayList<ComputerDynamicStateDataOutboundPort>();
-		this.reservedCores = new HashMap<>();
+		this.nbAvailablesCores = new ArrayList<>();
 	}
 
 	@Override
@@ -229,8 +232,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	public synchronized String[] submitApplication(String appURI, int nbVM) throws Exception{
 		
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
-		
-		AllocatedCore[] allocatedCore = csops.get(0).allocateCores(NB_CORES);
+		AllocatedCore[] allocatedCore = getAvailableCores(NB_CORES);
 		
 		if(allocatedCore!=null && allocatedCore.length != 0) {
 			
@@ -253,12 +255,11 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	@Override
 	public void shutdown() throws ComponentShutdownException {
 		try {			
-		/*	for(ComputerServicesOutboundPort csop : csops) {
+			for(ComputerServicesOutboundPort csop : csops) {
 				if (csop.connected()) {
 					csop.doDisconnection();
 				}
 			}
-			*/
 			for(ComputerDynamicStateDataOutboundPort cdsdop : cdsdops) {
 				if (cdsdop.connected()) {
 					cdsdop.doDisconnection();
@@ -327,10 +328,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		assert submissionInterface.isInterface();
 		
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
-		System.out.println(getAvailableCores(2));
-		AllocatedCore[] allocatedCore = csops.get(0).allocateCores(NB_CORES);
-		
-		System.out.println(allocatedCore);
+		AllocatedCore[] allocatedCore = getAvailableCores(NB_CORES);
 		if(allocatedCore!=null && allocatedCore.length != 0) {
 			
 			Class<?> dispa = RequestDispatcherCreator.createRequestDispatcher("JAVASSIST-dispa", RequestDispatcher.class, submissionInterface);
@@ -349,28 +347,58 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	 * Return the index of the first available computer
 	 * @param nbCores
 	 * @return index 
+	 * @throws Exception 
 	 */
-	private String getAvailableCores(int nbCores) {
-		for(Entry<String, boolean[][]> processor: this.reservedCores.entrySet()) {
-			for (int p = 0; p < processor.getValue().length; p++) {
-				int availableCores = 0;
-				for (int c = 0; c < processor.getValue()[0].length; c++) {
-					if (!processor.getValue()[p][c]) {					
-						availableCores++;
-						if (availableCores == nbCores) {
-							return processor.getKey();	
-						}					
-					}
-				}
+	private AllocatedCore[] getAvailableCores(int nbCores) throws Exception {
+		for(int i = 0; i < nbAvailablesCores.size(); i++) {
+			if(this.nbAvailablesCores.get(i) >= nbCores) {
+				return tryAllocated(csops.get(i), i, nbCores);
 			}
+		}
+		return null;
+	}
+	
+	
+	private AllocatedCore[] getAvailableCores(ComputerServicesOutboundPort csop, int nbCores) throws Exception {
+		for(int i = 0; i < csops.size(); i++) {
+			if(csops.get(i) == csop) {
+				if(this.nbAvailablesCores.get(i) >= nbCores) {
+					return tryAllocated(csop, i, nbCores);
+				}else
+					return null;
+			}
+		}
+		return null;
+	}
+	
+	private AllocatedCore[] tryAllocated(ComputerServicesOutboundPort csop, int index,  int nbCores) throws Exception {
+		AllocatedCore[] allocatedCore = csop.allocateCores(nbCores);
+		if(allocatedCore!=null && allocatedCore.length != 0) {
+			this.nbAvailablesCores.set(index, this.nbAvailablesCores.get(index));
+			return allocatedCore;
 		}
 		return null;
 	}
 
 	@Override
-	public boolean addCores(String rdURI, int nbCores) throws Exception {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean addCores(String rdURI, int nbCores, String vmUri) throws Exception {
+		// parcourir les computers utilisés
+		boolean ok = false;
+		int nbAllocated = 0;
+		/*
+		
+		AllocatedCore[] ac = getAvailableCores(csop, nbCores);
+		
+		ok = ((nbAllocated = ac.length) > 0);
+
+		if (ok) {
+			avmopMap.get(s).allocateCores(ac);
+			print(nbAllocated + " cores allocated on the computer " + currentAVMOP);
+		} else
+			print("No core available on the computer  " + compIndex);
+		nbAvailablesCores[compIndex] = nbAvailablesCores[compIndex] - nbAllocated;*/
+
+return ok;
 	}
 
 	@Override
@@ -382,7 +410,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	@Override
 	public void acceptComputerDynamicData(String computerURI, ComputerDynamicStateI currentDynamicState)
 			throws Exception {
-		this.reservedCores.put(computerURI, currentDynamicState.getCurrentCoreReservations());
+		//this.reservedCores.put(computerURI, currentDynamicState.getCurrentCoreReservations());
 	} 
 
 	@Override
@@ -409,10 +437,14 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 					ComputerStaticStateDataInboundPortURI,
 					ControlledDataConnector.class.getCanonicalName());
 
+			ComputerStaticStateI staticState= (ComputerStaticStateI) cssdop.request();
+			int nbCores = staticState.getNumberOfCoresPerProcessor();
+			int nbProc = staticState.getNumberOfProcessors();
+			
+			this.nbAvailablesCores.add(nbCores*nbProc);
 			
 			
 			this.cssdops.add(cssdop);
-			
 			String cdsdopUri = AdmissionControllerDynamic.computerDynamicStateDataOutboundPortURI + "_" +  this.cdsdops.size();
 			ComputerDynamicStateDataOutboundPort cdsdop = new ComputerDynamicStateDataOutboundPort(cdsdopUri, this, computerURI);
 			
@@ -424,7 +456,4 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			cdsdop.startUnlimitedPushing(1000);
 			this.cdsdops.add(cdsdop);
 	}
-
-
-
 }

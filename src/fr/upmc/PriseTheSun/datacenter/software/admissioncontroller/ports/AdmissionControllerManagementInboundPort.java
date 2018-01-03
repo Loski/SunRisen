@@ -21,14 +21,14 @@ public class AdmissionControllerManagementInboundPort extends AbstractInboundPor
 	}
 
 	@Override
-	public boolean addCores(String rdURI, int nbCores) throws Exception {
+	public boolean addCores(String rdURI, int nbCores, String vmUri) throws Exception {
 		final AdmissionControllerManagementI acm = ( AdmissionControllerManagementI ) this.owner;
 		
 		return this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
-						return acm.addCores(rdURI, nbCores) ;
+						return acm.addCores(rdURI, nbCores, null) ;
 					}
 				});
 		}
