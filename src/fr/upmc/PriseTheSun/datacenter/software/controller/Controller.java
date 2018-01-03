@@ -6,6 +6,7 @@ import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.Requ
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStaticStateI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherDynamicStateDataOutboundPort;
 import fr.upmc.components.AbstractComponent;
+import fr.upmc.datacenter.connectors.ControlledDataConnector;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationI;
 import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
@@ -17,12 +18,12 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	protected String controllerURI;
 	protected String cmop;
 	protected AdmissionControllerManagementOutboundPort acmop;
-	protected  RequestDispatcherDynamicStateDataOutboundPort rddsdop;
+	protected RequestDispatcherDynamicStateDataOutboundPort rddsdop;
 	
 	private int threesholdBottom;
 	private int threesholdTop;
 
-	public Controller(String controllerURI,String requestDispatcherDynamicStateDataOutboundPort,String rdURI) throws Exception
+	public Controller(String controllerURI,String requestDispatcherDynamicStateDataOutboundPort,String rdURI,String requestDispatcherDynamicStateDataInboundPortURI) throws Exception
 	{
 		super(controllerURI,1,1);
 		
@@ -33,13 +34,16 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 			new RequestDispatcherDynamicStateDataOutboundPort(requestDispatcherDynamicStateDataOutboundPort,this,rdURI) ;
 		this.addPort(this.rddsdop) ;
 		this.rddsdop.publishPort() ;
+
+		this.rddsdop.doConnection(requestDispatcherDynamicStateDataInboundPortURI, ControlledDataConnector.class.getCanonicalName());
+		
+		this.rddsdop.startUnlimitedPushing(10000);
 	}
 	
 	@Override
 	public void acceptRequestDispatcherDynamicData(String dispatcherURI,
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
 		System.out.println(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,currentDynamicState.getAvgExecutionTime()));
-		
 	}
 	@Override
 	public void acceptRequestDispatcherStaticData(String dispatcherURI, RequestDispatcherStaticStateI staticState)
