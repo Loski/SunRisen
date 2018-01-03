@@ -1,6 +1,8 @@
 package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI;
 import fr.upmc.datacenter.TimeManagement;
@@ -18,10 +20,13 @@ public class RequestDispatcherDynamicState implements RequestDispatcherDynamicSt
 	protected final String		rdURI ;
     /** the average request execution time */
     protected final long executionTimeAvg;
+    
+    protected final List<String> VmURI;
 	
 	public				RequestDispatcherDynamicState(
 			String rdURI,
-			long executionTimeAvg
+			long executionTimeAvg,
+			List<String> vmURIsList
 			) throws Exception
 	{
 		super() ;
@@ -29,6 +34,7 @@ public class RequestDispatcherDynamicState implements RequestDispatcherDynamicSt
 		this.timestamperIP = InetAddress.getLocalHost().getHostAddress() ;
 		this.rdURI = rdURI ;
 		this.executionTimeAvg=executionTimeAvg;
+		this.VmURI = vmURIsList;
 	}
     
 	@Override
@@ -50,6 +56,12 @@ public class RequestDispatcherDynamicState implements RequestDispatcherDynamicSt
 	@Override
 	public String getDispatcherURI() {
 		return new String(this.rdURI) ;
+	}
+
+	@Override
+	public List<String> getVMUri() {
+		// TODO Auto-generated method stub
+		return VmURI;
 	}
 
 }

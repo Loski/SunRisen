@@ -421,16 +421,23 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	public boolean addCores(String rdURI, int nbCores, String vmUri) {
 		ComputerServicesOutboundPort csop = csopMap.get(vmUri);
 		try {
+			
 			AllocatedCore[] ac = getAvailableCores(csop, nbCores);
-			int index = avmOutPort.indexOf(vmUri);
-			avmOutPort.get(index).allocateCores(ac);
+			avmOutPort.get(findVM(vmUri)).allocateCores(ac);
 			return true;
 		} catch (Exception e) {
-			this.logMessage("Failed to allocates core for a new application.");
+			this.logMessage("Failed to allocates core for a new application." + e.getMessage());
 			return false;
 		}
 	}
 
+	private int findVM(String vmUri) throws Exception {
+		for(int i = 0; i < avmOutPort.size(); i++) {
+			if(avmOutPort.get(i).getPortURI().equals(vmUri))
+				return i;
+		}
+		return -1;
+	}
 	@Override
 	public void acceptComputerStaticData(String computerURI, ComputerStaticStateI staticState) throws Exception {
 		// TODO Auto-generated method stub
@@ -483,7 +490,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			cdsdop.doConnection(
 					ComputerDynamicStateDataInboundPortURI,
 					ControlledDataConnector.class.getCanonicalName());
-			cdsdop.startUnlimitedPushing(1000);
 			this.cdsdops.add(cdsdop);
 	}
 }

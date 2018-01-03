@@ -303,7 +303,7 @@ implements
 	
 	public RequestDispatcherDynamicStateI	getDynamicState() throws Exception
 	{
-		return new RequestDispatcherDynamicState(this.rdURI,0) ;
+		return new RequestDispatcherDynamicState(this.rdURI,0 , vmURIsList) ;
 	}
 	
 	public void			sendDynamicState() throws Exception
