@@ -12,9 +12,11 @@ import java.util.concurrent.AbstractExecutorService;
 
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementInboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.controller.Controller;
 import fr.upmc.PriseTheSun.datacenter.software.javassist.RequestDispatcherCreator;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatcher;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherDynamicStateDataOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.ports.ApplicationSubmissionInboundPort;
@@ -98,12 +100,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	//Map Between a vm and his computer
 	protected Map<String, ComputerServicesOutboundPort> csopMap;
 
-
-
-	
-	
 	private DynamicComponentCreationOutboundPort portToRequestDispatcherJVM;
 	private DynamicComponentCreationOutboundPort portToApplicationVMJVM;
+	private DynamicComponentCreationOutboundPort portTControllerJVM;
 	protected LinkedHashMap<Class,Class> interface_dispatcher_map;
 	
 
@@ -115,11 +114,11 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			String applicationSubmissionInboundPortURI,
 			String AdmissionControllerManagementInboundPortURI,
 			String RequestDispatcher_JVM_URI,
-			String Application_VM_JVM_URI
+			String Application_VM_JVM_URI,
+			String Controller_JVM_URI
 			) throws Exception {
 		
 		super(acURI,2, 2);
-		
 		
 		this.computerUri = new ArrayList<String>();
 		
@@ -151,6 +150,14 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		
 		this.portToRequestDispatcherJVM.doConnection(					
 				RequestDispatcher_JVM_URI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
+				DynamicComponentCreationConnector.class.getCanonicalName());
+		
+		this.portTControllerJVM = new DynamicComponentCreationOutboundPort(this);
+		this.portTControllerJVM.publishPort();
+		this.addPort(this.portTControllerJVM);
+		
+		this.portTControllerJVM.doConnection(					
+				Controller_JVM_URI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
 				DynamicComponentCreationConnector.class.getCanonicalName());
 		
 
@@ -228,24 +235,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		}
 		
 	}
-	@Override
-	public synchronized String[] submitApplication(String appURI, int nbVM) throws Exception{
-		
-		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
-		AllocatedCore[] allocatedCore = getAvailableCores(NB_CORES);
-		
-		if(allocatedCore!=null && allocatedCore.length != 0) {
-			
-			String dispatcherUri[] = createDispatcher(appURI, RequestDispatcher.class.getCanonicalName());
-			this.createVM(appURI, dispatcherUri, nbVM, allocatedCore);
-			
-			return dispatcherUri;
-			
-	}else {
-		this.logMessage("Failed to allocates core for a new application.");
-		return null;
-	}
-	}
+
 
 	@Override
 	public void submitGenerator(String RequestNotificationInboundPort, String appUri, String rgURI) throws Exception {
@@ -287,6 +277,30 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		super.shutdown();
 	}
 	
+	private String[] createController(String appURI,String requestDispatcherDynamicStateDataInboundPortURI,String rdURI) throws Exception
+	{
+		String controllerURIs[] = new String[2];
+		controllerURIs[0] = appURI+"-controller";
+		controllerURIs[1] = controllerURIs[0]+"-rddsdop";
+		
+		this.portTControllerJVM.createComponent(
+				Controller.class.getCanonicalName(),
+				new Object[] {
+						controllerURIs[0],
+						controllerURIs[1],
+						rdURI
+		});
+		
+		ReflectionOutboundPort rop = new ReflectionOutboundPort(this);
+		this.addPort(rop);
+		rop.publishPort();
+		rop.doConnection(controllerURIs[0], ReflectionConnector.class.getCanonicalName());
+		rop.doPortConnection(controllerURIs[1],requestDispatcherDynamicStateDataInboundPortURI, ControlledDataConnector.class.getCanonicalName());
+		rop.doDisconnection();
+		
+		return controllerURIs;
+	}
+	
 	private String[] createDispatcher(String appURI, String className) throws Exception {
 		
 		String dispatcherURI[] = new String[8];
@@ -323,24 +337,44 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	
 
 	@Override
+	public synchronized String[] submitApplication(String appURI, int nbVM) throws Exception{
+		
+		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
+		AllocatedCore[] allocatedCore;
+		try {
+			allocatedCore = getAvailableCores(NB_CORES);
+		} catch (Exception e) {
+			this.logMessage("Failed to allocates core for a new application.");
+			return null;
+		}
+		
+		String dispatcherUri[] = createDispatcher(appURI, RequestDispatcher.class.getCanonicalName());
+		this.createVM(appURI, dispatcherUri, nbVM, allocatedCore);
+		this.createController(appURI,dispatcherUri[6],dispatcherUri[0]);
+		
+		return dispatcherUri;
+	}
+	
+	@Override
 	public synchronized String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
 		
 		assert submissionInterface.isInterface();
 		
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
-		AllocatedCore[] allocatedCore = getAvailableCores(NB_CORES);
-		if(allocatedCore!=null && allocatedCore.length != 0) {
-			
-			Class<?> dispa = RequestDispatcherCreator.createRequestDispatcher("JAVASSIST-dispa", RequestDispatcher.class, submissionInterface);
-			interface_dispatcher_map.put(submissionInterface, dispa);
-			
-			String dispatcherUri[] = createDispatcher(appURI, dispa.getCanonicalName());
-			this.createVM(appURI, dispatcherUri, nbVM, allocatedCore);
-			return dispatcherUri;	
-		}else {
+		AllocatedCore[] allocatedCore = null;
+		try{
+			 allocatedCore = getAvailableCores(NB_CORES);
+		}catch(Exception e) {
 			this.logMessage("Failed to allocates core for a new application.");
 			return null;
 		}
+
+		Class<?> dispa = RequestDispatcherCreator.createRequestDispatcher("JAVASSIST-dispa", RequestDispatcher.class, submissionInterface);
+		interface_dispatcher_map.put(submissionInterface, dispa);
+		
+		String dispatcherUri[] = createDispatcher(appURI, dispa.getCanonicalName());
+		this.createVM(appURI, dispatcherUri, nbVM, allocatedCore);
+		return dispatcherUri;
 	}
 	
 	/**
@@ -355,7 +389,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 				return tryAllocated(csops.get(i), i, nbCores);
 			}
 		}
-		return null;
+		throw new Exception("Impossible d'allouer des cores");
 	}
 	
 	
@@ -364,11 +398,12 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			if(csops.get(i) == csop) {
 				if(this.nbAvailablesCores.get(i) >= nbCores) {
 					return tryAllocated(csop, i, nbCores);
-				}else
-					return null;
+				}else {
+					break;
+				}
 			}
 		}
-		return null;
+		throw new Exception("Impossible d'allouer des cores");
 	}
 	
 	private AllocatedCore[] tryAllocated(ComputerServicesOutboundPort csop, int index,  int nbCores) throws Exception {
@@ -377,28 +412,23 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			this.nbAvailablesCores.set(index, this.nbAvailablesCores.get(index));
 			return allocatedCore;
 		}
-		return null;
+		else {
+			throw new Exception("Impossible d'allouer des cores");
+		}
 	}
 
 	@Override
-	public boolean addCores(String rdURI, int nbCores, String vmUri) throws Exception {
-		// parcourir les computers utilisés
-		boolean ok = false;
-		int nbAllocated = 0;
-		/*
-		
-		AllocatedCore[] ac = getAvailableCores(csop, nbCores);
-		
-		ok = ((nbAllocated = ac.length) > 0);
-
-		if (ok) {
-			avmopMap.get(s).allocateCores(ac);
-			print(nbAllocated + " cores allocated on the computer " + currentAVMOP);
-		} else
-			print("No core available on the computer  " + compIndex);
-		nbAvailablesCores[compIndex] = nbAvailablesCores[compIndex] - nbAllocated;*/
-
-return ok;
+	public boolean addCores(String rdURI, int nbCores, String vmUri) {
+		ComputerServicesOutboundPort csop = csopMap.get(vmUri);
+		try {
+			AllocatedCore[] ac = getAvailableCores(csop, nbCores);
+			int index = avmOutPort.indexOf(vmUri);
+			avmOutPort.get(index).allocateCores(ac);
+			return true;
+		} catch (Exception e) {
+			this.logMessage("Failed to allocates core for a new application.");
+			return false;
+		}
 	}
 
 	@Override
