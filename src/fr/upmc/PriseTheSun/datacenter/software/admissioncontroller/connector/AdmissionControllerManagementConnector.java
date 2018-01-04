@@ -9,8 +9,8 @@ public class AdmissionControllerManagementConnector extends	AbstractConnector im
 {
 
 	@Override
-	public boolean addCores(String rdURI, int nbCores) throws Exception {
-		return ( ( AdmissionControllerManagementI ) this.offering ).addCores( rdURI,  nbCores);
+	public boolean addCores(String rdURI, int nbCores, String vmUri) throws Exception {
+		return ( ( AdmissionControllerManagementI ) this.offering ).addCores( rdURI,  nbCores, null);
 
 	}
 

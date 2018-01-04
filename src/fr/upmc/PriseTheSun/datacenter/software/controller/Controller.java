@@ -7,6 +7,7 @@ import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.Requ
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherDynamicStateDataOutboundPort;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.datacenter.connectors.ControlledDataConnector;
+import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationI;
 import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
@@ -52,7 +53,18 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		System.out.println("Dispatcher Static Data : ");
 	}
 	
-	
-
-	
+	public void controlling() {
+		
+	}
+    @Override
+    public void shutdown() throws ComponentShutdownException {
+        try {
+            if (this.acmop.connected())
+                this.acmop.doDisconnection();
+        } catch (Exception e) {
+            throw new ComponentShutdownException(e);
+        }
+        super.shutdown();
+    }
+    
 }

@@ -316,7 +316,7 @@ implements
 	
 	public RequestDispatcherDynamicStateI	getDynamicState() throws Exception
 	{
-		return new RequestDispatcherDynamicState(this.rdURI,0) ;
+		return new RequestDispatcherDynamicState(this.rdURI,0,this.virtualMachineDataList) ;
 	}
 	
 	public void			sendDynamicState() throws Exception
