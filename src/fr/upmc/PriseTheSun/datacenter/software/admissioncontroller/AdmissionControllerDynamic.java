@@ -288,15 +288,16 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 				new Object[] {
 						controllerURIs[0],
 						controllerURIs[1],
-						rdURI
+						rdURI,
+						requestDispatcherDynamicStateDataInboundPortURI
 		});
 		
-		ReflectionOutboundPort rop = new ReflectionOutboundPort(this);
+		/*ReflectionOutboundPort rop = new ReflectionOutboundPort(this);
 		this.addPort(rop);
 		rop.publishPort();
 		rop.doConnection(controllerURIs[0], ReflectionConnector.class.getCanonicalName());
 		rop.doPortConnection(controllerURIs[1],requestDispatcherDynamicStateDataInboundPortURI, ControlledDataConnector.class.getCanonicalName());
-		rop.doDisconnection();
+		rop.doDisconnection();*/
 		
 		return controllerURIs;
 	}

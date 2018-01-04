@@ -8,6 +8,7 @@ import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.Requ
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStaticStateI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherDynamicStateDataOutboundPort;
 import fr.upmc.components.AbstractComponent;
+import fr.upmc.datacenter.connectors.ControlledDataConnector;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationI;
@@ -21,12 +22,13 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	protected String cmop;
 	protected String rdUri;
 	protected AdmissionControllerManagementOutboundPort acmop;
-	protected  RequestDispatcherDynamicStateDataOutboundPort rddsdop;
+	protected RequestDispatcherDynamicStateDataOutboundPort rddsdop;
 	
 	private int threesholdBottom;
 	private int threesholdTop;
 
-	public Controller(String controllerURI,String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String AdmissionControllerManagementInboundPortURI) throws Exception
+
+	public Controller(String controllerURI,String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI) throws Exception
 	{
 		super(controllerURI,1,1);
 		
@@ -43,15 +45,15 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		this.acmop = new AdmissionControllerManagementOutboundPort("acmop-"+this.controllerURI, this);
 		this.acmop.publishPort();
 		this.acmop.doConnection(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementConnector.class.getCanonicalName());
+		this.rddsdop.doConnection(requestDispatcherDynamicStateDataInboundPortURI, ControlledDataConnector.class.getCanonicalName());
 		
-		
+		this.rddsdop.startUnlimitedPushing(10000);
 	}
 	
 	@Override
 	public void acceptRequestDispatcherDynamicData(String dispatcherURI,
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
 		System.out.println(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,currentDynamicState.getAvgExecutionTime()));
-		
 	}
 	@Override
 	public void acceptRequestDispatcherStaticData(String dispatcherURI, RequestDispatcherStaticStateI staticState)
@@ -63,7 +65,6 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	public void controlling() {
 		
 	}
-    @Override
 
 	@Override
     public void shutdown() throws ComponentShutdownException {

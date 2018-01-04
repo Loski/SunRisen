@@ -3,6 +3,7 @@ package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces;
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.VirtualMachineData;
 import fr.upmc.components.interfaces.DataOfferedI;
 import fr.upmc.components.interfaces.DataRequiredI;
 import fr.upmc.datacenter.interfaces.TimeStampingI;
@@ -14,5 +15,5 @@ extends 		DataOfferedI.DataI,
 {
 	public String			getDispatcherURI() ;
 	public double getAvgExecutionTime();
-	public List<String> getVMUri();
+	public List<VirtualMachineData> getVMData();
 }

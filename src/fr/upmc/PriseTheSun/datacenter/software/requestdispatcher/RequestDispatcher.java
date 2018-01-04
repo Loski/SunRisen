@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -61,9 +62,11 @@ implements
 	/** InboundPort to receive VM notification */
 	protected RequestNotificationInboundPort  requestNotificationInboundPort;
 
-	/** List of OutboundPort to resend requests to VM */
-	protected List<RequestSubmissionOutboundPort> requestSubmissionOutboundPortList;
-	protected List<String> vmURIsList;
+	/** List of virtual machines' data (URI,submissionOutboundPort,...)*/
+	protected List<VirtualMachineData> virtualMachineDataList;
+	
+	/**  */
+	private List<RequestTimeData> requestTimeDataList;
 	
 	/** index of the VM in the requestSubmissionOutboundPortList which will receive the next request*/
 	private int currentVM;
@@ -145,8 +148,7 @@ implements
 				this.addPort(this.requestNotificationOutboundPort) ;
 				this.requestNotificationOutboundPort.publishPort() ;
 				
-				this.requestSubmissionOutboundPortList = new ArrayList<RequestSubmissionOutboundPort>();
-				this.vmURIsList = new ArrayList<String>();
+				this.virtualMachineDataList = new ArrayList<VirtualMachineData>();
 				this.addRequiredInterface( RequestSubmissionI.class );
 				
 				this.addOfferedInterface(ControlledDataOfferedI.ControlledPullI.class) ;
@@ -155,22 +157,23 @@ implements
 								requestDispatcherDynamicStateDataInboundPortURI, this) ;
 				this.addPort(this.requestDispatcherDynamicStateDataInboundPort) ;
 				this.requestDispatcherDynamicStateDataInboundPort.publishPort() ;
-				this.startUnlimitedPushing(1000);
+				
+				this.requestTimeDataList = new ArrayList<>();
 	}
 	
 	private void nextVM()
 	{
-		this.currentVM = (this.currentVM+1)%this.requestSubmissionOutboundPortList.size();
+		this.currentVM = (this.currentVM+1)%this.virtualMachineDataList.size();
 	}
 
 	private RequestSubmissionOutboundPort getCurrentVMPort()
 	{
-		return this.requestSubmissionOutboundPortList.get(this.currentVM);
+		return this.virtualMachineDataList.get(this.currentVM).getRsobp();
 	}
 	
 	private String getCurrentVMURI()
 	{
-		return this.vmURIsList.get(this.currentVM);
+		return this.virtualMachineDataList.get(this.currentVM).getVmURI();
 	}
 	
 	@Override
@@ -218,8 +221,10 @@ implements
 	            if ( this.requestNotificationOutboundPort.connected() ) {
 	                this.requestNotificationOutboundPort.doDisconnection();
 	            }
-	            for (RequestSubmissionOutboundPort port : requestSubmissionOutboundPortList)
+	            for (VirtualMachineData data : virtualMachineDataList)
 	            {
+	            	RequestSubmissionOutboundPort port = data.getRsobp();
+	            	
 	            	if (port.connected() ) {
 	            		port.doDisconnection();
 	     	       }
@@ -244,8 +249,7 @@ implements
 		
 		RequestSubmissionOutboundPort port = new RequestSubmissionOutboundPort( RequestSubmissionOutboundPortURI, this );
 		
-		this.requestSubmissionOutboundPortList.add(port);
-		this.vmURIsList.add(vmURI);
+		this.virtualMachineDataList.add(new VirtualMachineData(vmURI, port));
 		this.addPort( port );
 		port.publishPort();
 		
@@ -262,12 +266,21 @@ implements
 	@Override
 	public void disconnectVirtualMachine(String vmURI) throws Exception {
 		
-		/*RequestSubmissionOutboundPort port = this.requestSubmissionOutboundPortList.get(vmURI);
+		ListIterator<VirtualMachineData> iterator = this.virtualMachineDataList.listIterator();
 		
-		if(port!=null && port.connected())
-		{
-			port.doDisconnection();
-		}*/
+		while(iterator.hasNext()){
+			VirtualMachineData data = iterator.next();
+			if(data.getVmURI().equals(vmURI))
+			{
+				RequestSubmissionOutboundPort port = data.getRsobp();
+				
+				if(port!=null && port.connected())
+				{
+					port.doDisconnection();
+				}	
+				iterator.remove();
+			}
+		}
 	}
 	
 	public String getConnectorClassName()
@@ -303,7 +316,7 @@ implements
 	
 	public RequestDispatcherDynamicStateI	getDynamicState() throws Exception
 	{
-		return new RequestDispatcherDynamicState(this.rdURI,0 , vmURIsList) ;
+		return new RequestDispatcherDynamicState(this.rdURI,0,this.virtualMachineDataList) ;
 	}
 	
 	public void			sendDynamicState() throws Exception
@@ -400,6 +413,16 @@ implements
 									this.pushingFuture.isDone())) {
 			this.pushingFuture.cancel(false) ;
 		}
+	}
+	
+	private String getSlowestVM()
+	{
+		return this.virtualMachineDataList.get(0).getVmURI();
+	}
+	
+	private String getFastestVM()
+	{
+		return this.virtualMachineDataList.get(0).getVmURI();
 	}
 
 }
