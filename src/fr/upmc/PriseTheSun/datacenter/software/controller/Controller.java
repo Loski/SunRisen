@@ -45,6 +45,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		this.acmop = new AdmissionControllerManagementOutboundPort("acmop-"+this.controllerURI, this);
 		this.acmop.publishPort();
 		this.acmop.doConnection(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementConnector.class.getCanonicalName());
+		
 		this.rddsdop.doConnection(requestDispatcherDynamicStateDataInboundPortURI, ControlledDataConnector.class.getCanonicalName());
 		
 		this.rddsdop.startUnlimitedPushing(10000);

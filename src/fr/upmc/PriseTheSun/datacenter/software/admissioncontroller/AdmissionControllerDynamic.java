@@ -277,7 +277,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		super.shutdown();
 	}
 	
-	private String[] createController(String appURI,String requestDispatcherDynamicStateDataInboundPortURI,String rdURI) throws Exception
+	private String[] createController(String appURI,String requestDispatcherDynamicStateDataInboundPortURI, String rdURI) throws Exception
 	{
 		String controllerURIs[] = new String[2];
 		controllerURIs[0] = appURI+"-controller";
@@ -289,7 +289,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 						controllerURIs[0],
 						controllerURIs[1],
 						rdURI,
-						requestDispatcherDynamicStateDataInboundPortURI
+						requestDispatcherDynamicStateDataInboundPortURI,
+						this.acmip.getPortURI()
 		});
 		
 		/*ReflectionOutboundPort rop = new ReflectionOutboundPort(this);

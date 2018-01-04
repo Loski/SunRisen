@@ -1,7 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher;
 
 import java.util.ArrayList;
-
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -65,8 +65,8 @@ implements
 	/** List of virtual machines' data (URI,submissionOutboundPort,...)*/
 	protected List<VirtualMachineData> virtualMachineDataList;
 	
-	/**  */
-	private List<RequestTimeData> requestTimeDataList;
+	/** map associating the uri of a Request with the VirtualMachineData*/
+	protected HashMap<String,VirtualMachineData> requestVirtalMachineDataMap;
 	
 	/** index of the VM in the requestSubmissionOutboundPortList which will receive the next request*/
 	private int currentVM;
@@ -158,7 +158,7 @@ implements
 				this.addPort(this.requestDispatcherDynamicStateDataInboundPort) ;
 				this.requestDispatcherDynamicStateDataInboundPort.publishPort() ;
 				
-				this.requestTimeDataList = new ArrayList<>();
+				this.requestVirtalMachineDataMap = new HashMap<>();
 	}
 	
 	private void nextVM()
@@ -181,9 +181,11 @@ implements
 
 		assert r != null;
 		
+		this.requestVirtalMachineDataMap.put(r.getRequestURI(), this.virtualMachineDataList.get(this.currentVM));
+		
 		RequestSubmissionOutboundPort port = getCurrentVMPort();
 		port.submitRequest(r);
-		
+
 		this.nextVM();
 	}
 
@@ -191,6 +193,8 @@ implements
 	public void acceptRequestSubmissionAndNotify(RequestI r) throws Exception {
 		
 		assert r != null;
+		
+		this.requestVirtalMachineDataMap.put(r.getRequestURI(), this.virtualMachineDataList.get(this.currentVM));
 		
 		RequestSubmissionOutboundPort port = getCurrentVMPort();
 		
@@ -206,6 +210,8 @@ implements
 	public void acceptRequestTerminationNotification(RequestI r) throws Exception {
 		
 		assert r != null;
+		
+		this.requestVirtalMachineDataMap.remove(r.getRequestURI());
 		
 		if (RequestGenerator.DEBUG_LEVEL >= 1) 
 			this.logMessage(String.format("RequestDispatcher [%s] notifies end of request %s",this.rdURI,r.getRequestURI()));

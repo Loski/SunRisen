@@ -10,12 +10,15 @@ public class VirtualMachineData {
 	private String vmURI;
 	private RequestSubmissionOutboundPort rsobp;
 	private double averageTime;
+	/**  */
+	private List<RequestTimeData> requestTimeDataList;
 
 	public VirtualMachineData(String uri,RequestSubmissionOutboundPort port)
 	{
 		this.vmURI=uri;
 		this.rsobp=port;
 		this.averageTime=0.0;
+		this.requestTimeDataList = new ArrayList<RequestTimeData>();
 	}
 	
 	public String getVmURI() {
@@ -29,6 +32,15 @@ public class VirtualMachineData {
 	}
 	public void setAverageTime(double averageTime) {
 		this.averageTime = averageTime;
-	}	
+	}
+	
+	public List<RequestTimeData> getRequestTimeDataList() {
+		return this.requestTimeDataList;
+	}
+	
+	public void resetRequestTimeDataList()
+	{
+		this.requestTimeDataList = new ArrayList<RequestTimeData>();
+	}
 	
 }
