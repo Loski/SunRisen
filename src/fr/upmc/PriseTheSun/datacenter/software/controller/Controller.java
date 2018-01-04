@@ -1,5 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.controller;
 
+import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.connector.AdmissionControllerManagementConnector;
+import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStateDataConsumerI;
@@ -17,23 +19,32 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 
 	protected String controllerURI;
 	protected String cmop;
+	protected String rdUri;
 	protected AdmissionControllerManagementOutboundPort acmop;
 	protected  RequestDispatcherDynamicStateDataOutboundPort rddsdop;
 	
 	private int threesholdBottom;
 	private int threesholdTop;
 
-	public Controller(String controllerURI,String requestDispatcherDynamicStateDataOutboundPort,String rdURI) throws Exception
+	public Controller(String controllerURI,String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String AdmissionControllerManagementInboundPortURI) throws Exception
 	{
 		super(controllerURI,1,1);
 		
 		this.controllerURI = controllerURI;
+		this.rdUri = rdURI;
 		
 		this.addRequiredInterface(ControlledDataOfferedI.ControlledPullI.class) ;
 		this.rddsdop =
 			new RequestDispatcherDynamicStateDataOutboundPort(requestDispatcherDynamicStateDataOutboundPort,this,rdURI) ;
 		this.addPort(this.rddsdop) ;
 		this.rddsdop.publishPort() ;
+		
+		this.addRequiredInterface(AdmissionControllerManagementI.class);
+		this.acmop = new AdmissionControllerManagementOutboundPort("acmop-"+this.controllerURI, this);
+		this.acmop.publishPort();
+		this.acmop.doConnection(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementConnector.class.getCanonicalName());
+		
+		
 	}
 	
 	@Override
@@ -53,6 +64,8 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		
 	}
     @Override
+
+	@Override
     public void shutdown() throws ComponentShutdownException {
         try {
             if (this.acmop.connected())
@@ -61,6 +74,10 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
             throw new ComponentShutdownException(e);
         }
         super.shutdown();
+    }
+    
+    public enum Threeshold{
+    	LOWER, HIGHTER, GOOD
     }
     
 }
