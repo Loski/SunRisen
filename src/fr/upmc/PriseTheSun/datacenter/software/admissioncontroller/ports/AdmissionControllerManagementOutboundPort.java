@@ -1,5 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports;
 
+import java.util.ArrayList;
+
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.components.ComponentI;
@@ -26,8 +28,8 @@ implements	fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interface
 
 	@Override
 	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
-			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI)
+			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI, ArrayList<String> pmipURIs, ArrayList<String> pssdURIs)
 			throws Exception {
-		((AdmissionControllerManagementI)this.connector).linkComputer(computerURI, ComputerServicesInboundPortURI, ComputerStaticStateDataInboundPortURI, ComputerDynamicStateDataInboundPortURI);	
+		((AdmissionControllerManagementI)this.connector).linkComputer(computerURI, ComputerServicesInboundPortURI, ComputerStaticStateDataInboundPortURI, ComputerDynamicStateDataInboundPortURI, pmipURIs, pssdURIs);	
 	}
 }

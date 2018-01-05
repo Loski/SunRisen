@@ -178,7 +178,9 @@ extends		AbstractCVM
         processingPower.put(3000, 3000000); // 3 GHz executes 3 Mips
 
         // map associate processor uri with uri of inbound port
-        Map<String, String> pmipURIs = new HashMap<>();
+        ArrayList<String> pmipURIs = new ArrayList<String>();
+        ArrayList<String> pssdURIs = new ArrayList<String>();
+
         Map<String, String> processorCoordinators = new HashMap<>();
         
         
@@ -194,16 +196,19 @@ extends		AbstractCVM
                     numberOfProcessors, numberOfCores, csip[i], cssdip[i], cdsdip[i]);
             this.addDeployedComponent(c);
             
-            this.acmop.linkComputer(computer[i], csip[i], cssdip[i], cdsdip[i]);
-            
             Map<Integer, String> processorURIs = c.getStaticState().getProcessorURIs();
             
             for (Map.Entry<Integer, String> entry : processorURIs.entrySet()) {
                 Map<ProcessorPortTypes, String> pPortsList = c.getStaticState().getProcessorPortMap()
                         .get(entry.getValue());
-                pmipURIs.put(entry.getValue(), pPortsList.get(Processor.ProcessorPortTypes.MANAGEMENT));
+                pmipURIs.add(pPortsList.get(Processor.ProcessorPortTypes.MANAGEMENT));
+                pssdURIs.add(pPortsList.get(Processor.ProcessorPortTypes.STATIC_STATE));
             }
+            System.out.println(pmipURIs);
             
+            this.acmop.linkComputer(computer[i], csip[i], cssdip[i], cdsdip[i], pmipURIs, pssdURIs);
+            
+
             // --------------------------------------------------------------------
             // Create and deploy Processors coordinator
             // --------------------------------------------------------------------
@@ -277,9 +282,7 @@ extends		AbstractCVM
 	public void			testScenario() throws Exception
 	{
 		for(int i = 0; i < this.apmop.length;i++) {
-			
 				this.apmop[i].createAndSendApplication();
-			
 		}
 	}
 

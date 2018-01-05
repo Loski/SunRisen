@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.AbstractExecutorService;
 
+import fr.upmc.PriseTheSun.datacenter.hardware.processors.ProcessorsController;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementInboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.controller.Controller;
@@ -38,6 +39,7 @@ import fr.upmc.datacenter.hardware.computers.interfaces.ComputerStaticStateI;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerDynamicStateDataOutboundPort;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerStaticStateDataOutboundPort;
+import fr.upmc.datacenter.hardware.processors.Processor;
 import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagementConnector;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
@@ -77,6 +79,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	protected static final String RequestDynamicDataInboundPortURI = "rddip";
 	protected static final String computerServiceOutboundPortURI = "csop";
 	protected static final String computerDynamicStateDataOutboundPortURI = "cdsdop";
+	protected  String AdmissionControllerManagementInboundPortURI;
 	protected final String ComputerStaticStateDataOutboundPortURI = "cssdop";
 
 	protected AdmissionControllerManagementInboundPort acmip;
@@ -121,7 +124,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		super(acURI,2, 2);
 		
 		this.computerUri = new ArrayList<String>();
-		
+		this.AdmissionControllerManagementInboundPortURI = AdmissionControllerManagementInboundPortURI;
 		this.toggleLogging();
 		this.toggleTracing();
 		this.acURI = acURI;	
@@ -289,7 +292,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 						controllerURIs[0],
 						controllerURIs[1],
 						rdURI,
-						requestDispatcherDynamicStateDataInboundPortURI
+						requestDispatcherDynamicStateDataInboundPortURI,
+						AdmissionControllerManagementInboundPortURI
 		});
 		
 		/*ReflectionOutboundPort rop = new ReflectionOutboundPort(this);
@@ -453,7 +457,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 
 	@Override
 	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
-			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI)
+			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI,
+			ArrayList<String> pmipURIs, ArrayList<String> pssdURIs)
 			throws Exception {
 		
 			String csopUri = AdmissionControllerDynamic.computerServiceOutboundPortURI + "_" +  this.csops.size();
@@ -492,5 +497,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 					ComputerDynamicStateDataInboundPortURI,
 					ControlledDataConnector.class.getCanonicalName());
 			this.cdsdops.add(cdsdop);
+			
+			ProcessorsController p = new ProcessorsController("controller");
+			p.bindProcessor(pssdURIs.get(0));
 	}
 }
