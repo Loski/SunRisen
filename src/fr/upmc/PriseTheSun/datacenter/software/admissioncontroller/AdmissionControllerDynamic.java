@@ -8,16 +8,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.AbstractExecutorService;
 
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.ProcessorsController;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementInboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMWrapper;
 import fr.upmc.PriseTheSun.datacenter.software.controller.Controller;
 import fr.upmc.PriseTheSun.datacenter.software.javassist.RequestDispatcherCreator;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatcher;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
-import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherDynamicStateDataOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.ports.ApplicationSubmissionInboundPort;
@@ -39,7 +38,6 @@ import fr.upmc.datacenter.hardware.computers.interfaces.ComputerStaticStateI;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerDynamicStateDataOutboundPort;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerStaticStateDataOutboundPort;
-import fr.upmc.datacenter.hardware.processors.Processor;
 import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagementConnector;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
@@ -92,6 +90,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	protected ArrayList<ComputerServicesOutboundPort> csops;
 	protected ArrayList<ComputerStaticStateDataOutboundPort> cssdops;
 	protected ArrayList<ComputerDynamicStateDataOutboundPort> cdsdops;
+	
 	protected ArrayList<Integer> nbAvailablesCores;
 
 	protected ArrayList<String> computerUri;
@@ -103,6 +102,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	//Map Between a vm and his computer
 	protected Map<String, ComputerServicesOutboundPort> csopMap;
 
+	protected Map<String, ProcessorsController> processorsController;
+	protected List<ApplicationVMWrapper> ApplicationVM;
+	
 	private DynamicComponentCreationOutboundPort portToRequestDispatcherJVM;
 	private DynamicComponentCreationOutboundPort portToApplicationVMJVM;
 	private DynamicComponentCreationOutboundPort portTControllerJVM;
@@ -172,7 +174,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		this.csops = new ArrayList<ComputerServicesOutboundPort>();
 		this.cssdops = new ArrayList<ComputerStaticStateDataOutboundPort>();
 		this.cdsdops = new ArrayList<ComputerDynamicStateDataOutboundPort>();
-		this.nbAvailablesCores = new ArrayList<>();
+		this.nbAvailablesCores = new ArrayList<Integer>();
+		this.processorsController = new HashMap<>();
+		this.ApplicationVM = new ArrayList<>();
 	}
 
 	@Override
@@ -181,7 +185,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	}
 	 
 	
-	private void createVM(String appURI, String[] dispatcherUri, int nbVM, AllocatedCore[] allocatedCore) throws Exception {
+	private void allocVm(String appURI, String[] dispatcherUri, int nbVM) throws Exception {
 		
 		//TODO : a surveiller
 		ReflectionOutboundPort rop = null;
@@ -199,49 +203,18 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			e.printStackTrace();
 		}
 
-		String applicationVM[] = new String[5];
-		
-		for(int i =0; i < nbVM; i++) {
-			// --------------------------------------------------------------------
-			// Create an Application VM component
-			// --------------------------------------------------------------------
-			applicationVM[0] = "avm-"+this.avmOutPort.size();
-			applicationVM[1] = "avmibp-"+this.avmOutPort.size();
-			applicationVM[2] = "rsibpVM-"+this.avmOutPort.size();
-			applicationVM[3] = "rnobpVM-"+this.avmOutPort.size();
-			applicationVM[4] = "avmobp-"+this.avmOutPort.size();
-			this.portToRequestDispatcherJVM.createComponent(
-					ApplicationVM.class.getCanonicalName(),
-					new Object[] {
-							applicationVM[0],							
-							applicationVM[1],
-							applicationVM[2],
-							applicationVM[3]
-			});
-			
-			
-			// Create a mock up port to manage the AVM component (allocate cores).
-			ApplicationVMManagementOutboundPort avmPort = new ApplicationVMManagementOutboundPort(
-					applicationVM[4], this) ;
-			avmPort.publishPort() ;
-			avmPort.doConnection(applicationVM[1],
-						ApplicationVMManagementConnector.class.getCanonicalName()) ;
-			this.avmOutPort.add(avmPort);
-			avmPort.allocateCores(allocatedCore);
-
-			rdmopMap.get(appURI).connectVirtualMachine(applicationVM[0], applicationVM[2], dispatcherUri[7]+"-"+i);
-			avmPort.connectWithRequestSubmissioner(dispatcherUri[0], dispatcherUri[4]);
-			rop.doConnection(applicationVM[0], ReflectionConnector.class.getCanonicalName());
+			ApplicationVMWrapper wrap = ApplicationVM.remove(0);
+			rdmopMap.get(appURI).connectVirtualMachine(wrap.avmURi, wrap.sub, dispatcherUri[7]+"-");
+			wrap.avmPort.connectWithRequestSubmissioner(dispatcherUri[0], dispatcherUri[4]);
+			rop.doConnection(wrap.avmURi, ReflectionConnector.class.getCanonicalName());
 			
 			rop.toggleTracing();
 			rop.toggleLogging();
 
 			rop.doDisconnection();
 		}
-		
-	}
 
-
+	
 	@Override
 	public void submitGenerator(String RequestNotificationInboundPort, String appUri, String rgURI) throws Exception {
 		this.rdmopMap.get(appUri).connectWithRequestGenerator(rgURI, RequestNotificationInboundPort);
@@ -282,7 +255,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		super.shutdown();
 	}
 	
-	private String[] createController(String appURI,String requestDispatcherDynamicStateDataInboundPortURI,String rdURI) throws Exception
+	private String[] createController(String appURI, String requestDispatcherDynamicStateDataInboundPortURI, String rdURI) throws Exception
 	{
 		String controllerURIs[] = new String[2];
 		controllerURIs[0] = appURI+"-controller";
@@ -356,7 +329,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		}
 		
 		String dispatcherUri[] = createDispatcher(appURI, RequestDispatcher.class.getCanonicalName());
-		this.createVM(appURI, dispatcherUri, nbVM, allocatedCore);
+		this.allocVm(appURI, dispatcherUri, nbVM);
 		this.createController(appURI,dispatcherUri[6],dispatcherUri[0]);
 		
 		return dispatcherUri;
@@ -380,7 +353,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		interface_dispatcher_map.put(submissionInterface, dispa);
 		
 		String dispatcherUri[] = createDispatcher(appURI, dispa.getCanonicalName());
-		this.createVM(appURI, dispatcherUri, nbVM, allocatedCore);
+		this.allocVm(appURI, dispatcherUri, nbVM);
 		return dispatcherUri;
 	}
 	
@@ -503,6 +476,25 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			for(int i = 0; i < processorsURI.size(); i++) {
 				ProcessorsController p = new ProcessorsController("controller"+processorsURI.get(i)+i);
 				p.bindProcessor(processorsURI.get(i), pmipURIs.get(i), pssdURIs.get(i), pdssURIs.get(i));
+				createVM(p, ComputerServicesInboundPortURI, csop.allocateCores(nbCores/2));
 			}
 	}
+	
+	private void createVM(ProcessorsController controller, String ComputerServicesInboundPortURI, AllocatedCore[] allocatedCore) throws Exception {
+		
+		String applicationVM[] = new String[5];
+		
+			// --------------------------------------------------------------------
+			// Create an Application VM component
+			// --------------------------------------------------------------------
+			applicationVM[0] = "avm-"+this.avmOutPort.size();
+			applicationVM[1] = "avmibp-"+this.avmOutPort.size();
+			applicationVM[2] = "rsibpVM-"+this.avmOutPort.size();
+			applicationVM[3] = "rnobpVM-"+this.avmOutPort.size();
+			applicationVM[4] = "avmobp-"+this.avmOutPort.size();
+			
+			ApplicationVMWrapper wrapper = new ApplicationVMWrapper(controller, applicationVM, ComputerServicesInboundPortURI);
+			wrapper.avmPort.allocateCores(allocatedCore);
+			this.ApplicationVM.add(wrapper);		
+	}	
 }

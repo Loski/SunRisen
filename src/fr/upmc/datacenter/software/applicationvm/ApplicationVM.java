@@ -56,6 +56,7 @@ import fr.upmc.datacenter.hardware.processors.ports.ProcessorServicesNotificatio
 import fr.upmc.datacenter.hardware.processors.ports.ProcessorServicesOutboundPort;
 import fr.upmc.datacenter.interfaces.PushModeControllingI;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamicStateI;
+import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMIntrospectionI;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMManagementI;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMStaticStateI;
 import fr.upmc.datacenter.software.applicationvm.interfaces.TaskI;
@@ -257,6 +258,17 @@ implements	ProcessorServicesNotificationConsumerI,
 									this) ;
 		this.addPort(this.requestNotificationOutboundPort) ;
 		this.requestNotificationOutboundPort.publishPort() ;
+		
+		
+		
+		this.addRequiredInterface(ApplicationVMIntrospectionI.class) ;
+		this.avmIntrospectionInboundPort =
+			new ApplicationVMIntrospectionInboundPort(
+									vmURI + "-intro",
+									this) ;
+		this.addPort(this.avmIntrospectionInboundPort) ;
+		this.avmIntrospectionInboundPort.publishPort() ;
+
 	}
 
 	// ------------------------------------------------------------------------
