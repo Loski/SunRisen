@@ -198,8 +198,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		String applicationVM[] = new String[5];
 
+		String applicationVM[] = new String[5];
+		
 		for(int i =0; i < nbVM; i++) {
 			// --------------------------------------------------------------------
 			// Create an Application VM component
@@ -217,6 +218,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 							applicationVM[2],
 							applicationVM[3]
 			});
+			
 			
 			// Create a mock up port to manage the AVM component (allocate cores).
 			ApplicationVMManagementOutboundPort avmPort = new ApplicationVMManagementOutboundPort(
@@ -458,7 +460,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	@Override
 	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
 			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI,
-			ArrayList<String> pmipURIs, ArrayList<String> pssdURIs)
+			ArrayList<String> processorsURI, ArrayList<String> pmipURIs, ArrayList<String> pssdURIs, ArrayList<String> pdssURIs)
 			throws Exception {
 		
 			String csopUri = AdmissionControllerDynamic.computerServiceOutboundPortURI + "_" +  this.csops.size();
@@ -498,7 +500,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 					ControlledDataConnector.class.getCanonicalName());
 			this.cdsdops.add(cdsdop);
 			
-			ProcessorsController p = new ProcessorsController("controller");
-			p.bindProcessor(pssdURIs.get(0));
+			for(int i = 0; i < processorsURI.size(); i++) {
+				ProcessorsController p = new ProcessorsController("controller"+processorsURI.get(i)+i);
+				p.bindProcessor(processorsURI.get(i), pmipURIs.get(i), pssdURIs.get(i), pdssURIs.get(i));
+			}
 	}
 }

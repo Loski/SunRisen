@@ -38,7 +38,7 @@ public class AdmissionControllerManagementInboundPort extends AbstractInboundPor
 	@Override
 	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
 			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI,
-			ArrayList<String> pmipURIs, ArrayList<String> pssdURIs)
+			ArrayList<String> processorsURI, ArrayList<String> pmipURIs, ArrayList<String> pssdURIs, ArrayList<String> pdssURIs)
 			throws Exception {
 		final AdmissionControllerManagementI acm = ( AdmissionControllerManagementI ) this.owner;
 
@@ -46,7 +46,7 @@ public class AdmissionControllerManagementInboundPort extends AbstractInboundPor
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
-						acm.linkComputer(computerURI, ComputerServicesInboundPortURI, ComputerStaticStateDataInboundPortURI, ComputerDynamicStateDataInboundPortURI, pmipURIs, pssdURIs);
+						acm.linkComputer(computerURI, ComputerServicesInboundPortURI, ComputerStaticStateDataInboundPortURI, ComputerDynamicStateDataInboundPortURI, processorsURI, pmipURIs, pssdURIs, pdssURIs);
 						return null;
 					}
 				});
