@@ -196,6 +196,8 @@ implements
 	{
 		VirtualMachineData vmData  = this.requestVirtalMachineDataMap.remove(requestURI);
 		vmData.endRequest();
+		
+		this.nbRequestRecevedSinceAverage++;
 	}
 	
 	private Double averageTime()
@@ -215,6 +217,7 @@ implements
 			}
 			
 			this.averageTime = res/nbRequest;
+			this.nbRequestRecevedSinceAverage = 0;
 		}
 		
 		return averageTime;
