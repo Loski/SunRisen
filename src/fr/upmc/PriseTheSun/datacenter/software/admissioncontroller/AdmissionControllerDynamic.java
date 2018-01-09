@@ -481,18 +481,18 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			}
 	}
 	
-	private void createVM(ProcessorsController controller, String ComputerServicesInboundPortURI, AllocatedCore[] allocatedCore) throws Exception {
+	private synchronized void  createVM(ProcessorsController controller, String ComputerServicesInboundPortURI, AllocatedCore[] allocatedCore) throws Exception {
 		
 		String applicationVM[] = new String[5];
-		
+		int nbVM = ApplicationVM.size(); //Add VM non occupé
 			// --------------------------------------------------------------------
 			// Create an Application VM component
 			// --------------------------------------------------------------------
-			applicationVM[0] = "avm-"+this.avmOutPort.size();
-			applicationVM[1] = "avmibp-"+this.avmOutPort.size();
-			applicationVM[2] = "rsibpVM-"+this.avmOutPort.size();
-			applicationVM[3] = "rnobpVM-"+this.avmOutPort.size();
-			applicationVM[4] = "avmobp-"+this.avmOutPort.size();
+			applicationVM[0] = "avm-"+nbVM;
+			applicationVM[1] = "avmibp-"+nbVM;
+			applicationVM[2] = "rsibpVM-"+nbVM;
+			applicationVM[3] = "rnobpVM-"+nbVM;
+			applicationVM[4] = "avmobp-"+nbVM;
 			
 			ApplicationVMWrapper wrapper = new ApplicationVMWrapper(controller, applicationVM, ComputerServicesInboundPortURI);
 			wrapper.avmPort.allocateCores(allocatedCore);

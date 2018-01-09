@@ -32,7 +32,7 @@ public class ProcessorsController extends AbstractComponent implements Processor
 	@Override
 	public void acceptProcessorDynamicData(String processorURI, ProcessorDynamicStateI currentDynamicState)
 			throws Exception {
-		System.out.println(currentDynamicState.getCurrentCoreFrequencies()[0]);
+		//System.out.println(currentDynamicState.getCurrentCoreFrequencies()[0]);
 		
 	}
 	
