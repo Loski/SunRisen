@@ -56,9 +56,9 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
 		
 		if(currentDynamicState.getAvgExecutionTime()!=null)
-			System.out.println(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,""+currentDynamicState.getAvgExecutionTime()));
+			System.err.println(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,""+currentDynamicState.getAvgExecutionTime()));
 		else
-			System.out.println(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,"pas assez de données pour calculer la moyenne"));
+			System.err.println(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,"pas assez de données pour calculer la moyenne"));
 		
 		currentDynamicState.getVMData();
 	}

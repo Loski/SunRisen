@@ -476,7 +476,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			
 			for(int i = 0; i < processorsURI.size(); i++) {
 				ProcessorsController p = new ProcessorsController("controller"+processorsURI.get(i)+i);
-				p.bindProcessor(processorsURI.get(i), pmipURIs.get(i), pssdURIs.get(i), pdssURIs.get(i));
+				p.bindProcessor(processorsURI.get(i), "ACHANGER", pmipURIs.get(i), pssdURIs.get(i), pdssURIs.get(i));
 				createVM(p, ComputerServicesInboundPortURI, csop.allocateCores(nbCores/2));
 			}
 	}
