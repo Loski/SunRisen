@@ -269,7 +269,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 						rdURI,
 						requestDispatcherDynamicStateDataInboundPortURI,
 						this.acmip.getPortURI()
-						//,AdmissionControllerManagementInboundPortURI
+						//AdmissionControllerManagementInboundPortURI
 		});
 		
 		/*ReflectionOutboundPort rop = new ReflectionOutboundPort(this);

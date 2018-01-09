@@ -43,7 +43,13 @@ public class VirtualMachineData {
 		this.currentRequest=0;
 	}
 	
-	public void beginRequest()
+	public void addRequest(String dispatcherURI)
+	{
+		this.requestTimeDataList.add(new RequestTimeData(dispatcherURI, vmURI));
+		this.beginRequest();
+	}
+	
+	private void beginRequest()
 	{
 		this.requestTimeDataList.get(currentRequest).begin();
 	}

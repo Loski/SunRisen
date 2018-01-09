@@ -189,7 +189,7 @@ implements
 		
 		this.requestVirtalMachineDataMap.put(requestURI,vmData);
 		
-		vmData.beginRequest();
+		vmData.addRequest(this.rdURI);
 	}
 	
 	private void endRequestTime(String requestURI)
@@ -253,6 +253,7 @@ implements
 	@Override
 	public void acceptRequestTerminationNotification(RequestI r) throws Exception {
 		
+		try {
 		assert r != null;
 		
 		this.endRequestTime(r.getRequestURI());
@@ -261,6 +262,13 @@ implements
 			this.logMessage(String.format("RequestDispatcher [%s] notifies end of request %s",this.rdURI,r.getRequestURI()));
 		
 		this.requestNotificationOutboundPort.notifyRequestTermination( r );
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			System.err.println(r.getRequestURI());
+			System.out.println(this.requestVirtalMachineDataMap);
+		}
 	}
 	
 	
@@ -310,7 +318,6 @@ implements
 		
 		if (RequestGenerator.DEBUG_LEVEL >= 2)
 			this.logMessage(String.format("[%s] Connecting %s with %s using %s -> %s",getConnectorSimpleName(),this.rdURI,vmURI,port.getPortURI(),requestSubmissionInboundPortURI));
-
 	}
 
 	@Override
