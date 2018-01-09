@@ -14,6 +14,6 @@ extends 		DataOfferedI.DataI,
 				TimeStampingI
 {
 	public String			getDispatcherURI() ;
-	public double getAvgExecutionTime();
+	public Double getAvgExecutionTime();
 	public List<VirtualMachineData> getVMData();
 }

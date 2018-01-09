@@ -19,13 +19,13 @@ public class RequestDispatcherDynamicState implements RequestDispatcherDynamicSt
 	/** URI of the dispatcher to which this dynamic state relates.			*/
 	protected final String		rdURI ;
     /** the average request execution time */
-    protected final long executionTimeAvg;
+    protected final Double executionTimeAvg;
     
     protected final List<VirtualMachineData> VmURI;
 	
 	public				RequestDispatcherDynamicState(
 			String rdURI,
-			long executionTimeAvg,
+			Double averageTime,
 			List<VirtualMachineData> virtualMachineDataList
 			) throws Exception
 	{
@@ -33,7 +33,7 @@ public class RequestDispatcherDynamicState implements RequestDispatcherDynamicSt
 		this.timestamp = TimeManagement.timeStamp() ;
 		this.timestamperIP = InetAddress.getLocalHost().getHostAddress() ;
 		this.rdURI = rdURI ;
-		this.executionTimeAvg=executionTimeAvg;
+		this.executionTimeAvg=averageTime;
 		this.VmURI = virtualMachineDataList;
 	}
     
@@ -48,9 +48,9 @@ public class RequestDispatcherDynamicState implements RequestDispatcherDynamicSt
 	}
 
 	@Override
-	public double getAvgExecutionTime() {
+	public Double getAvgExecutionTime() {
 		// TODO Auto-generated method stub
-		return 0;
+		return this.executionTimeAvg;
 	}
 
 	@Override

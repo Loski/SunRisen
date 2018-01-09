@@ -49,6 +49,7 @@ implements
 {
 
 	public static int	DEBUG_LEVEL = 2 ;
+	public static int NB_REQUEST_NEEDED_FOR_AVG = 10;
 	
 	/** URI of this request dispatcher */
 	protected String rdURI;
@@ -79,6 +80,10 @@ implements
 	
 	/** future of the task scheduled to push dynamic data.					*/
 	protected ScheduledFuture<?>			pushingFuture ;
+	
+	/** */
+	private int nbRequestRecevedSinceAverage;
+	private Double averageTime;
 	
 	/**
 	 * Construct a <code>RequestDispatcher</code>.
@@ -159,6 +164,8 @@ implements
 				this.requestDispatcherDynamicStateDataInboundPort.publishPort() ;
 				
 				this.requestVirtalMachineDataMap = new HashMap<>();
+				this.nbRequestRecevedSinceAverage = 0;
+				this.averageTime = null;
 	}
 	
 	private void nextVM()
@@ -176,12 +183,49 @@ implements
 		return this.virtualMachineDataList.get(this.currentVM).getVmURI();
 	}
 	
+	private void beginRequestTime(String requestURI)
+	{
+		VirtualMachineData vmData = this.virtualMachineDataList.get(this.currentVM);
+		
+		this.requestVirtalMachineDataMap.put(requestURI,vmData);
+		
+		vmData.beginRequest();
+	}
+	
+	private void endRequestTime(String requestURI)
+	{
+		VirtualMachineData vmData  = this.requestVirtalMachineDataMap.remove(requestURI);
+		vmData.endRequest();
+	}
+	
+	private Double averageTime()
+	{
+		double res = 0.0;
+		
+		if(this.nbRequestRecevedSinceAverage >= NB_REQUEST_NEEDED_FOR_AVG)
+		{
+			int nbRequest = 0;
+			
+			for(VirtualMachineData vmData: this.virtualMachineDataList)
+			{
+				vmData.calculateAverageTime();
+				res+=vmData.getAverageTime();
+				
+				nbRequest++;
+			}
+			
+			this.averageTime = res/nbRequest;
+		}
+		
+		return averageTime;
+	}
+	
 	@Override
 	public void acceptRequestSubmission(RequestI r) throws Exception {
 
 		assert r != null;
 		
-		this.requestVirtalMachineDataMap.put(r.getRequestURI(), this.virtualMachineDataList.get(this.currentVM));
+		beginRequestTime(r.getRequestURI());
 		
 		RequestSubmissionOutboundPort port = getCurrentVMPort();
 		port.submitRequest(r);
@@ -194,7 +238,7 @@ implements
 		
 		assert r != null;
 		
-		this.requestVirtalMachineDataMap.put(r.getRequestURI(), this.virtualMachineDataList.get(this.currentVM));
+		beginRequestTime(r.getRequestURI());
 		
 		RequestSubmissionOutboundPort port = getCurrentVMPort();
 		
@@ -211,7 +255,7 @@ implements
 		
 		assert r != null;
 		
-		this.requestVirtalMachineDataMap.remove(r.getRequestURI());
+		this.endRequestTime(r.getRequestURI());
 		
 		if (RequestGenerator.DEBUG_LEVEL >= 1) 
 			this.logMessage(String.format("RequestDispatcher [%s] notifies end of request %s",this.rdURI,r.getRequestURI()));
@@ -286,6 +330,10 @@ implements
 				}	
 				iterator.remove();
 			}
+			else
+			{
+				data.resetRequestTimeDataList();
+			}
 		}
 	}
 	
@@ -322,7 +370,7 @@ implements
 	
 	public RequestDispatcherDynamicStateI	getDynamicState() throws Exception
 	{
-		return new RequestDispatcherDynamicState(this.rdURI,0,this.virtualMachineDataList) ;
+		return new RequestDispatcherDynamicState(this.rdURI,this.averageTime(),this.virtualMachineDataList) ;
 	}
 	
 	public void			sendDynamicState() throws Exception
