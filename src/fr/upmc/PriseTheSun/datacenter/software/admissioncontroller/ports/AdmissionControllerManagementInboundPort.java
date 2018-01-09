@@ -1,5 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports;
 
+import java.util.ArrayList;
+
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.components.ComponentI;
@@ -35,7 +37,8 @@ public class AdmissionControllerManagementInboundPort extends AbstractInboundPor
 
 	@Override
 	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
-			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI)
+			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI,
+			ArrayList<String> processorsURI, ArrayList<String> pmipURIs, ArrayList<String> pssdURIs, ArrayList<String> pdssURIs)
 			throws Exception {
 		final AdmissionControllerManagementI acm = ( AdmissionControllerManagementI ) this.owner;
 
@@ -43,7 +46,7 @@ public class AdmissionControllerManagementInboundPort extends AbstractInboundPor
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
-						acm.linkComputer(computerURI, ComputerServicesInboundPortURI, ComputerStaticStateDataInboundPortURI, ComputerDynamicStateDataInboundPortURI);
+						acm.linkComputer(computerURI, ComputerServicesInboundPortURI, ComputerStaticStateDataInboundPortURI, ComputerDynamicStateDataInboundPortURI, processorsURI, pmipURIs, pssdURIs, pdssURIs);
 						return null;
 					}
 				});
