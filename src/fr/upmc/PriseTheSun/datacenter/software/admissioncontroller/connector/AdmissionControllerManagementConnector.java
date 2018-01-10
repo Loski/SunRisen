@@ -22,5 +22,11 @@ public class AdmissionControllerManagementConnector extends	AbstractConnector im
 			throws Exception {
 		 ( ( AdmissionControllerManagementI ) this.offering ).linkComputer(computerURI, ComputerServicesInboundPortURI, ComputerStaticStateDataInboundPortURI, ComputerDynamicStateDataInboundPortURI, processorsURI, pmipURIs, pssdURIs, pdssURIs);
 	}
+
+	@Override
+	public boolean supCores(int nbCores, String vmUri) throws Exception {
+		return ( ( AdmissionControllerManagementI ) this.offering ).supCores(nbCores, vmUri);
+
+	}
 	
 }

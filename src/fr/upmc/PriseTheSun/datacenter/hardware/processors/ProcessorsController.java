@@ -8,6 +8,8 @@ import java.util.Set;
 
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.interfaces.ProcessorsControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.ports.ProcessorsControllerManagmentInboundPort;
+import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI;
+import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.ports.ApplicationSubmissionInboundPort;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.datacenter.connectors.ControlledDataConnector;
 import fr.upmc.datacenter.hardware.processors.UnacceptableFrequencyException;
@@ -24,20 +26,22 @@ public class ProcessorsController extends AbstractComponent implements Processor
 
 	private static final String ProcessorStaticStateDataOutboundPortURI = "pss";
 	private static final String ProcessorDynamicStateDataOutboundPortURI = "pds";
-	private static final String ProcessorControllerManagementInboundPortURI = "pcmip";
 	private static final String ProcessorManagementOutboundPortURI = "pmop";
 
 	private ProcessorsControllerManagmentInboundPort pcmip;
 	private Map<String, ProcessorStaticStateI> processorsStaticState;
 	private Map<String, ProcessorDynamicStateI> processorsDynamicState;
 	private Map<String, ProcessorManagementOutboundPort> processorsManagement;
-
-	public ProcessorsController(String URI) throws Exception {
+	public ProcessorsController(String URI, String ProcessorControllerManagementInboundPortURI) throws Exception {
 		super(URI, 2, 2);
 		processorsStaticState = new HashMap<String, ProcessorStaticStateI>();
 		processorsDynamicState = new HashMap<String, ProcessorDynamicStateI>();
 		processorsManagement = new HashMap<String, ProcessorManagementOutboundPort>();
-		pcmip = new ProcessorsControllerManagmentInboundPort(URI + ProcessorControllerManagementInboundPortURI, this);
+		
+		this.addOfferedInterface(ProcessorsControllerManagementI.class);
+		pcmip = new ProcessorsControllerManagmentInboundPort(ProcessorControllerManagementInboundPortURI, this);
+		this.addPort(pcmip);
+		this.pcmip.publishPort();
 	}
 	
 
@@ -99,7 +103,7 @@ public class ProcessorsController extends AbstractComponent implements Processor
 		int newfrequency = -1;
 		int frequency = -1;
 		
-		//Ajouter tri à la création des fréquences pour éviter parcourt ??.
+		//Ajouter tri ï¿½ la crï¿½ation des frï¿½quences pour ï¿½viter parcourt ??.
 		
 		if(ask == CoreAsk.HIGHER) {
 		    while(it.hasNext()) {

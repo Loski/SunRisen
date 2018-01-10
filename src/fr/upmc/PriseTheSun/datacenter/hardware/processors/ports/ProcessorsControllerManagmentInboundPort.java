@@ -2,11 +2,14 @@ package fr.upmc.PriseTheSun.datacenter.hardware.processors.ports;
 
 
 
+import fr.upmc.PriseTheSun.datacenter.hardware.processors.ProcessorsController.CoreAsk;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.interfaces.ProcessorsControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ports.AbstractInboundPort;
+import fr.upmc.datacenter.hardware.processors.UnacceptableFrequencyException;
+import fr.upmc.datacenter.hardware.processors.UnavailableFrequencyException;
 
 
 public class ProcessorsControllerManagmentInboundPort extends AbstractInboundPort implements ProcessorsControllerManagementI{
@@ -44,6 +47,19 @@ public class ProcessorsControllerManagmentInboundPort extends AbstractInboundPor
 					}
 				});
 		}
+
+	@Override
+	public boolean setCoreFrequency(CoreAsk ask, String processorURI, int coreNo)
+			throws UnavailableFrequencyException, UnacceptableFrequencyException, Exception {
+		final ProcessorsControllerManagementI pcm = ( ProcessorsControllerManagementI ) this.owner;
+		return this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						return pcm.setCoreFrequency(ask, processorURI, coreNo);
+					}
+				});
+	}
 
 
 

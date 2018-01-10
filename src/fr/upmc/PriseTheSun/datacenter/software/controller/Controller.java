@@ -2,7 +2,13 @@ package fr.upmc.PriseTheSun.datacenter.software.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
+import fr.upmc.PriseTheSun.datacenter.hardware.processors.ProcessorsController.CoreAsk;
+import fr.upmc.PriseTheSun.datacenter.hardware.processors.connector.ProcessorControllerManagementConnector;
+import fr.upmc.PriseTheSun.datacenter.hardware.processors.interfaces.ProcessorsControllerManagementI;
+import fr.upmc.PriseTheSun.datacenter.hardware.processors.ports.ProcessorsControllerManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.connector.AdmissionControllerManagementConnector;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementOutboundPort;
@@ -15,6 +21,7 @@ import fr.upmc.components.AbstractComponent;
 import fr.upmc.datacenter.connectors.ControlledDataConnector;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
+import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamicStateI;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationI;
 import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
 
@@ -27,12 +34,13 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	protected String rdUri;
 	protected AdmissionControllerManagementOutboundPort acmop;
 	protected RequestDispatcherDynamicStateDataOutboundPort rddsdop;
-	
+	protected ProcessorsControllerManagementOutboundPort pcmop;
+
 	private int threesholdBottom;
 	private int threesholdTop;
 
 
-	public Controller(String controllerURI,String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI) throws Exception
+	public Controller(String controllerURI,String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri) throws Exception
 	{
 		super(controllerURI,1,1);
 		
@@ -51,8 +59,13 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		this.acmop.doConnection(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementConnector.class.getCanonicalName());
 		
 		this.rddsdop.doConnection(requestDispatcherDynamicStateDataInboundPortURI, ControlledDataConnector.class.getCanonicalName());
-		
 		this.rddsdop.startUnlimitedPushing(10000);
+		
+		
+		this.addRequiredInterface(ProcessorsControllerManagementI.class);
+		this.pcmop = new ProcessorsControllerManagementOutboundPort("pcmop-"+this.controllerURI, this);
+		this.pcmop.publishPort();
+		this.pcmop.doConnection(ProcessorControllerManagementInboundUri, ProcessorControllerManagementConnector.class.getCanonicalName());
 	}
 	
 	@Override
@@ -61,7 +74,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		
 		if(currentDynamicState.getAvgExecutionTime()!=null) {
 			System.err.println(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,""+currentDynamicState.getAvgExecutionTime()));
-			//processControl(currentDynamicState.getAvgExecutionTime(), currentDynamicState.getVMData());
+			processControl(currentDynamicState.getAvgExecutionTime(), currentDynamicState.getVirtualMachineDynamicStates());
 		}
 		else {
 			System.err.println(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,"pas assez de données pour calculer la moyenne"));
@@ -91,7 +104,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
     	LOWER, HIGHER, GOOD
     }
     
-	public Threeshold getThreeshold(long time){
+	public Threeshold getThreeshold(Double time){
 		if(isHigher(time))
 			return Threeshold.HIGHER;
 		if(isLower(time))
@@ -99,37 +112,41 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		return Threeshold.GOOD;
 	}
 
-	public boolean isHigher(long time){
-		return (time > (StaticData.AVERAGE_TARGET*StaticData.HIGHER_PERCENT + StaticData.AVERAGE_TARGET));
+	public boolean isHigher(Double time){
+		return Double.compare(time, (StaticData.AVERAGE_TARGET*StaticData.HIGHER_PERCENT + StaticData.AVERAGE_TARGET)) == 1 ? true : false;
 	}
 
-	public boolean isLower(long time){
-		return (time < (StaticData.AVERAGE_TARGET*StaticData.LOWER_PERCENT - StaticData.AVERAGE_TARGET));
-}
+	public boolean isLower(Double time){
+		return Double.compare(time, (StaticData.AVERAGE_TARGET*StaticData.LOWER_PERCENT - StaticData.AVERAGE_TARGET)) == -1 ? true : false;
+	}
 	
-	private void processControl(long time, ArrayList<VirtualMachineData> vms) throws Exception {
+	private void processControl(Double double1, Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		
 		double factor=0;
 		int number=0;
 		int cores = getNumberOfCoresAllocatedFrom(vms);
-
-		switch(getThreeshold(time)){
+		ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
+		switch(getThreeshold(double1)){
 		case HIGHER :
-			factor = (time/StaticData.AVERAGE_TARGET);
+			factor = (double1/StaticData.AVERAGE_TARGET);
 			number = Math.max(1, (int)(cores*factor));
 			number = Math.min(StaticData.MAX_ALLOCATION, number);
-			processAllocation(factor,number,vms,time,nbreq,cores);
 			
-			// add Reset request stat?
+			//Try to change frequency
+			for(int i = 0; i < randomVM.getAllocatedCoresNumber().length;i++) {
+				pcmop.setCoreFrequency(CoreAsk.HIGHER, randomVM.getProcessorURI(), randomVM.getAllocatedCoresNumber()[i]);
+			}
+			this.acmop.addCores(null, 1, randomVM.getApplicationVMURI());
 			break;
 		case LOWER :
-			factor = (StaticData.AVERAGE_TARGET/time);
+			factor = (StaticData.AVERAGE_TARGET/double1);
 			number =Math.max(1, (int)(cores-(cores/factor)));
-			number =Math.min(StaticData.MAX_DEALLOCATION, number);
-			if(vms.size()==1)
-				if(vms.get(0).getNbCore()== StaticData.MIN_ALLOCATION)
-					break;
-			processDeallocate(factor,number,vms,time,nbreq,cores);
+			number =Math.min(StaticData.MIN_ALLOCATION, number);
+			if(vms.size()==1 && cores == StaticData.MIN_ALLOCATION) {
+				//TODO add proco
+				break;
+			}
+		//	processDeallocate(factor,number,vms,double1,nbreq,cores);
 			
 			// add Reset request stat?
 
@@ -146,10 +163,11 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	 * @param vms
 	 * @return
 	 */
-	private int getNumberOfCoresAllocatedFrom(List<VirtualMachineData> vms) {
+	private int getNumberOfCoresAllocatedFrom(Map<String, ApplicationVMDynamicStateI> vms) {
 		int number = 0;
-		for(VirtualMachineData vm : vms) {
-			number++;
+		for (Entry<String, ApplicationVMDynamicStateI> entry : vms.entrySet())
+		{
+		   number+= entry.getValue().getAllocatedCoresNumber().length;
 		}
 		return number;
 	}

@@ -30,7 +30,7 @@ public class AdmissionControllerManagementInboundPort extends AbstractInboundPor
 				new ComponentI.ComponentService<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
-						return acm.addCores(rdURI, nbCores, null) ;
+						return acm.addCores(rdURI, nbCores, vmUri) ;
 					}
 				});
 		}
@@ -48,6 +48,19 @@ public class AdmissionControllerManagementInboundPort extends AbstractInboundPor
 					public Void call() throws Exception {
 						acm.linkComputer(computerURI, ComputerServicesInboundPortURI, ComputerStaticStateDataInboundPortURI, ComputerDynamicStateDataInboundPortURI, processorsURI, pmipURIs, pssdURIs, pdssURIs);
 						return null;
+					}
+				});
+	}
+
+	@Override
+	public boolean supCores(int nbCores, String vmUri) throws Exception {
+final AdmissionControllerManagementI acm = ( AdmissionControllerManagementI ) this.owner;
+		
+		return this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						return acm.supCores(nbCores, vmUri) ;
 					}
 				});
 	}

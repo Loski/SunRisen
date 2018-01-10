@@ -110,6 +110,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	private DynamicComponentCreationOutboundPort portTControllerJVM;
 	protected LinkedHashMap<Class,Class> interface_dispatcher_map;
 	
+	private static final String ProcessorControllerManagementInboundPortURI = "pcmip";
 
 
 	/*protected static final String RequestDispatcher_JVM_URI = "controller" ;
@@ -269,7 +270,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 						controllerURIs[1],
 						rdURI,
 						requestDispatcherDynamicStateDataInboundPortURI,
-						this.acmip.getPortURI()
+						this.acmip.getPortURI(),
+						ProcessorControllerManagementInboundPortURI
 						//AdmissionControllerManagementInboundPortURI
 		});
 		

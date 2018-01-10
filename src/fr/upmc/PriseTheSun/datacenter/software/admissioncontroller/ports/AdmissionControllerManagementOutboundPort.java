@@ -32,4 +32,9 @@ implements	fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interface
 			throws Exception {
 		((AdmissionControllerManagementI)this.connector).linkComputer(computerURI, ComputerServicesInboundPortURI, ComputerStaticStateDataInboundPortURI, ComputerDynamicStateDataInboundPortURI, processorsURI, pmipURIs, pssdURIs, pdssURIs);	
 	}
+
+	@Override
+	public boolean supCores(int nbCores, String vmUri) throws Exception {
+		return ( ( AdmissionControllerManagementI ) this.connector ).supCores(nbCores, vmUri);
+	}
 }
