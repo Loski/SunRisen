@@ -88,7 +88,6 @@ implements
 	
 	/** */
 	private int nbRequestRecevedSinceAverage;
-	private Double averageTime;
 	
 	/**
 	 * Construct a <code>RequestDispatcher</code>.
@@ -171,7 +170,6 @@ implements
 				
 				this.requestVirtalMachineDataMap = new HashMap<>();
 				this.nbRequestRecevedSinceAverage = 0;
-				this.averageTime = null;
 	}
 	
 	private void nextVM()
@@ -208,25 +206,28 @@ implements
 	
 	private Double averageTime()
 	{
-		double res = 0.0;
-		
 		if(this.nbRequestRecevedSinceAverage >= NB_REQUEST_NEEDED_FOR_AVG)
 		{
+			double averageTime = 0.0;
 			int nbRequest = 0;
 			
 			for(VirtualMachineData vmData: this.virtualMachineDataList)
 			{
 				vmData.calculateAverageTime();
-				res+=vmData.getAverageTime();
+				averageTime+=vmData.getAverageTime();
+				
+				vmData.resetRequestTimeDataList();
 				
 				nbRequest++;
 			}
 			
-			this.averageTime = res/nbRequest;
+			averageTime = averageTime/nbRequest;
 			this.nbRequestRecevedSinceAverage = 0;
+			
+			return averageTime;
 		}
 		
-		return averageTime;
+		return null;
 	}
 	
 	@Override

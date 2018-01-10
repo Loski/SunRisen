@@ -21,7 +21,7 @@ public class VirtualMachineData {
 		this.vmURI=uri;
 		this.rsobp=rsobp;
 		this.avmiovp=avmiovp;
-		this.averageTime=0.0;
+		this.averageTime=null;
 		this.requestTimeDataList = new ArrayList<RequestTimeData>();
 		this.currentRequest = 0;
 	}
@@ -44,6 +44,7 @@ public class VirtualMachineData {
 	{
 		this.requestTimeDataList = new ArrayList<RequestTimeData>();
 		this.currentRequest=0;
+		this.averageTime=null;
 	}
 	
 	public void addRequest(String dispatcherURI)
