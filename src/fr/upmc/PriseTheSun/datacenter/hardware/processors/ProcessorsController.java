@@ -2,12 +2,16 @@ package fr.upmc.PriseTheSun.datacenter.hardware.processors;
 
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.interfaces.ProcessorsControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.ports.ProcessorsControllerManagmentInboundPort;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.datacenter.connectors.ControlledDataConnector;
+import fr.upmc.datacenter.hardware.processors.UnacceptableFrequencyException;
+import fr.upmc.datacenter.hardware.processors.UnavailableFrequencyException;
 import fr.upmc.datacenter.hardware.processors.connectors.ProcessorManagementConnector;
 import fr.upmc.datacenter.hardware.processors.interfaces.ProcessorDynamicStateI;
 import fr.upmc.datacenter.hardware.processors.interfaces.ProcessorStateDataConsumerI;
@@ -35,6 +39,8 @@ public class ProcessorsController extends AbstractComponent implements Processor
 		processorsManagement = new HashMap<String, ProcessorManagementOutboundPort>();
 		pcmip = new ProcessorsControllerManagmentInboundPort(URI + ProcessorControllerManagementInboundPortURI, this);
 	}
+	
+
 	
 	@Override
 	public void acceptProcessorStaticData(String processorURI, ProcessorStaticStateI staticState) throws Exception {
@@ -82,5 +88,44 @@ public class ProcessorsController extends AbstractComponent implements Processor
 				processorManagementURI,
 				ProcessorManagementConnector.class.getCanonicalName());
 		this.processorsManagement.put(processorURI, pmop);
+	}
+	
+	public boolean setCoreFrequency(CoreAsk ask, String processorURI, int coreNo) throws UnavailableFrequencyException, UnacceptableFrequencyException, Exception {
+		ProcessorStaticStateI staticState = this.processorsStaticState.get(processorURI);
+		ProcessorDynamicStateI dynamicState = this.processorsDynamicState.get(processorURI); 
+		int frequenceCore = dynamicState.getCurrentCoreFrequency(coreNo);
+		Set<Integer> admissableFrequencies = staticState.getAdmissibleFrequencies();
+		Iterator<Integer> it = admissableFrequencies.iterator();
+		int newfrequency = -1;
+		int frequency = -1;
+		
+		//Ajouter tri à la création des fréquences pour éviter parcourt ??.
+		
+		if(ask == CoreAsk.HIGHER) {
+		    while(it.hasNext()) {
+		    	frequency = (int) it.next();
+		    	if(frequency > frequenceCore) {
+		    		newfrequency = frequency;
+		    		break;
+		    	}
+		    }
+		}else if(ask == CoreAsk.LOWER) {
+		    while(it.hasNext()) {
+		    	frequency = (int) it.next();
+		    	if(frequency > frequenceCore) {
+		    		newfrequency = frequency;
+		    		break;
+		    	}
+		    }
+		}
+		if(newfrequency != -1) {
+			this.processorsManagement.get(processorURI).setCoreFrequency(coreNo, newfrequency);
+			return true;
+		}
+		return false;
+	}
+	
+	public enum CoreAsk {
+		HIGHER, LOWER
 	}
 }

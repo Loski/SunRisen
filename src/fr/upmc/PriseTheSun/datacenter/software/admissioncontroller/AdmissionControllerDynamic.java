@@ -178,7 +178,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		this.processorsController = new HashMap<>();
 		this.FreeApplicationVM = new ArrayList<>();
 		this.OccupedApplicationVM = new ArrayList<>();
-
 	}
 
 	@Override
