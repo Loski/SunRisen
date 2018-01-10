@@ -70,4 +70,6 @@ extends		DataOfferedI.DataI,
 	public String getProcessorURI();
 	
 	public int[] getAllocatedCoresNumber();
+	
+	public int numberOfRequestInQueue();
 }

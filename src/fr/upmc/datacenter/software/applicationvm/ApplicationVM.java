@@ -630,7 +630,22 @@ implements	ProcessorServicesNotificationConsumerI,
 	public	ApplicationVMDynamicStateI	getDynamicState()
 	throws Exception
 	{
-		return null ;
+		String processorURI = null;
+		boolean idle = true;
+		int[] coreNumber = new int[this.allocatedCoresIdleStatus.size()];
+		
+		int i=0;
+		for (AllocatedCore ac : this.allocatedCoresIdleStatus.keySet()) {
+			if(!this.allocatedCoresIdleStatus.get(ac))
+			{
+				idle=false;
+			}		
+			coreNumber[i]=ac.coreNo;
+			processorURI=ac.processorURI;
+			i++;
+		}
+		
+		return new ApplicationVMDynamicState(this.vmURI,idle,processorURI, null, this.runningTasks.size()) ;
 	}
 
 	// ------------------------------------------------------------------------

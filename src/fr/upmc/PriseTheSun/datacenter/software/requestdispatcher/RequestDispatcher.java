@@ -400,7 +400,7 @@ implements
 		for(VirtualMachineData vmData : this.virtualMachineDataList)
 		{
 			virtualMachineExecutionAverageTime.put(vmData.getVmURI(),vmData.getAverageTime());
-			virtualMachineDynamicStates.put(vmData.getVmURI(), vmData.get);
+			virtualMachineDynamicStates.put(vmData.getVmURI(), vmData.getAvmiovp().getDynamicState());
 		}
 		
 		return new RequestDispatcherDynamicState(this.rdURI,this.averageTime(),virtualMachineExecutionAverageTime,virtualMachineDynamicStates) ;

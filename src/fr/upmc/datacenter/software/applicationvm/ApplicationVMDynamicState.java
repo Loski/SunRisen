@@ -22,13 +22,15 @@ implements	ApplicationVMDynamicStateI
 	protected final boolean idle;
 	protected final String processorURI;
 	protected final int[] allocatedCoresNumber;
+	protected final int numberOfRequestInQueue;
 	
 
 	public ApplicationVMDynamicState(
 			String vmURI,
 			boolean idle,
 			String processorURI,
-			int[] allocatedCoresNumber
+			int[] allocatedCoresNumber,
+			int numberOfRequestInQueue
 	)throws Exception
 	{
 		super() ;
@@ -38,6 +40,7 @@ implements	ApplicationVMDynamicStateI
 		this.processorURI=processorURI;
 		this.idle=idle;
 		this.allocatedCoresNumber = allocatedCoresNumber;
+		this.numberOfRequestInQueue=numberOfRequestInQueue;
 	}
 	
 	@Override
@@ -68,6 +71,11 @@ implements	ApplicationVMDynamicStateI
 	@Override
 	public int[] getAllocatedCoresNumber() {
 		return this.allocatedCoresNumber;
+	}
+
+	@Override
+	public int numberOfRequestInQueue() {
+		return this.numberOfRequestInQueue;
 	}
 
 
