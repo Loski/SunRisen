@@ -54,7 +54,7 @@ implements
 {
 
 	public static int	DEBUG_LEVEL = 2 ;
-	public static int NB_REQUEST_NEEDED_FOR_AVG = 1;
+	public static int NB_REQUEST_NEEDED_FOR_AVG = 5;
 	
 	/** URI of this request dispatcher */
 	protected String rdURI;
@@ -88,6 +88,8 @@ implements
 	
 	/** */
 	private int nbRequestRecevedSinceAverage;
+	
+	private Object lock;
 	
 	/**
 	 * Construct a <code>RequestDispatcher</code>.
@@ -170,6 +172,8 @@ implements
 				
 				this.requestVirtalMachineDataMap = new HashMap<>();
 				this.nbRequestRecevedSinceAverage = 0;
+				
+				this.lock = new Object(); 
 	}
 	
 	private void nextVM()
@@ -190,14 +194,14 @@ implements
 	private void beginRequestTime(String requestURI)
 	{
 		VirtualMachineData vmData = this.virtualMachineDataList.get(this.currentVM);
-		
+			
 		this.requestVirtalMachineDataMap.put(requestURI,vmData);
-		
+			
 		vmData.addRequest(this.rdURI);
 	}
 	
 	private void endRequestTime(String requestURI)
-	{
+	{		
 		VirtualMachineData vmData  = this.requestVirtalMachineDataMap.remove(requestURI);
 		vmData.endRequest();
 		
@@ -206,28 +210,32 @@ implements
 	
 	private Double averageTime()
 	{
-		if(this.nbRequestRecevedSinceAverage >= NB_REQUEST_NEEDED_FOR_AVG)
+		synchronized(this.lock)
 		{
-			double averageTime = 0.0;
-			int nbRequest = 0;
-			
-			for(VirtualMachineData vmData: this.virtualMachineDataList)
+			if(this.nbRequestRecevedSinceAverage >= NB_REQUEST_NEEDED_FOR_AVG)
 			{
-				vmData.calculateAverageTime();
-				averageTime+=vmData.getAverageTime();
+				double averageTime = 0.0;
+				int nbRequest = 0;
 				
-				vmData.resetRequestTimeDataList();
+				for(VirtualMachineData vmData: this.virtualMachineDataList)
+				{
+					vmData.calculateAverageTime();
+					averageTime+=vmData.getAverageTime();
+					
+					vmData.resetRequestTimeDataList();
+					
+					nbRequest++;
+				}
 				
-				nbRequest++;
+				averageTime = averageTime/nbRequest;
+				this.nbRequestRecevedSinceAverage = 0;
+				
+				return averageTime;
 			}
 			
-			averageTime = averageTime/nbRequest;
-			this.nbRequestRecevedSinceAverage = 0;
-			
-			return averageTime;
+			else
+				return null;
 		}
-		
-		return null;
 	}
 	
 	@Override

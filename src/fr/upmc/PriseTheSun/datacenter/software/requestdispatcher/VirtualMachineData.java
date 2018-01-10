@@ -2,6 +2,7 @@ package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMIntrospectionOutboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
@@ -42,7 +43,16 @@ public class VirtualMachineData {
 	
 	public void resetRequestTimeDataList()
 	{
-		this.requestTimeDataList = new ArrayList<RequestTimeData>();
+		ListIterator<RequestTimeData> iterator = this.requestTimeDataList.listIterator();
+		
+		while(iterator.hasNext()){
+			RequestTimeData data = iterator.next();
+			if(data.isFinished())
+			{
+				iterator.remove();
+			}
+		}
+		
 		this.currentRequest=0;
 		this.averageTime=null;
 	}

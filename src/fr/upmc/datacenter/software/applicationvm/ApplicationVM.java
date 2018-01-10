@@ -645,7 +645,7 @@ implements	ProcessorServicesNotificationConsumerI,
 			i++;
 		}
 		
-		return new ApplicationVMDynamicState(this.vmURI,idle,processorURI, null, this.runningTasks.size()) ;
+		return new ApplicationVMDynamicState(this.vmURI,idle,processorURI, coreNumber, this.runningTasks.size()) ;
 	}
 
 	// ------------------------------------------------------------------------
