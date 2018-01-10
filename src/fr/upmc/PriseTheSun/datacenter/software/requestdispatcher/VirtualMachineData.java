@@ -3,21 +3,24 @@ package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher;
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMIntrospectionOutboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
 
 public class VirtualMachineData {
 
 	private String vmURI;
 	private RequestSubmissionOutboundPort rsobp;
+	private ApplicationVMIntrospectionOutboundPort avmiovp;
 	private Double averageTime;
 	/**  */
 	private List<RequestTimeData> requestTimeDataList;
 	private int currentRequest;
 
-	public VirtualMachineData(String uri,RequestSubmissionOutboundPort port)
+	public VirtualMachineData(String uri,RequestSubmissionOutboundPort rsobp,ApplicationVMIntrospectionOutboundPort avmiovp)
 	{
 		this.vmURI=uri;
-		this.rsobp=port;
+		this.rsobp=rsobp;
+		this.avmiovp=avmiovp;
 		this.averageTime=0.0;
 		this.requestTimeDataList = new ArrayList<RequestTimeData>();
 		this.currentRequest = 0;

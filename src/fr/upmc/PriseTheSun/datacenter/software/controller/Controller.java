@@ -48,7 +48,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		
 		this.rddsdop.doConnection(requestDispatcherDynamicStateDataInboundPortURI, ControlledDataConnector.class.getCanonicalName());
 		
-		this.rddsdop.startUnlimitedPushing(10000);
+		this.rddsdop.startUnlimitedPushing(1000);
 	}
 	
 	@Override
@@ -59,8 +59,6 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 			System.out.println(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,""+currentDynamicState.getAvgExecutionTime()));
 		else
 			System.out.println(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,"pas assez de données pour calculer la moyenne"));
-		
-		currentDynamicState.getVMData();
 	}
 	@Override
 	public void acceptRequestDispatcherStaticData(String dispatcherURI, RequestDispatcherStaticStateI staticState)

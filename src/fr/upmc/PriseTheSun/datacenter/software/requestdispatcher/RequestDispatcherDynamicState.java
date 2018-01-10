@@ -3,9 +3,12 @@ package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI;
 import fr.upmc.datacenter.TimeManagement;
+import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
+import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamicStateI;
 
 
 public class RequestDispatcherDynamicState implements RequestDispatcherDynamicStateI{
@@ -21,12 +24,14 @@ public class RequestDispatcherDynamicState implements RequestDispatcherDynamicSt
     /** the average request execution time */
     protected final Double executionTimeAvg;
     
-    protected final List<VirtualMachineData> VmURI;
+    protected final Map<String,Double> virtualMachineExecutionAverageTime;
+    protected final Map<String,ApplicationVMDynamicStateI> virtualMachineDynamicStates;
 	
 	public				RequestDispatcherDynamicState(
 			String rdURI,
 			Double averageTime,
-			List<VirtualMachineData> virtualMachineDataList
+			Map<String,Double> virtualMachineExecutionAverageTime,
+			Map<String,ApplicationVMDynamicStateI> virtualMachineDynamicStates
 			) throws Exception
 	{
 		super() ;
@@ -34,7 +39,8 @@ public class RequestDispatcherDynamicState implements RequestDispatcherDynamicSt
 		this.timestamperIP = InetAddress.getLocalHost().getHostAddress() ;
 		this.rdURI = rdURI ;
 		this.executionTimeAvg=averageTime;
-		this.VmURI = virtualMachineDataList;
+		this.virtualMachineExecutionAverageTime=virtualMachineExecutionAverageTime;
+		this.virtualMachineDynamicStates=virtualMachineDynamicStates;
 	}
     
 	@Override
@@ -49,19 +55,12 @@ public class RequestDispatcherDynamicState implements RequestDispatcherDynamicSt
 
 	@Override
 	public Double getAvgExecutionTime() {
-		// TODO Auto-generated method stub
 		return this.executionTimeAvg;
 	}
 
 	@Override
 	public String getDispatcherURI() {
 		return new String(this.rdURI) ;
-	}
-
-	@Override
-	public List<VirtualMachineData> getVMData() {
-		// TODO Auto-generated method stub
-		return VmURI;
 	}
 
 }

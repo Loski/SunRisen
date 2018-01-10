@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -19,6 +20,8 @@ import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.TimeManagement;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
 import fr.upmc.datacenter.interfaces.PushModeControllingI;
+import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamicStateI;
+import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMIntrospectionOutboundPort;
 import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenter.software.interfaces.RequestI;
@@ -49,7 +52,7 @@ implements
 {
 
 	public static int	DEBUG_LEVEL = 2 ;
-	public static int NB_REQUEST_NEEDED_FOR_AVG = 10;
+	public static int NB_REQUEST_NEEDED_FOR_AVG = 1;
 	
 	/** URI of this request dispatcher */
 	protected String rdURI;
@@ -308,19 +311,28 @@ implements
 		/*if(this.requestSubmissionOutboundPortList.get(indexVM)!=null && this.requestSubmissionOutboundPortList.get(indexVM).getPortURI().equals(RequestSubmissionOutboundPortURI))
 			throw new Exception("VM déjà connecté sur ce port");*/
 		
-		RequestSubmissionOutboundPort port = new RequestSubmissionOutboundPort( RequestSubmissionOutboundPortURI, this );
+		RequestSubmissionOutboundPort rsobp = new RequestSubmissionOutboundPort( RequestSubmissionOutboundPortURI, this );
+		ApplicationVMIntrospectionOutboundPort avmiovp = new ApplicationVMIntrospectionOutboundPort( RequestSubmissionOutboundPortURI, this );
 		
-		this.virtualMachineDataList.add(new VirtualMachineData(vmURI, port));
-		this.addPort( port );
-		port.publishPort();
+		this.virtualMachineDataList.add(new VirtualMachineData(vmURI, rsobp,avmiovp));
+		this.addPort( rsobp );
+		rsobp.publishPort();
 		
 		this.doPortConnection(
-				port.getPortURI(),
+				rsobp.getPortURI(),
+				requestSubmissionInboundPortURI,
+				getConnectorClassName());
+		
+		this.addPort( avmiovp );
+		avmiovp.publishPort();
+		
+		this.doPortConnection(
+				avmiovp.getPortURI(),
 				requestSubmissionInboundPortURI,
 				getConnectorClassName());
 		
 		if (RequestGenerator.DEBUG_LEVEL >= 2)
-			this.logMessage(String.format("[%s] Connecting %s with %s using %s -> %s",getConnectorSimpleName(),this.rdURI,vmURI,port.getPortURI(),requestSubmissionInboundPortURI));
+			this.logMessage(String.format("[%s] Connecting %s with %s using %s -> %s",getConnectorSimpleName(),this.rdURI,vmURI,rsobp.getPortURI(),requestSubmissionInboundPortURI));
 	}
 
 	@Override
@@ -380,7 +392,15 @@ implements
 	
 	public RequestDispatcherDynamicStateI	getDynamicState() throws Exception
 	{
-		return new RequestDispatcherDynamicState(this.rdURI,this.averageTime(),this.virtualMachineDataList) ;
+		HashMap<String,Double> virtualMachineExecutionAverageTime = new HashMap<String,Double>();
+		HashMap<String,ApplicationVMDynamicStateI> virtualMachineDynamicStates = new HashMap<String,ApplicationVMDynamicStateI>();
+		
+		for(VirtualMachineData vmData : this.virtualMachineDataList)
+		{
+			virtualMachineExecutionAverageTime.put(vmData.getVmURI(),vmData.getAverageTime());
+		}
+		
+		return new RequestDispatcherDynamicState(this.rdURI,this.averageTime(),virtualMachineExecutionAverageTime,virtualMachineDynamicStates) ;
 	}
 	
 	public void			sendDynamicState() throws Exception
@@ -477,16 +497,6 @@ implements
 									this.pushingFuture.isDone())) {
 			this.pushingFuture.cancel(false) ;
 		}
-	}
-	
-	private String getSlowestVM()
-	{
-		return this.virtualMachineDataList.get(0).getVmURI();
-	}
-	
-	private String getFastestVM()
-	{
-		return this.virtualMachineDataList.get(0).getVmURI();
 	}
 
 }

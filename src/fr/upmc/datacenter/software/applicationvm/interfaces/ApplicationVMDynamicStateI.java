@@ -36,6 +36,7 @@ package fr.upmc.datacenter.software.applicationvm.interfaces;
 
 import fr.upmc.components.interfaces.DataOfferedI;
 import fr.upmc.components.interfaces.DataRequiredI;
+import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
 import fr.upmc.datacenter.interfaces.TimeStampingI;
 
 /**
@@ -65,4 +66,8 @@ extends		DataOfferedI.DataI,
 	public String		getApplicationVMURI() ;
 	/** 	return true if the application virtual machine is idle.		*/
 	public boolean		isIdle() ;
+	
+	public String getProcessorURI();
+	
+	public int[] getAllocatedCoresNumber();
 }

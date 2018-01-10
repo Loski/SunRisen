@@ -484,7 +484,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	private synchronized void  createVM(ProcessorsController controller, String ComputerServicesInboundPortURI, AllocatedCore[] allocatedCore) throws Exception {
 		
 		String applicationVM[] = new String[5];
-		int nbVM = ApplicationVM.size(); //Add VM non occupé
+		int nbVM = ApplicationVM.size(); //Add VM non occupï¿½
 			// --------------------------------------------------------------------
 			// Create an Application VM component
 			// --------------------------------------------------------------------
