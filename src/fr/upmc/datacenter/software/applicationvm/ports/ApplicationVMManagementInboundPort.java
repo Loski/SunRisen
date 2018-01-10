@@ -138,12 +138,26 @@ implements	ApplicationVMManagementI
 		final ApplicationVMManagementI avm =
 				(ApplicationVMManagementI) this.owner ;
 		this.owner.handleRequestSync(
-		new ComponentI.ComponentService<Void>() {
-		@Override
-		public Void call() throws Exception {
-			avm.connectWithRequestSubmissioner(rgURI, RequestNotificationInboundPortURI) ;
-			return null;
-		}
+			new ComponentI.ComponentService<Void>() {
+			@Override
+			public Void call() throws Exception {
+				avm.connectWithRequestSubmissioner(rgURI, RequestNotificationInboundPortURI) ;
+				return null;
+			}
 		}) ;
+	}
+
+	@Override
+	public void desallocateCores(int nbCore) throws Exception {
+		final ApplicationVMManagementI avm = (ApplicationVMManagementI) this.owner ;
+		this.owner.handleRequestSync(
+			new ComponentI.ComponentService<Void>() {
+			@Override
+			public Void call() throws Exception {
+				avm.desallocateCores(nbCore);
+				return null;
+			}
+		}) ;
+		
 	}
 }

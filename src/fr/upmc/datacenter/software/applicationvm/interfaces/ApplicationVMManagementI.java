@@ -77,4 +77,6 @@ extends		OfferedI,
 
 	public void			connectWithRequestSubmissioner(String rgURI, String RequestNotificationInboundPortURI)
 	throws Exception ;
+	
+	public void	desallocateCores(int nbCore) throws Exception;
 }

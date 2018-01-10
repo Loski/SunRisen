@@ -90,13 +90,17 @@ implements	ApplicationVMManagementI
 	public void			allocateCores(final AllocatedCore[] allocatedCores)
 	throws Exception
 	{
-		((ApplicationVMManagementI)this.connector).
-												allocateCores(allocatedCores) ;
+		((ApplicationVMManagementI)this.connector).allocateCores(allocatedCores) ;
 	}
 
 	@Override
 	public void			connectWithRequestSubmissioner(String rdURI, String RequestNotificationInboundPortURI) throws Exception {
 		// TODO Auto-generated method stub
 		((ApplicationVMManagementI)this.connector).connectWithRequestSubmissioner(rdURI,RequestNotificationInboundPortURI) ;
+	}
+
+	@Override
+	public void desallocateCores(int nbCore) throws Exception {
+		((ApplicationVMManagementI)this.connector).desallocateCores(nbCore);	
 	}
 }

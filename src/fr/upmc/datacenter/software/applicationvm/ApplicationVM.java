@@ -676,6 +676,19 @@ implements	ProcessorServicesNotificationConsumerI,
 		}
 	}
 
+	@Override
+	public void	desallocateCores(int nbCore) throws Exception {
+		assert	nbCore >= 0 && nbCore < allocatedCoresIdleStatus.size();
+
+		for(int i = 0; i < nbCore; i++) {
+			AllocatedCore ac = findIdleCore();
+			if(ac == null) {
+				continue;
+			}
+			this.allocatedCoresIdleStatus.remove(ac);
+		}
+	}
+	
 	/**
 	 * @see fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMManagementI#connectWithRequestSubmissioner(String,String)
 	 */
