@@ -94,5 +94,9 @@ public class VirtualMachineData {
 		else
 			this.averageTime=null;
 	}
+
+	public ApplicationVMIntrospectionOutboundPort getAvmiovp() {
+		return avmiovp;
+	}
 	
 }

@@ -21,6 +21,7 @@ import fr.upmc.datacenter.TimeManagement;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
 import fr.upmc.datacenter.interfaces.PushModeControllingI;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamicStateI;
+import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMIntrospectionI;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMIntrospectionOutboundPort;
 import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
@@ -158,6 +159,7 @@ implements
 				
 				this.virtualMachineDataList = new ArrayList<VirtualMachineData>();
 				this.addRequiredInterface( RequestSubmissionI.class );
+				this.addRequiredInterface(ApplicationVMIntrospectionI.class );
 				
 				this.addOfferedInterface(ControlledDataOfferedI.ControlledPullI.class) ;
 				this.requestDispatcherDynamicStateDataInboundPort =
@@ -398,6 +400,7 @@ implements
 		for(VirtualMachineData vmData : this.virtualMachineDataList)
 		{
 			virtualMachineExecutionAverageTime.put(vmData.getVmURI(),vmData.getAverageTime());
+			virtualMachineDynamicStates.put(vmData.getVmURI(), vmData.get);
 		}
 		
 		return new RequestDispatcherDynamicState(this.rdURI,this.averageTime(),virtualMachineExecutionAverageTime,virtualMachineDynamicStates) ;

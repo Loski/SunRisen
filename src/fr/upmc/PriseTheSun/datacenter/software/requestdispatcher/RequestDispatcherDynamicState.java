@@ -63,4 +63,14 @@ public class RequestDispatcherDynamicState implements RequestDispatcherDynamicSt
 		return new String(this.rdURI) ;
 	}
 
+	@Override
+	public Map<String, Double> getVrtualMachineExecutionAverageTime() {
+		return this.virtualMachineExecutionAverageTime;
+	}
+
+	@Override
+	public Map<String, ApplicationVMDynamicStateI> getVirtualMachineDynamicStates() {
+		return this.virtualMachineDynamicStates;
+	}
+
 }
