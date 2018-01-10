@@ -20,6 +20,7 @@ import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.TimeManagement;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
 import fr.upmc.datacenter.interfaces.PushModeControllingI;
+import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMIntrospectionConnector;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamicStateI;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMIntrospectionI;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMIntrospectionOutboundPort;
@@ -330,8 +331,8 @@ implements
 		
 		this.doPortConnection(
 				avmiovp.getPortURI(),
-				requestSubmissionInboundPortURI,
-				getConnectorClassName());
+				vmURI+"-intro",
+				ApplicationVMIntrospectionConnector.class.getCanonicalName());
 		
 		if (RequestGenerator.DEBUG_LEVEL >= 2)
 			this.logMessage(String.format("[%s] Connecting %s with %s using %s -> %s",getConnectorSimpleName(),this.rdURI,vmURI,rsobp.getPortURI(),requestSubmissionInboundPortURI));

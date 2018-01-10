@@ -261,7 +261,7 @@ implements	ProcessorServicesNotificationConsumerI,
 		
 		
 		
-		this.addRequiredInterface(ApplicationVMIntrospectionI.class) ;
+		this.addOfferedInterface(ApplicationVMIntrospectionI.class) ;
 		this.avmIntrospectionInboundPort =
 			new ApplicationVMIntrospectionInboundPort(
 									vmURI + "-intro",
