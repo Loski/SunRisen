@@ -35,6 +35,7 @@ public class ProcessorsController extends AbstractComponent implements Processor
 		processorsManagement = new HashMap<String, ProcessorManagementOutboundPort>();
 		pcmip = new ProcessorsControllerManagmentInboundPort(URI + ProcessorControllerManagementInboundPortURI, this);
 	}
+	
 	@Override
 	public void acceptProcessorStaticData(String processorURI, ProcessorStaticStateI staticState) throws Exception {
 		processorsStaticState.put(processorURI, staticState);
@@ -44,6 +45,7 @@ public class ProcessorsController extends AbstractComponent implements Processor
 	public void acceptProcessorDynamicData(String processorURI, ProcessorDynamicStateI currentDynamicState)
 			throws Exception {
 		//System.out.println(currentDynamicState.getCurrentCoreFrequencies()[0]);
+		
 		
 	}
 	
@@ -80,6 +82,5 @@ public class ProcessorsController extends AbstractComponent implements Processor
 				processorManagementURI,
 				ProcessorManagementConnector.class.getCanonicalName());
 		this.processorsManagement.put(processorURI, pmop);
-		
 	}
 }
