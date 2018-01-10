@@ -80,4 +80,9 @@ implements	ApplicationVMManagementI
 		
 		((ApplicationVMManagementI)this.offering).connectWithRequestSubmissioner(rgURI,RequestNotificationInboundPortURI);		
 	}
+
+	@Override
+	public void desallocateCores(int nbCore) throws Exception {
+		((ApplicationVMManagementI)this.offering).desallocateCores(nbCore);
+	}
 }

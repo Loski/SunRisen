@@ -1,8 +1,12 @@
 package fr.upmc.PriseTheSun.datacenter.software.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.connector.AdmissionControllerManagementConnector;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementOutboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.VirtualMachineData;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStateDataConsumerI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStaticStateI;
@@ -55,11 +59,13 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	public void acceptRequestDispatcherDynamicData(String dispatcherURI,
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
 		
-		if(currentDynamicState.getAvgExecutionTime()!=null)
+		if(currentDynamicState.getAvgExecutionTime()!=null) {
 			System.err.println(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,""+currentDynamicState.getAvgExecutionTime()));
-		else
+			processControl(currentDynamicState.getAvgExecutionTime(), currentDynamicState.getVMData());
+		}
+		else {
 			System.err.println(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,"pas assez de données pour calculer la moyenne"));
-		
+		}
 		currentDynamicState.getVMData();
 	}
 	@Override
@@ -69,9 +75,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		System.out.println("Dispatcher Static Data : ");
 	}
 	
-	public void controlling() {
-		
-	}
+
 
 	@Override
     public void shutdown() throws ComponentShutdownException {
@@ -85,7 +89,82 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
     }
     
     public enum Threeshold{
-    	LOWER, HIGHTER, GOOD
+    	LOWER, HIGHER, GOOD
     }
     
+	public Threeshold getThreeshold(long time){
+		if(isHigher(time))
+			return Threeshold.HIGHER;
+		if(isLower(time))
+			return Threeshold.LOWER;
+		return Threeshold.GOOD;
+	}
+
+	public boolean isHigher(long time){
+		return (time > (StaticData.AVERAGE_TARGET*StaticData.HIGHER_PERCENT + StaticData.AVERAGE_TARGET));
+	}
+
+	public boolean isLower(long time){
+		return (time < (StaticData.AVERAGE_TARGET*StaticData.LOWER_PERCENT - StaticData.AVERAGE_TARGET));
+}
+	
+	private void processControl(long time, ArrayList<VirtualMachineData> vms) throws Exception {
+		
+		double factor=0;
+		int number=0;
+		int cores = getNumberOfCoresAllocatedFrom(vms);
+
+		switch(getThreeshold(time)){
+		case HIGHER :
+			factor = (time/StaticData.AVERAGE_TARGET);
+			number = Math.max(1, (int)(cores*factor));
+			number = Math.min(StaticData.MAX_ALLOCATION, number);
+			processAllocation(factor,number,vms,time,nbreq,cores);
+			
+			// add Reset request stat?
+			break;
+		case LOWER :
+			factor = (StaticData.AVERAGE_TARGET/time);
+			number =Math.max(1, (int)(cores-(cores/factor)));
+			number =Math.min(StaticData.MAX_DEALLOCATION, number);
+			if(vms.size()==1)
+				if(vms.get(0).getNbCore()== StaticData.MIN_ALLOCATION)
+					break;
+			processDeallocate(factor,number,vms,time,nbreq,cores);
+			
+			// add Reset request stat?
+
+			break;
+		case GOOD :
+			break;
+		default:
+			break;
+		}
+	}
+	//TODO PAs oublier de renvoyer le vrai truc un jour
+	/**
+	 * 
+	 * @param vms
+	 * @return
+	 */
+	private int getNumberOfCoresAllocatedFrom(List<VirtualMachineData> vms) {
+		int number = 0;
+		for(VirtualMachineData vm : vms) {
+			number++;
+		}
+		return number;
+	}
+	
+	static class StaticData {
+		public static long AVERAGE_TARGET=2500;
+		public static double LOWER_PERCENT=0.5;
+		public static double HIGHER_PERCENT=0.3;
+		public static int DISPATCHER_PUSH_INTERVAL=5000;
+		
+		//Max core
+		public static int MAX_ALLOCATION=25;
+		
+		public static int MIN_ALLOCATION = 2;
+
+	}
 }
