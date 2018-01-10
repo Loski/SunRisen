@@ -55,8 +55,7 @@ public class ProcessorsController extends AbstractComponent implements Processor
 	public void acceptProcessorDynamicData(String processorURI, ProcessorDynamicStateI currentDynamicState)
 			throws Exception {
 		//System.out.println(currentDynamicState.getCurrentCoreFrequencies()[0]);
-		
-		
+		processorsDynamicState.put(processorURI, currentDynamicState);	
 	}
 	
 	public void bindProcessor(String processorURI, String processorControllerInboundPortURI, String processorManagementURI, String ProcessorStaticStateDataInboundPortURI, String ProcessorDynamicStateDataInoundPortURI) throws Exception {
@@ -94,15 +93,20 @@ public class ProcessorsController extends AbstractComponent implements Processor
 		this.processorsManagement.put(processorURI, pmop);
 	}
 	
-	public boolean setCoreFrequency(CoreAsk ask, String processorURI, int coreNo) throws UnavailableFrequencyException, UnacceptableFrequencyException, Exception {
+	public synchronized boolean setCoreFrequency(CoreAsk ask, String processorURI, int coreNo) throws UnavailableFrequencyException, UnacceptableFrequencyException, Exception {
+		System.err.println("JE VEUX MOURIR");
+
 		ProcessorStaticStateI staticState = this.processorsStaticState.get(processorURI);
-		ProcessorDynamicStateI dynamicState = this.processorsDynamicState.get(processorURI); 
+		ProcessorDynamicStateI dynamicState = this.processorsDynamicState.get(processorURI);
+		if(staticState == null || dynamicState == null)
+			throw new Exception("admidssableF was null");
 		int frequenceCore = dynamicState.getCurrentCoreFrequency(coreNo);
 		Set<Integer> admissableFrequencies = staticState.getAdmissibleFrequencies();
 		Iterator<Integer> it = admissableFrequencies.iterator();
 		int newfrequency = -1;
 		int frequency = -1;
-		
+	
+
 		//Ajouter tri � la cr�ation des fr�quences pour �viter parcourt ??.
 		
 		if(ask == CoreAsk.HIGHER) {

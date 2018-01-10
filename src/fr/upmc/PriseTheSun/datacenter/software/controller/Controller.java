@@ -1,6 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.controller;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -105,11 +106,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
     }
     
 	public Threeshold getThreeshold(Double time){
-		if(isHigher(time))
-			return Threeshold.HIGHER;
-		if(isLower(time))
-			return Threeshold.LOWER;
-		return Threeshold.GOOD;
+		return Threeshold.HIGHER;
 	}
 
 	public boolean isHigher(Double time){
@@ -120,26 +117,32 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		return Double.compare(time, (StaticData.AVERAGE_TARGET*StaticData.LOWER_PERCENT - StaticData.AVERAGE_TARGET)) == -1 ? true : false;
 	}
 	
-	private void processControl(Double double1, Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
-		
+	private synchronized void processControl(Double time, Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		double factor=0;
 		int number=0;
-		int cores = getNumberOfCoresAllocatedFrom(vms);
 		ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
-		switch(getThreeshold(double1)){
+		System.out.println(Arrays.toString(randomVM.getAllocatedCoresNumber()));
+		int cores = getNumberOfCoresAllocatedFrom(vms);
+		switch(getThreeshold(time)){
 		case HIGHER :
-			factor = (double1/StaticData.AVERAGE_TARGET);
+			factor = (time/StaticData.AVERAGE_TARGET);
 			number = Math.max(1, (int)(cores*factor));
 			number = Math.min(StaticData.MAX_ALLOCATION, number);
 			
 			//Try to change frequency
 			for(int i = 0; i < randomVM.getAllocatedCoresNumber().length;i++) {
-				pcmop.setCoreFrequency(CoreAsk.HIGHER, randomVM.getProcessorURI(), randomVM.getAllocatedCoresNumber()[i]);
+				System.err.println(i);
+
+				boolean set = pcmop.setCoreFrequency(CoreAsk.HIGHER, randomVM.getProcessorURI(), randomVM.getAllocatedCoresNumber()[i]);
+
+				if(set) {
+					System.err.println("Frequece was set");
+				}
 			}
 			this.acmop.addCores(null, 1, randomVM.getApplicationVMURI());
 			break;
 		case LOWER :
-			factor = (StaticData.AVERAGE_TARGET/double1);
+			factor = (StaticData.AVERAGE_TARGET/time);
 			number =Math.max(1, (int)(cores-(cores/factor)));
 			number =Math.min(StaticData.MIN_ALLOCATION, number);
 			if(vms.size()==1 && cores == StaticData.MIN_ALLOCATION) {
