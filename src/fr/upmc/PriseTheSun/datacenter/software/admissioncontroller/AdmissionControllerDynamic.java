@@ -109,6 +109,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	private DynamicComponentCreationOutboundPort portToApplicationVMJVM;
 	private DynamicComponentCreationOutboundPort portTControllerJVM;
 	protected LinkedHashMap<Class,Class> interface_dispatcher_map;
+	private ProcessorsController processorController;
 	
 	private static final String ProcessorControllerManagementInboundPortURI = "pcmip";
 
@@ -179,6 +180,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		this.processorsController = new HashMap<>();
 		this.FreeApplicationVM = new ArrayList<>();
 		this.OccupedApplicationVM = new ArrayList<>();
+		this.processorController = new ProcessorsController("controller", ProcessorControllerManagementInboundPortURI);
+
 	}
 
 	@Override
@@ -474,9 +477,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			this.cdsdops.add(cdsdop);
 			
 			for(int i = 0; i < processorsURI.size(); i++) {
-				ProcessorsController p = new ProcessorsController("controller"+processorsURI.get(i)+i);
-				p.bindProcessor(processorsURI.get(i), "ACHANGER", pmipURIs.get(i), pssdURIs.get(i), pdssURIs.get(i));
-				createVM(p, ComputerServicesInboundPortURI, csop.allocateCores(nbCores/2));
+				this.processorController.bindProcessor(processorsURI.get(i), "ACHANGER", pmipURIs.get(i), pssdURIs.get(i), pdssURIs.get(i));
+				createVM(this.processorController, ComputerServicesInboundPortURI, csop.allocateCores(nbCores/2));
 			}
 	}
 	
@@ -512,5 +514,17 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		this.avmOutPort.put(applicationVM[0], avmPort);
 		this.FreeApplicationVM.add(new ApplicationVMInfo(applicationVM[0], applicationVM[4], applicationVM[2]));
 		return applicationVM[0];
+	}
+
+	@Override
+	public boolean supCores(int nbCores, String vmUri) throws Exception {
+		ComputerServicesOutboundPort csop = csopMap.get(vmUri);
+		try {
+			findVM(vmUri).desallocateCores(nbCores);
+			return true;
+		} catch (Exception e) {
+			this.logMessage("Failed to allocates core for a new application." + e.getMessage());
+			return false;
+		}
 	}	
 }
