@@ -197,7 +197,7 @@ implements
 			
 		this.requestVirtalMachineDataMap.put(requestURI,vmData);
 			
-		vmData.addRequest(this.rdURI);
+		vmData.addRequest(this.rdURI,requestURI);
 	}
 	
 	private void endRequestTime(String requestURI)
@@ -210,29 +210,39 @@ implements
 	
 	private Double averageTime()
 	{
+		int nbRequestRemoved = 0;
+		
+		System.err.println("BEFORE :"+this.nbRequestRecevedSinceAverage);
+		
 		synchronized(this.lock)
 		{
 			if(this.nbRequestRecevedSinceAverage >= NB_REQUEST_NEEDED_FOR_AVG)
-			{
+			{	
 				double averageTime = 0.0;
-				int nbRequest = 0;
 				
 				for(VirtualMachineData vmData: this.virtualMachineDataList)
 				{
-					vmData.calculateAverageTime();
-					averageTime+=vmData.getAverageTime();
+					int nbRequest = vmData.calculateAverageTime();
+					if(vmData.getAverageTime()!=null)
+					{
+						double average = vmData.getAverageTime();
+						
+						nbRequestRemoved+=nbRequest;
+						averageTime+=average;
+					}
 					
 					vmData.resetRequestTimeDataList();
-					
-					nbRequest++;
 				}
 				
-				averageTime = averageTime/nbRequest;
-				this.nbRequestRecevedSinceAverage = 0;
+				averageTime = averageTime/this.virtualMachineDataList.size();
+		
+				System.err.println("removed :"+nbRequestRemoved);
+				this.nbRequestRecevedSinceAverage-=nbRequestRemoved;
+				
+				System.err.println("AFTER :"+this.nbRequestRecevedSinceAverage);
 				
 				return averageTime;
 			}
-			
 			else
 				return null;
 		}
@@ -407,13 +417,15 @@ implements
 		HashMap<String,Double> virtualMachineExecutionAverageTime = new HashMap<String,Double>();
 		HashMap<String,ApplicationVMDynamicStateI> virtualMachineDynamicStates = new HashMap<String,ApplicationVMDynamicStateI>();
 		
+		Double average = this.averageTime();
+		
 		for(VirtualMachineData vmData : this.virtualMachineDataList)
 		{
 			virtualMachineExecutionAverageTime.put(vmData.getVmURI(),vmData.getAverageTime());
 			virtualMachineDynamicStates.put(vmData.getVmURI(), vmData.getAvmiovp().getDynamicState());
 		}
 		
-		return new RequestDispatcherDynamicState(this.rdURI,this.averageTime(),virtualMachineExecutionAverageTime,virtualMachineDynamicStates) ;
+		return new RequestDispatcherDynamicState(this.rdURI,average,virtualMachineExecutionAverageTime,virtualMachineDynamicStates) ;
 	}
 	
 	public void			sendDynamicState() throws Exception

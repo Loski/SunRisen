@@ -57,15 +57,11 @@ public class VirtualMachineData {
 		this.averageTime=null;
 	}
 	
-	public void addRequest(String dispatcherURI)
+	public void addRequest(String dispatcherURI,String requestURI)
 	{
-		this.requestTimeDataList.add(new RequestTimeData(dispatcherURI, vmURI));
-		this.beginRequest();
-	}
-	
-	private void beginRequest()
-	{
-		this.requestTimeDataList.get(currentRequest).begin();
+		RequestTimeData req = new RequestTimeData(dispatcherURI, vmURI,requestURI);
+		this.requestTimeDataList.add(req);
+		req.begin();
 	}
 	
 	public void endRequest()
@@ -74,36 +70,37 @@ public class VirtualMachineData {
 		currentRequest++;
 	}
 	
-	public void calculateAverageTime()
-	{
-		calculateAverageTime(0,this.requestTimeDataList.size()-1);
-	}
-	
-	public void calculateAverageTime(int range)
-	{
-		calculateAverageTime(0,range);
-	}
-	
-	public void calculateAverageTime(int begin, int end)
-	{
-		if(end-begin<=0)
-			return;
-			
+	public int calculateAverageTime()
+	{		
+		int nbRequest = 0;
+		
 		if(this.requestTimeDataList.size()>0)
 		{
 			Double res = 0.0;
-			
+
 			for(RequestTimeData timeData : this.requestTimeDataList)
 			{
 				if(timeData.isFinished())
 				{
 					res+=timeData.getDuration();
+					nbRequest++;
 				}
 			}		
-			this.averageTime = res/(end-begin);
+			
+			System.err.println("REQ :"+nbRequest);
+			System.err.println(String.format("res : %4.3f",res/1000000/1000));
+			
+			if(nbRequest>0)
+				this.averageTime = res/nbRequest;
+			else
+				this.averageTime=null;
 		}
 		else
+		{
 			this.averageTime=null;
+		}
+		
+		return nbRequest;
 	}
 
 	public ApplicationVMIntrospectionOutboundPort getAvmiovp() {

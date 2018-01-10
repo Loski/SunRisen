@@ -60,7 +60,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		this.acmop.doConnection(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementConnector.class.getCanonicalName());
 		
 		this.rddsdop.doConnection(requestDispatcherDynamicStateDataInboundPortURI, ControlledDataConnector.class.getCanonicalName());
-		this.rddsdop.startUnlimitedPushing(10000);
+		this.rddsdop.startUnlimitedPushing(1000);
 		
 		
 		this.addRequiredInterface(ProcessorsControllerManagementI.class);
@@ -74,7 +74,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
 		
 		if(currentDynamicState.getAvgExecutionTime()!=null) {
-			System.err.println(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,""+currentDynamicState.getAvgExecutionTime()));
+			System.err.println(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
 			processControl(currentDynamicState.getAvgExecutionTime(), currentDynamicState.getVirtualMachineDynamicStates());
 		}
 		else {
