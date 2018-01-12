@@ -32,12 +32,15 @@ public class ProcessorsController extends AbstractComponent implements Processor
 	private Map<String, ProcessorStaticStateI> processorsStaticState;
 	private Map<String, ProcessorDynamicStateI> processorsDynamicState;
 	private Map<String, ProcessorManagementOutboundPort> processorsManagement;
+	private Map<String,String> processorsDynaToUri;
+	
 	public ProcessorsController(String URI, String ProcessorControllerManagementInboundPortURI) throws Exception {
 		super(URI, 2, 2);
 		processorsStaticState = new HashMap<String, ProcessorStaticStateI>();
 		processorsDynamicState = new HashMap<String, ProcessorDynamicStateI>();
 		processorsManagement = new HashMap<String, ProcessorManagementOutboundPort>();
-		
+		processorsDynaToUri = new HashMap<String, String>();
+
 		this.addOfferedInterface(ProcessorsControllerManagementI.class);
 		pcmip = new ProcessorsControllerManagmentInboundPort(ProcessorControllerManagementInboundPortURI, this);
 		this.addPort(pcmip);
@@ -48,19 +51,21 @@ public class ProcessorsController extends AbstractComponent implements Processor
 	
 	@Override
 	public void acceptProcessorStaticData(String processorURI, ProcessorStaticStateI staticState) throws Exception {
-		processorsStaticState.put(processorURI, staticState);
+	//	processorsStaticState.put(processorURI, staticState);
 	}
 
 	@Override
 	public void acceptProcessorDynamicData(String processorURI, ProcessorDynamicStateI currentDynamicState)
 			throws Exception {
-		//System.out.println(currentDynamicState.getCurrentCoreFrequencies()[0]);
-		processorsDynamicState.put(processorURI, currentDynamicState);	
+		System.err.println(processorURI);
+		
+		processorsDynamicState.put(processorsDynaToUri.get(processorURI), currentDynamicState);	
 	}
 	
 	public void bindProcessor(String processorURI, String processorControllerInboundPortURI, String processorManagementURI, String ProcessorStaticStateDataInboundPortURI, String ProcessorDynamicStateDataInoundPortURI) throws Exception {
 		
 		int number = this.processorsStaticState.size();
+		System.err.println("Processor n "+ number);
 		String processorStaticStateDataOutboundPortUri = ProcessorStaticStateDataOutboundPortURI + "_" +  number;
 		String processorDynamicStateDataUriOutboundPort = ProcessorDynamicStateDataOutboundPortURI + "_" +  number;
 		
@@ -91,10 +96,11 @@ public class ProcessorsController extends AbstractComponent implements Processor
 				processorManagementURI,
 				ProcessorManagementConnector.class.getCanonicalName());
 		this.processorsManagement.put(processorURI, pmop);
+		
+		this.processorsDynaToUri.put(processorDynamicStateDataUriOutboundPort, processorURI);
 	}
 	
-	public synchronized boolean setCoreFrequency(CoreAsk ask, String processorURI, int coreNo) throws UnavailableFrequencyException, UnacceptableFrequencyException, Exception {
-		System.err.println("JE VEUX MOURIR");
+	public  boolean setCoreFrequency(CoreAsk ask, String processorURI, int coreNo) throws UnavailableFrequencyException, UnacceptableFrequencyException, Exception {
 
 		ProcessorStaticStateI staticState = this.processorsStaticState.get(processorURI);
 		ProcessorDynamicStateI dynamicState = this.processorsDynamicState.get(processorURI);
@@ -127,8 +133,13 @@ public class ProcessorsController extends AbstractComponent implements Processor
 		    }
 		}
 		if(newfrequency != -1) {
-			this.processorsManagement.get(processorURI).setCoreFrequency(coreNo, newfrequency);
-			return true;
+			try {
+				this.processorsManagement.get(processorURI).setCoreFrequency(coreNo, newfrequency);
+				System.err.println("Frequence change");
+				return true;
+			}catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		return false;
 	}

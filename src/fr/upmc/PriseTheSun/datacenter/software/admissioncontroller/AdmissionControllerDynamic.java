@@ -457,8 +457,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			cssdop.doConnection(
 					ComputerStaticStateDataInboundPortURI,
 					ControlledDataConnector.class.getCanonicalName());
-
+			
 			ComputerStaticStateI staticState= (ComputerStaticStateI) cssdop.request();
+			
 			int nbCores = staticState.getNumberOfCoresPerProcessor();
 			int nbProc = staticState.getNumberOfProcessors();
 			

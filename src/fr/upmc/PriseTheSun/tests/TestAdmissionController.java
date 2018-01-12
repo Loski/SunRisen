@@ -188,12 +188,13 @@ extends		AbstractCVM
             computer[i] = "computer"+i;
             cssdip[i] = "cssdip"+i;
             cdsdip[i] = "cdsdip"+i;
-            
+            System.out.println("Creating computer " + i + "with " +numberOfProcessors + "proc of "+ numberOfCores + " cores");
             Computer c = new Computer(computer[i], admissibleFrequencies, processingPower, 1500, 1500,
                     numberOfProcessors, numberOfCores, csip[i], cssdip[i], cdsdip[i]);
             this.addDeployedComponent(c);
             
             // map associate processor uri with uri of inbound port
+            //TODO A déplacer dans l'admission !!
             ArrayList<String> processorsURIs = new ArrayList<String>();
             ArrayList<String> pmipURIs = new ArrayList<String>();
             ArrayList<String> pssdURIs = new ArrayList<String>();
