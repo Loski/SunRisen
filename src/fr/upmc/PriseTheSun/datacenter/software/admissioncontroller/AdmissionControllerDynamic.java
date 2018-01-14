@@ -65,7 +65,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 
 	public static int DEBUG_LEVEL = 1 ;
 	protected String acURI;
- 
 
 	protected static final String RequestDispatcherManagementInboundPortURI = "rdmi";
 	protected static final String RequestNotificationInboundPortURI = "rnip";
@@ -73,13 +72,16 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	protected static final String RequestNotificationOutboundPortURI = "rnop";
 	protected static final String RequestDispatcherManagementOutboundPortURI = "rdmop";
 	protected static final String RequestSubmissionOutboundPortURI = "rsop"; 
-	protected static final int NB_CORES = 2;
 	protected static final String RequestStaticDataInboundPortURI = "rsdip";
 	protected static final String RequestDynamicDataInboundPortURI = "rddip";
 	protected static final String computerServiceOutboundPortURI = "csop";
 	protected static final String computerDynamicStateDataOutboundPortURI = "cdsdop";
-	protected  String AdmissionControllerManagementInboundPortURI;
-	protected final String ComputerStaticStateDataOutboundPortURI = "cssdop";
+	protected static final String ComputerStaticStateDataOutboundPortURI = "cssdop";
+	protected static final String ProcessorControllerManagementInboundPortURI = "pcmip";
+	protected static final String ControllerDataRingInboundPortURI = "cdrip";
+	protected static final String ControllerDataRingOutboundPortURI = "cdrop";
+
+	
 
 	protected AdmissionControllerManagementInboundPort acmip;
 	protected ApplicationSubmissionInboundPort asip;
@@ -91,9 +93,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	protected ArrayList<ComputerServicesOutboundPort> csops;
 	protected ArrayList<ComputerStaticStateDataOutboundPort> cssdops;
 	protected ArrayList<ComputerDynamicStateDataOutboundPort> cdsdops;
-	
 	protected ArrayList<Integer> nbAvailablesCores;
-
 	protected ArrayList<String> computerUri;
 	
 
@@ -102,18 +102,19 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	
 	//Map Between a vm and his computer
 	protected Map<String, ComputerServicesOutboundPort> csopMap;
-
-	protected Map<String, ProcessorsController> processorsController;
 	protected List<ApplicationVMInfo> FreeApplicationVM;
 	protected List<ApplicationVMInfo> OccupedApplicationVM;
+	protected LinkedHashMap<Class,Class> interface_dispatcher_map;
+	private ProcessorsController processorController;
+	private LinkedList<String> controllerURI;
+	Object o=new Object();
+	protected static final int NB_CORES = 2;
+	
 	private DynamicComponentCreationOutboundPort portToRequestDispatcherJVM;
 	private DynamicComponentCreationOutboundPort portToApplicationVMJVM;
 	private DynamicComponentCreationOutboundPort portTControllerJVM;
-	protected LinkedHashMap<Class,Class> interface_dispatcher_map;
-	private ProcessorsController processorController;
-	private static final String ProcessorControllerManagementInboundPortURI = "pcmip";
-	private LinkedList<String> controllerURI;
-	Object o=new Object();
+	
+
 	/*protected static final String RequestDispatcher_JVM_URI = "controller" ;
 	protected static final String Application_VM_JVM_URI = "controller";*/
 	
@@ -128,7 +129,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		super(acURI,2, 2);
 		
 		this.computerUri = new ArrayList<String>();
-		this.AdmissionControllerManagementInboundPortURI = AdmissionControllerManagementInboundPortURI;
 		this.toggleLogging();
 		this.toggleTracing();
 		this.acURI = acURI;	
@@ -177,7 +177,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		this.cssdops = new ArrayList<ComputerStaticStateDataOutboundPort>();
 		this.cdsdops = new ArrayList<ComputerDynamicStateDataOutboundPort>();
 		this.nbAvailablesCores = new ArrayList<Integer>();
-		this.processorsController = new HashMap<>();
 		this.FreeApplicationVM = new ArrayList<>();
 		this.OccupedApplicationVM = new ArrayList<>();
 		this.processorController = new ProcessorsController("controller", ProcessorControllerManagementInboundPortURI);
@@ -272,8 +271,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 						rdURI,
 						requestDispatcherDynamicStateDataInboundPortURI,
 						this.acmip.getPortURI(),
-						ProcessorControllerManagementInboundPortURI
-						//AdmissionControllerManagementInboundPortURI
+						ProcessorControllerManagementInboundPortURI,
+						ControllerDataRingOutboundPortURI,
+						ControllerDataRingInboundPortURI
 		});
 		
 		/*ReflectionOutboundPort rop = new ReflectionOutboundPort(this);

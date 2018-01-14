@@ -18,6 +18,8 @@ import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.Requ
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStateDataConsumerI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStaticStateI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherDynamicStateDataOutboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingDynamicStateDataInboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingDynamicStateDataOutboundPort;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.datacenter.connectors.ControlledDataConnector;
 import fr.upmc.components.exceptions.ComponentShutdownException;
@@ -36,12 +38,11 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	protected AdmissionControllerManagementOutboundPort acmop;
 	protected RequestDispatcherDynamicStateDataOutboundPort rddsdop;
 	protected ProcessorsControllerManagementOutboundPort pcmop;
+	private RingDynamicStateDataOutboundPort rdsdop;
+	private RingDynamicStateDataInboundPort rdsdip;
 
-	private int threesholdBottom;
-	private int threesholdTop;
 
-
-	public Controller(String controllerURI,String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri) throws Exception
+	public Controller(String controllerURI,String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri, String RingDynamicStateDataOutboundPortURI, String RingDynamicStateDataInboundPortURI ) throws Exception
 	{
 		super(controllerURI,1,1);
 		
@@ -67,6 +68,16 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		this.pcmop = new ProcessorsControllerManagementOutboundPort("pcmop-"+this.controllerURI, this);
 		this.pcmop.publishPort();
 		this.pcmop.doConnection(ProcessorControllerManagementInboundUri, ProcessorControllerManagementConnector.class.getCanonicalName());
+		
+		
+		
+		rdsdop = new RingDynamicStateDataOutboundPort(this, RingDynamicStateDataOutboundPortURI);
+		this.addPort(rdsdop);
+		this.rdsdop.publishPort();
+
+		rdsdip=new RingDynamicStateDataInboundPort(RingDynamicStateDataInboundPortURI, this);
+		this.addPort(rdsdip);
+		this.rdsdip.publishPort();
 	}
 	
 	@Override
