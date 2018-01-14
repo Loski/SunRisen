@@ -16,6 +16,7 @@ import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMInfo;
 import fr.upmc.PriseTheSun.datacenter.software.controller.Controller;
 import fr.upmc.PriseTheSun.datacenter.software.javassist.RequestDispatcherCreator;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatcher;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.VirtualMachineData;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI;
@@ -110,10 +111,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	private DynamicComponentCreationOutboundPort portTControllerJVM;
 	protected LinkedHashMap<Class,Class> interface_dispatcher_map;
 	private ProcessorsController processorController;
-	
 	private static final String ProcessorControllerManagementInboundPortURI = "pcmip";
-
-
+	private LinkedList<String> controllerURI;
+	Object o=new Object();
 	/*protected static final String RequestDispatcher_JVM_URI = "controller" ;
 	protected static final String Application_VM_JVM_URI = "controller";*/
 	
@@ -190,7 +190,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	}
 	 
 	
-	private void allocVm(String appURI, String[] dispatcherUri, int nbVM) throws Exception {
+	private void allocVm(String appURI, String[] dispatcherUri, ApplicationVMInfo wrap) throws Exception {
 		
 		//TODO : a surveiller
 		ReflectionOutboundPort rop = null;
@@ -207,16 +207,14 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		rdmopMap.get(appURI).connectVirtualMachine(wrap.getApplicationVM(), wrap.getSubmission(), dispatcherUri[7]+"-");
+		this.avmOutPort.get(wrap.getApplicationVM()).connectWithRequestSubmissioner(dispatcherUri[0], dispatcherUri[4]);
+		rop.doConnection(wrap.getApplicationVM(), ReflectionConnector.class.getCanonicalName());
+		
+		rop.toggleTracing();
+		rop.toggleLogging();
 
-			ApplicationVMInfo wrap = FreeApplicationVM.remove(0);
-			rdmopMap.get(appURI).connectVirtualMachine(wrap.getApplicationVM(), wrap.getSubmission(), dispatcherUri[7]+"-");
-			this.avmOutPort.get(wrap.getApplicationVM()).connectWithRequestSubmissioner(dispatcherUri[0], dispatcherUri[4]);
-			rop.doConnection(wrap.getApplicationVM(), ReflectionConnector.class.getCanonicalName());
-			
-			rop.toggleTracing();
-			rop.toggleLogging();
-
-			rop.doDisconnection();
+		rop.doDisconnection();
 		}
 
 	
@@ -327,19 +325,20 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	public synchronized String[] submitApplication(String appURI, int nbVM) throws Exception{
 		
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
-		AllocatedCore[] allocatedCore;
-		try {
-			allocatedCore = getAvailableCores(NB_CORES);
-		} catch (Exception e) {
-			this.logMessage("Failed to allocates core for a new application.");
-			return null;
+		ApplicationVMInfo vm;
+		synchronized(o){
+			if(this.FreeApplicationVM.size() > 2) {
+				vm = FreeApplicationVM.remove(0);
+			}else {
+				return null;
+			}
 		}
 		
 		String dispatcherUri[] = createDispatcher(appURI, RequestDispatcher.class.getCanonicalName());
-		this.allocVm(appURI, dispatcherUri, nbVM);
+		this.allocVm(appURI, dispatcherUri, vm);
 		this.createController(appURI,dispatcherUri[6],dispatcherUri[0]);
-		
 		return dispatcherUri;
+
 	}
 	
 	@Override
@@ -348,19 +347,18 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		assert submissionInterface.isInterface();
 		
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
-		AllocatedCore[] allocatedCore = null;
-		try{
-			 allocatedCore = getAvailableCores(NB_CORES);
-		}catch(Exception e) {
-			this.logMessage("Failed to allocates core for a new application.");
-			return null;
+		ApplicationVMInfo vm;
+		synchronized(o){
+			if(this.FreeApplicationVM.size() > 2) {
+				vm = FreeApplicationVM.remove(0);
+			}else {
+				return null;
+			}
 		}
-
 		Class<?> dispa = RequestDispatcherCreator.createRequestDispatcher("JAVASSIST-dispa", RequestDispatcher.class, submissionInterface);
 		interface_dispatcher_map.put(submissionInterface, dispa);
-		
 		String dispatcherUri[] = createDispatcher(appURI, dispa.getCanonicalName());
-		this.allocVm(appURI, dispatcherUri, nbVM);
+		this.allocVm(appURI, dispatcherUri, vm);
 		return dispatcherUri;
 	}
 	
