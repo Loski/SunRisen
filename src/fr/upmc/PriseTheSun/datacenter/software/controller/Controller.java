@@ -1,10 +1,13 @@
 package fr.upmc.PriseTheSun.datacenter.software.controller;
 
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.ProcessorsController.CoreAsk;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.connector.ProcessorControllerManagementConnector;
@@ -15,26 +18,31 @@ import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.Ad
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMInfo;
 import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerManagementI;
+import fr.upmc.PriseTheSun.datacenter.software.controller.ports.ControllerManagementInboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.controller.ports.ControllerManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.VirtualMachineData;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStateDataConsumerI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStaticStateI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherDynamicStateDataOutboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.ring.RingDynamicState;
 import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDataI;
 import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDynamicStateI;
 import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingDynamicStateDataInboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingDynamicStateDataOutboundPort;
 import fr.upmc.components.AbstractComponent;
+import fr.upmc.components.ComponentI;
 import fr.upmc.datacenter.connectors.ControlledDataConnector;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
+import fr.upmc.datacenter.interfaces.PushModeControllingI;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamicStateI;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationI;
 import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
 
 
 
-public class Controller extends AbstractComponent implements RequestDispatcherStateDataConsumerI, RingDataI,ControllerManagementI{
+public class Controller extends AbstractComponent implements RequestDispatcherStateDataConsumerI, RingDataI,ControllerManagementI, PushModeControllingI{
 
 	protected String controllerURI;
 	protected String cmop;
@@ -50,13 +58,21 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	//vm to propagate to other controller
 	private List<ApplicationVMInfo> vmFree;
 	private Object o;
+	private ScheduledFuture<?> pushingFuture;
+	private ControllerManagementInboundPort cmip;
 
-	public Controller(String controllerURI,String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri, String RingDynamicStateDataOutboundPortURI, String RingDynamicStateDataInboundPortURI ) throws Exception
+	public Controller(String controllerURI, String controllerManagement, String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri, String RingDynamicStateDataOutboundPortURI, String RingDynamicStateDataInboundPortURI ) throws Exception
 	{
 		super(controllerURI,1,1);
 		
 		this.controllerURI = controllerURI;
 		this.rdUri = rdURI;
+		
+		
+		this.addRequiredInterface(ControllerManagementI.class);
+		this.cmip = new ControllerManagementInboundPort(controllerManagement, this);
+		this.cmip.publishPort();
+		this.addPort(cmip);
 		
 		this.addRequiredInterface(ControlledDataOfferedI.ControlledPullI.class) ;
 		this.rddsdop =
@@ -224,4 +240,107 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		}
 		
 	}
+	
+
+	@Override
+	public void startUnlimitedPushing(int interval) throws Exception {
+		// first, send the static state if the corresponding port is connected
+		//this.sendStaticState() ;
+		final Controller c = this ;
+		this.pushingFuture =
+				this.scheduleTaskAtFixedRate(
+						new ComponentI.ComponentTask() {
+							@Override
+							public void run() {
+								try {
+									c.sendDynamicState() ;
+								} catch (Exception e) {
+									throw new RuntimeException(e) ;
+								}
+							}
+						}, interval, interval, TimeUnit.MILLISECONDS) ;
+	}
+
+	@Override
+	public void startLimitedPushing(final int interval, final int n) throws Exception {
+		assert	n > 0 ;
+		this.logMessage(this.controllerURI + " startLimitedPushing with interval "
+				+ interval + " ms for " + n + " times.") ;
+
+		// first, send the static state if the corresponding port is connected
+		//this.sendStaticState() ;
+
+		final Controller c = this ;
+		this.pushingFuture =
+				this.scheduleTask(
+						new ComponentI.ComponentTask() {
+							@Override
+							public void run() {
+								try {
+									c.sendDynamicState(interval, n) ;
+								} catch (Exception e) {
+									throw new RuntimeException(e) ;
+								}
+							}
+						}, interval, TimeUnit.MILLISECONDS) ;
+	}
+
+	public void	sendDynamicState() throws Exception
+	{
+		if (this.rdsdip.connected()) {
+			RingDynamicStateI rds = this.getDynamicState() ;
+			this.rdsdip.send(rds) ;
+		}
+	}
+
+	public void			sendDynamicState(
+			final int interval,
+			int numberOfRemainingPushes) throws Exception{
+		this.sendDynamicState() ;
+		final int fNumberOfRemainingPushes = numberOfRemainingPushes - 1 ;
+		if (fNumberOfRemainingPushes > 0) {
+			final Controller c = this ;
+			this.pushingFuture =
+					this.scheduleTask(
+							new ComponentI.ComponentTask() {
+								@Override
+								public void run() {
+									try {
+										c.sendDynamicState(
+												interval,
+												fNumberOfRemainingPushes) ;
+									} catch (Exception e) {
+										throw new RuntimeException(e) ;
+									}
+								}
+							}, interval, TimeUnit.MILLISECONDS) ;
+		}
+	}
+
+	@Override
+	public void stopPushing() throws Exception {
+		if (this.pushingFuture != null &&
+				!(this.pushingFuture.isCancelled() ||
+						this.pushingFuture.isDone())) {
+			this.pushingFuture.cancel(false) ;
+		}
+	}
+	
+	public RingDynamicState getDynamicState() throws UnknownHostException {
+		synchronized(o){
+			ArrayList<ApplicationVMInfo> copy=new ArrayList<>(vmFree);
+			RingDynamicState rds = new RingDynamicState(copy);
+			//Suppression car envoie
+			vmFree.clear();
+			return rds;
+		}
+	}
+
+	@Override
+	public void bindSendingDataUri(String DataInboundPortUri) throws Exception {
+		if(rdsdop.connected())
+			rdsdop.doDisconnection();
+		rdsdop.doConnection(DataInboundPortUri, ControlledDataConnector.class.getCanonicalName());
+	}
 }
+

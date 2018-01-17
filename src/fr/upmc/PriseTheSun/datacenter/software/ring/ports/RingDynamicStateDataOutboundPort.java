@@ -5,6 +5,8 @@ import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDynamicStateI
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.interfaces.DataRequiredI;
 import fr.upmc.datacenter.hardware.computers.interfaces.ComputerStateDataConsumerI;
+import fr.upmc.datacenter.hardware.processors.interfaces.ProcessorDynamicStateI;
+import fr.upmc.datacenter.hardware.processors.interfaces.ProcessorStateDataConsumerI;
 import fr.upmc.datacenter.ports.AbstractControlledDataOutboundPort;
 
 /**
@@ -50,4 +52,20 @@ public class RingDynamicStateDataOutboundPort extends AbstractControlledDataOutb
 	{
 		((RingDataI)this.owner).acceptRingDynamicData(this.ringURI,(RingDynamicStateI) d) ;
 	}
+	
+	/*
+	public void			receive(final DataRequiredI.DataI d) throws Exception
+	{
+		final RingDataI psdc = (RingDataI) this.owner ;
+		final String uri = this.processorURI ;
+		this.owner.handleRequestAsync(
+						new ComponentI.ComponentService<Void>() {
+							@Override
+							public Void call() throws Exception {
+								psdc.acceptRingDynamicData(
+											ringURI, ((RingDataI)d)) ;
+								return null;
+							}
+						}) ;
+	}*/
 }

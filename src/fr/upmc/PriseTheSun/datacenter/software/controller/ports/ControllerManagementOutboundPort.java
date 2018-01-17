@@ -1,5 +1,6 @@
 package fr.upmc.PriseTheSun.datacenter.software.controller.ports;
 
+import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerManagementI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ports.AbstractOutboundPort;
@@ -8,7 +9,7 @@ import fr.upmc.components.ports.AbstractOutboundPort;
  * inbound port through which the component management methods are called.
 * 
 * 
-* @author	Maxime LAVASTE Loïc Lafontaine
+* @author	Maxime LAVASTE Loï¿½c Lafontaine
 */
 public class ControllerManagementOutboundPort extends AbstractOutboundPort
 implements	ControllerManagementI{
@@ -18,12 +19,9 @@ implements	ControllerManagementI{
      * @param owner       owner component
      * @throws Exception e
      */
-	public		ControllerManagementOutboundPort(
-			ComponentI owner
-			) throws Exception
+	public	ControllerManagementOutboundPort(ComponentI owner) throws Exception
 	{
 		super(ControllerManagementI.class, owner) ;
-
 		assert	owner != null ;
 	}
 
@@ -38,6 +36,13 @@ implements	ControllerManagementI{
 		super(uri, ControllerManagementI.class, owner);
 		assert	owner != null;
 	}
+
+	@Override
+	public void bindSendingDataUri(String DataInboundPortUri) throws Exception {
+		((ControllerManagementI)this.connector).bindSendingDataUri(DataInboundPortUri);
+	}
+
+
 
 
 }

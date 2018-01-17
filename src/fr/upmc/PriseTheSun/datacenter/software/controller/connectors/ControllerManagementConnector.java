@@ -1,5 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.controller.connectors;
 
+import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
+import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerManagementI;
 import fr.upmc.components.connectors.AbstractConnector;
 
 /**
@@ -18,7 +20,12 @@ import fr.upmc.components.connectors.AbstractConnector;
  *
  */
 public class ControllerManagementConnector extends		AbstractConnector
-implements	fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerManagementI{
+implements	ControllerManagementI{
+
+	@Override
+	public void bindSendingDataUri(String DataInboundPortUri) throws Exception {
+		((ControllerManagementI)this.offering ).bindSendingDataUri(DataInboundPortUri);
+	}
 
 
 }

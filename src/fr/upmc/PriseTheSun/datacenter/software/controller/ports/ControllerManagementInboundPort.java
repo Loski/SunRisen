@@ -21,12 +21,9 @@ public class ControllerManagementInboundPort extends AbstractInboundPort impleme
 	 * @param owner     owner component
 	 * @throws Exception e
 	 */
-	public		ControllerManagementInboundPort(
-			ComponentI owner
-			) throws Exception
+	public	ControllerManagementInboundPort(ComponentI owner) throws Exception
 	{
 		super(ControllerManagementI.class, owner) ;
-
 		assert	owner != null && owner instanceof Controller ;
 	}
 	
@@ -35,14 +32,25 @@ public class ControllerManagementInboundPort extends AbstractInboundPort impleme
 	 * @param owner     owner component
 	 * @throws Exception e
 	 */
-	public				ControllerManagementInboundPort(
-			String uri,
-			ComponentI owner
-			) throws Exception
+	public	ControllerManagementInboundPort(String uri, ComponentI owner) throws Exception
 	{
 		super(uri, ControllerManagementI.class, owner);
 
 		assert	owner != null && owner instanceof Controller ;
+	}
+
+	@Override
+	public void bindSendingDataUri(String DataInboundPortUri) throws Exception {
+		final ControllerManagementI cm = ( ControllerManagementI ) this.owner;
+		
+		 this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Void>() {
+					@Override
+					public Void call() throws Exception {
+						cm.bindSendingDataUri(DataInboundPortUri);
+						return null;
+					}
+		});
 	}
 
 }

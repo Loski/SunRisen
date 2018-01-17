@@ -9,8 +9,8 @@ import fr.upmc.components.interfaces.RequiredI;
  * <p><strong>Description</strong></p>
  * 
  * 
- * @author	Maxime LAVASTE Loïc Lafontaine
+ * @author	Maxime LAVASTE Loï¿½c Lafontaine
  */
 public interface ControllerManagementI extends OfferedI,RequiredI{
-	
+	public void bindSendingDataUri(String DataInboundPortUri) throws Exception;
 }

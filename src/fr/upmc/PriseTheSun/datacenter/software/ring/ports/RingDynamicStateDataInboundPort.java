@@ -23,8 +23,7 @@ public class RingDynamicStateDataInboundPort extends AbstractControlledDataInbou
 		ComponentI owner
 		) throws Exception
 	{
-		super(owner) ;
-
+		super(owner);
 		//assert owner instanceof RequestDispatcher ;
 	}
 
