@@ -243,7 +243,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 			if(!currentDynamicState.getApplicationVMsInfo().isEmpty())
 				vmFree.addAll(currentDynamicState.getApplicationVMsInfo());
 			if(!vmFree.isEmpty()) {
-				vmReserved.add(vmFree.get(0));
+				vmReserved.add(vmFree.remove(0));
 			}
 		}
 		

@@ -131,7 +131,7 @@ extends		AbstractCVM
 	public static final String	RequestNotificationOutboundPortVMURI = "rnobpVM" ;
 	public static final String	RequestGeneratorManagementInboundPortURI = "rgmip" ;
 	public static final String	RequestGeneratorManagementOutboundPortURI = "rgmop" ;
-	public static final int NB_COMPUTER = 5;
+	public static final int NB_COMPUTER = 30;
 	private static final int NB_APPLICATION = 8;
 	/** Port connected to the computer component to access its services.	*/
 	protected ComputerServicesOutboundPort			csPort ;
