@@ -126,7 +126,10 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	private DynamicComponentCreationOutboundPort portTControllerJVM;
 	private RingDynamicStateDataOutboundPort rdsdop;
 	private RingDynamicStateDataInboundPort rdsdip;
-	private String nextControllerManagementUri;
+	private String AdmissionControllerDataRingOutboundUri;
+	private String AdmissionControllerDataRingInboundUri;
+
+	private String nextControllerDataRingUri;
 	private Object previousControllerManagementUri;
 	
 
@@ -184,15 +187,19 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		this.addRequiredInterface(ComputerServicesI.class);
 		
 		
-
-		rdsdop = new RingDynamicStateDataOutboundPort(this, this.acURI +"-"+ControllerDataRingOutboundPortURI );
+		this.AdmissionControllerDataRingInboundUri = this.acURI +"-"+ControllerDataRingInboundPortURI;
+		this.AdmissionControllerDataRingOutboundUri = this.acURI +"-"+ControllerDataRingOutboundPortURI;
+		
+		this.addRequiredInterface(RingDynamicStateI.class);
+		this.addOfferedInterface(RingDynamicStateI.class);
+		
+		rdsdop = new RingDynamicStateDataOutboundPort(this,  this.AdmissionControllerDataRingOutboundUri);
 		this.addPort(rdsdop);
 		this.rdsdop.publishPort();
 
-		rdsdip=new RingDynamicStateDataInboundPort(this);
+		rdsdip=new RingDynamicStateDataInboundPort(this.AdmissionControllerDataRingInboundUri, this);
 		this.addPort(rdsdip) ;
 		this.rdsdip.publishPort();
-
 		this.avmOutPort = new HashMap<String, ApplicationVMManagementOutboundPort>();
 		this.rdmopMap = new HashMap<String, RequestDispatcherManagementOutboundPort>();
 		this.interface_dispatcher_map = new LinkedHashMap<>();
@@ -280,48 +287,27 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	
 	private String[] createController(String appURI, String requestDispatcherDynamicStateDataInboundPortURI, String rdURI) throws Exception
 	{
-		String controllerURIs[] = new String[5];
-		controllerURIs[0] = appURI+"-controller";
+		String controllerURIs[] = new String[6];
+		controllerURIs[0] = appURI + "-controller";
 		controllerURIs[1] = appURI +"-controllermngt";
 		controllerURIs[2] = controllerURIs[0]+"-rddsdop";
 		controllerURIs[3] = controllerURIs[0]+"-"+ControllerDataRingOutboundPortURI;
 		controllerURIs[4] = controllerURIs[0]+"-"+ ControllerDataRingInboundPortURI;
-
+		//next dataring inbound uri
+		controllerURIs[5] = null;
+		
+		String previous = this.AdmissionControllerDataRingInboundUri;
 		/*Linking Ring*/
-		if(nextControllerManagementUri==null && previousControllerManagementUri==null){
-			nextControllerManagementUri = previousControllerManagementUri = 
-			co.setNextControllerUri(this.admissionControllerManagementInboundPort.getPortURI());
-			co.setPreviousControllerUri(this.admissionControllerManagementInboundPort.getPortURI());
-			co.bindSendingDataUri(this.rdsdip.getPortURI());
-			rdsdop.doConnection(controllerURIs[3],ControlledDataConnector.class.getCanonicalName());
+		if(nextControllerDataRingUri==null){
+			controllerURIs[5] = this.AdmissionControllerDataRingInboundUri;
 		}else{ 
 			stopPushing();
-			/*Add Controller to the ring */
-
-			/*Connecting the Admission Controller to the new Controller*/
-			rdsdop.doConnection(co.getControllerRingDataInboundPortUri(), ControlledDataConnector.class.getCanonicalName());
-			/*Get the old next controller data inbound port uri*/
-			ControllerManagementOutboundPort cmop=new ControllerManagementOutboundPort(this);
-			this.addPort(cmop);
-			cmop.publishPort();
-			cmop.doConnection(this.nextControllerManagementUri, ControllerManagementConnector.class.getCanonicalName());
-			/*Connect the new next controller to the old next controller */
-			co.bindSendingDataUri(controllerURIs[3]);
-
-			co.setNextControllerUri(this.nextControllerManagementUri);
-			co.setPreviousControllerUri(this.admissionControllerManagementInboundPort.getPortURI());
-
-			this.nextControllerManagementUri=controllerURIs[1];
-			
-			cmop.doDisconnection();
-			cmop.unpublishPort();
-			cmop.destroyPort();
-
+			controllerURIs[5] = nextControllerDataRingUri;
 		}
-
-		co.startUnlimitedPushing(RING_PUSH_INTERVAL);
-		this.startUnlimitedPushing(RING_PUSH_INTERVAL);
 		
+		nextControllerDataRingUri = controllerURIs[5];
+
+		System.out.println("my nxt managment" + nextControllerDataRingUri);
 		this.portTControllerJVM.createComponent(
 				Controller.class.getCanonicalName(),
 				new Object[] {
@@ -333,8 +319,17 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 						this.acmip.getPortURI(),
 						ProcessorControllerManagementInboundPortURI,
 						controllerURIs[3],
-						controllerURIs[4]
+						controllerURIs[4],
+						controllerURIs[5]
 		});
+		
+		//Connexion de l'ADMC au controller
+		if(rdsdop.connected())
+			rdsdop.doDisconnection();
+		rdsdop.doConnection(controllerURIs[4], ControlledDataConnector.class.getCanonicalName());
+		
+		this.startUnlimitedPushing(10);
+		
 		
 		/*ReflectionOutboundPort rop = new ReflectionOutboundPort(this);
 		this.addPort(rop);
@@ -372,7 +367,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
 				RequestDispatcherManagementOutboundPortURI + rdmopMap.size(),
 				this);
-
+		
 		rdmop.publishPort();
 		
 		rdmop.doConnection(dispatcherURI[1], RequestDispatcherManagementConnector.class.getCanonicalName());
@@ -518,7 +513,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 					ControlledDataConnector.class.getCanonicalName());
 			
 			ComputerStaticStateI staticState= (ComputerStaticStateI) cssdop.request();
-			
 			int nbCores = staticState.getNumberOfCoresPerProcessor();
 			int nbProc = staticState.getNumberOfProcessors();
 			
@@ -604,15 +598,15 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 
 	public void	sendDynamicState() throws Exception
 	{
+		System.err.println("send ?");
 		if (this.rdsdip.connected()) {
+			System.err.println("ça à l'air d'être send ISSOU DESU");
 			RingDynamicStateI rds = this.getDynamicState() ;
 			this.rdsdip.send(rds) ;
 		}
 	}
 
-	public void	sendDynamicState(
-			final int interval,
-			int numberOfRemainingPushes) throws Exception{
+	public void	sendDynamicState(final int interval, int numberOfRemainingPushes) throws Exception{
 		this.sendDynamicState() ;
 		final int fNumberOfRemainingPushes = numberOfRemainingPushes - 1 ;
 		if (fNumberOfRemainingPushes > 0) {
@@ -627,6 +621,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 												interval,
 												fNumberOfRemainingPushes) ;
 									} catch (Exception e) {
+										e.printStackTrace();
 										throw new RuntimeException(e) ;
 									}
 								}
@@ -656,6 +651,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 							@Override
 							public void run() {
 								try {
+									System.err.println("je tente de send..");
 									c.sendDynamicState() ;
 								} catch (Exception e) {
 									throw new RuntimeException(e) ;

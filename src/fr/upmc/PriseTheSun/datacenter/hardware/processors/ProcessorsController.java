@@ -47,8 +47,6 @@ public class ProcessorsController extends AbstractComponent implements Processor
 		this.pcmip.publishPort();
 	}
 	
-
-	
 	@Override
 	public void acceptProcessorStaticData(String processorURI, ProcessorStaticStateI staticState) throws Exception {
 	//	processorsStaticState.put(processorURI, staticState);
@@ -56,9 +54,7 @@ public class ProcessorsController extends AbstractComponent implements Processor
 
 	@Override
 	public void acceptProcessorDynamicData(String processorURI, ProcessorDynamicStateI currentDynamicState)
-			throws Exception {
-		System.err.println(processorURI);
-		
+			throws Exception {		
 		processorsDynamicState.put(processorsDynaToUri.get(processorURI), currentDynamicState);	
 	}
 	

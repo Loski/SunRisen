@@ -46,26 +46,17 @@ public class RingDynamicStateDataOutboundPort extends AbstractControlledDataOutb
 	/**
 	 * @see fr.upmc.components.interfaces.DataRequiredI.PushI#receive(fr.upmc.components.interfaces.DataRequiredI.DataI)
 	 */
-	@Override
-	public void			receive(DataRequiredI.DataI d)
-			throws Exception
-	{
-		((RingDataI)this.owner).acceptRingDynamicData(this.ringURI,(RingDynamicStateI) d) ;
-	}
-	
-	/*
-	public void			receive(final DataRequiredI.DataI d) throws Exception
+	public void	receive(final DataRequiredI.DataI d) throws Exception
 	{
 		final RingDataI psdc = (RingDataI) this.owner ;
-		final String uri = this.processorURI ;
+		final String uri = this.ringURI ;
 		this.owner.handleRequestAsync(
 						new ComponentI.ComponentService<Void>() {
 							@Override
 							public Void call() throws Exception {
-								psdc.acceptRingDynamicData(
-											ringURI, ((RingDataI)d)) ;
+								psdc.acceptRingDynamicData(uri, (RingDynamicStateI) d);
 								return null;
 							}
 						}) ;
-	}*/
+	}
 }

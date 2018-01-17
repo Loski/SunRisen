@@ -57,11 +57,11 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	private List<ApplicationVMInfo> vmReserved;
 	//vm to propagate to other controller
 	private List<ApplicationVMInfo> vmFree;
-	private Object o;
+	private Object o = new Object();
 	private ScheduledFuture<?> pushingFuture;
 	private ControllerManagementInboundPort cmip;
 
-	public Controller(String controllerURI, String controllerManagement, String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri, String RingDynamicStateDataOutboundPortURI, String RingDynamicStateDataInboundPortURI ) throws Exception
+	public Controller(String controllerURI, String controllerManagement, String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri, String RingDynamicStateDataOutboundPortURI, String RingDynamicStateDataInboundPortURI, String nextRingDynamicStateDataInboundPort ) throws Exception
 	{
 		super(controllerURI,1,1);
 		
@@ -95,14 +95,22 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		this.pcmop.doConnection(ProcessorControllerManagementInboundUri, ProcessorControllerManagementConnector.class.getCanonicalName());
 		
 		
+		this.addRequiredInterface(RingDynamicStateI.class);
+		this.addOfferedInterface(RingDynamicStateI.class);
+		
 		
 		rdsdop = new RingDynamicStateDataOutboundPort(this, RingDynamicStateDataOutboundPortURI);
 		this.addPort(rdsdop);
 		this.rdsdop.publishPort();
-
+		System.out.println(nextRingDynamicStateDataInboundPort);
+		this.rdsdop.doConnection(nextRingDynamicStateDataInboundPort, ControlledDataConnector.class.getCanonicalName());
+		this.startUnlimitedPushing(100);
+		
+		
 		rdsdip=new RingDynamicStateDataInboundPort(RingDynamicStateDataInboundPortURI, this);
 		this.addPort(rdsdip);
 		this.rdsdip.publishPort();
+		
 		
 		this.vmFree = new ArrayList<>();
 		this.vmReserved = new ArrayList<>();
@@ -113,11 +121,11 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
 		
 		if(currentDynamicState.getAvgExecutionTime()!=null) {
-			System.err.println(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
+			this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
 			processControl(currentDynamicState.getAvgExecutionTime(), currentDynamicState.getVirtualMachineDynamicStates());
 		}
 		else {
-			System.err.println(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,"pas assez de données pour calculer la moyenne"));
+			this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,"pas assez de données pour calculer la moyenne"));
 		}
 	}
 	@Override
@@ -160,7 +168,6 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		double factor=0;
 		int number=0;
 		ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
-		System.out.println(Arrays.toString(randomVM.getAllocatedCoresNumber()));
 		int cores = getNumberOfCoresAllocatedFrom(vms);
 		switch(getThreeshold(time)){
 		case HIGHER :
@@ -170,12 +177,10 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 			
 			//Try to change frequency
 			for(int i = 0; i < randomVM.getAllocatedCoresNumber().length;i++) {
-				System.err.println(i);
-
 				boolean set = pcmop.setCoreFrequency(CoreAsk.HIGHER, randomVM.getProcessorURI(), randomVM.getAllocatedCoresNumber()[i]);
 
 				if(set) {
-					System.err.println("Frequece was set");
+					this.logMessage("Frequece was set");
 				}
 			}
 			this.acmop.addCores(null, 1, randomVM.getApplicationVMURI());
@@ -255,6 +260,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 								try {
 									c.sendDynamicState() ;
 								} catch (Exception e) {
+									e.printStackTrace();
 									throw new RuntimeException(e) ;
 								}
 							}
@@ -310,6 +316,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 												interval,
 												fNumberOfRemainingPushes) ;
 									} catch (Exception e) {
+										e.printStackTrace();
 										throw new RuntimeException(e) ;
 									}
 								}
