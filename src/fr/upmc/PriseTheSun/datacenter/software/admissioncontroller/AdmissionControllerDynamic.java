@@ -303,9 +303,12 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		}else{ 
 			stopPushing();
 			controllerURIs[5] = nextControllerDataRingUri;
+			//Connexion de l'ADMC au controller
+			if(rdsdop.connected())
+				rdsdop.doDisconnection();
 		}
 		
-		nextControllerDataRingUri = controllerURIs[5];
+		nextControllerDataRingUri = controllerURIs[4];
 
 		System.out.println("my nxt managment" + nextControllerDataRingUri);
 		this.portTControllerJVM.createComponent(
@@ -322,10 +325,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 						controllerURIs[4],
 						controllerURIs[5]
 		});
-		
-		//Connexion de l'ADMC au controller
-		if(rdsdop.connected())
-			rdsdop.doDisconnection();
+
 		rdsdop.doConnection(controllerURIs[4], ControlledDataConnector.class.getCanonicalName());
 		
 		this.startUnlimitedPushing(10);
@@ -598,7 +598,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 
 	public void	sendDynamicState() throws Exception
 	{
-		System.err.println("send ?");
 		if (this.rdsdip.connected()) {
 			System.err.println("ça à l'air d'être send ISSOU DESU");
 			RingDynamicStateI rds = this.getDynamicState() ;

@@ -65,6 +65,9 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	{
 		super(controllerURI,1,1);
 		
+		this.toggleLogging();
+		this.toggleTracing();
+		
 		this.controllerURI = controllerURI;
 		this.rdUri = rdURI;
 		
@@ -204,7 +207,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 			break;
 		}
 	}
-	//TODO PAs oublier de renvoyer le vrai truc un jour
+
 	/**
 	 * 
 	 * @param vms
@@ -234,10 +237,10 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 
 	@Override
 	public void acceptRingDynamicData(String requestDispatcherURI, RingDynamicStateI currentDynamicState)
-			throws Exception {
-		
+			throws Exception {;
+		this.logMessage(this.controllerURI + " a reçu " + currentDynamicState.getApplicationVMsInfo().size() + "vms");
 		synchronized(o){
-			if(currentDynamicState.getApplicationVMsInfo().size() > 0)
+			if(!currentDynamicState.getApplicationVMsInfo().isEmpty())
 				vmFree.addAll(currentDynamicState.getApplicationVMsInfo());
 			if(!vmFree.isEmpty()) {
 				vmReserved.add(vmFree.get(0));
@@ -293,6 +296,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 
 	public void	sendDynamicState() throws Exception
 	{
+		System.out.println(this.controllerURI + " rdsip is connected " + this.rdsdip.connected());
 		if (this.rdsdip.connected()) {
 			RingDynamicStateI rds = this.getDynamicState() ;
 			this.rdsdip.send(rds) ;
@@ -335,7 +339,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	
 	public RingDynamicState getDynamicState() throws UnknownHostException {
 		synchronized(o){
-			ArrayList<ApplicationVMInfo> copy=new ArrayList<>(vmFree);
+			ArrayList<ApplicationVMInfo> copy= new ArrayList<>(vmFree);
 			RingDynamicState rds = new RingDynamicState(copy);
 			//Suppression car envoie
 			vmFree.clear();
