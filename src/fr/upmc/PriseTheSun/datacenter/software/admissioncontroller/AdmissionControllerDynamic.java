@@ -1,6 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.admissioncontroller;
 
 
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -8,6 +9,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.ProcessorsController;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
@@ -19,9 +22,15 @@ import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatch
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.VirtualMachineData;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.ring.RingDynamicState;
+import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDataI;
+import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDynamicStateI;
+import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingDynamicStateDataInboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingDynamicStateDataOutboundPort;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.ports.ApplicationSubmissionInboundPort;
 import fr.upmc.components.AbstractComponent;
+import fr.upmc.components.ComponentI;
 import fr.upmc.components.cvm.AbstractCVM;
 import fr.upmc.components.cvm.pre.dcc.connectors.DynamicComponentCreationConnector;
 import fr.upmc.components.cvm.pre.dcc.ports.DynamicComponentCreationOutboundPort;
@@ -61,7 +70,7 @@ import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOu
  * 
  * @author	Maxime LAVASTE Loïc LAFONTAINE
  */
-public class AdmissionControllerDynamic extends AbstractComponent implements ComputerStateDataConsumerI, ApplicationSubmissionI, AdmissionControllerManagementI{
+public class AdmissionControllerDynamic extends AbstractComponent implements ComputerStateDataConsumerI, ApplicationSubmissionI, AdmissionControllerManagementI, RingDataI{
 
 	public static int DEBUG_LEVEL = 1 ;
 	protected String acURI;
@@ -80,7 +89,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	protected static final String ProcessorControllerManagementInboundPortURI = "pcmip";
 	protected static final String ControllerDataRingInboundPortURI = "cdrip";
 	protected static final String ControllerDataRingOutboundPortURI = "cdrop";
-
+	
 	
 
 	protected AdmissionControllerManagementInboundPort acmip;
@@ -96,7 +105,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	protected ArrayList<Integer> nbAvailablesCores;
 	protected ArrayList<String> computerUri;
 	
-
+	protected ScheduledFuture<?>	pushingFuture ;
 	 // Map between RequestDispatcher URIs and the management ports to call them.
 	protected Map<String, RequestDispatcherManagementOutboundPort> rdmopMap;
 	
@@ -106,13 +115,14 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	protected List<ApplicationVMInfo> OccupedApplicationVM;
 	protected LinkedHashMap<Class,Class> interface_dispatcher_map;
 	private ProcessorsController processorController;
-	private LinkedList<String> controllerURI;
 	Object o=new Object();
 	protected static final int NB_CORES = 2;
 	
 	private DynamicComponentCreationOutboundPort portToRequestDispatcherJVM;
 	private DynamicComponentCreationOutboundPort portToApplicationVMJVM;
 	private DynamicComponentCreationOutboundPort portTControllerJVM;
+	private RingDynamicStateDataOutboundPort rdsdop;
+	private RingDynamicStateDataInboundPort rdsdip;
 	
 
 	/*protected static final String RequestDispatcher_JVM_URI = "controller" ;
@@ -166,10 +176,18 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		this.portTControllerJVM.doConnection(					
 				Controller_JVM_URI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
 				DynamicComponentCreationConnector.class.getCanonicalName());
-		
-
 		this.addRequiredInterface(ComputerServicesI.class);
 		
+		
+
+		rdsdop = new RingDynamicStateDataOutboundPort(this, this.acURI +"-"+ControllerDataRingOutboundPortURI );
+		this.addPort(rdsdop);
+		this.rdsdop.publishPort();
+
+		rdsdip=new RingDynamicStateDataInboundPort(this);
+		this.addPort(rdsdip) ;
+		this.rdsdip.publishPort();
+
 		this.avmOutPort = new HashMap<String, ApplicationVMManagementOutboundPort>();
 		this.rdmopMap = new HashMap<String, RequestDispatcherManagementOutboundPort>();
 		this.interface_dispatcher_map = new LinkedHashMap<>();
@@ -180,7 +198,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		this.FreeApplicationVM = new ArrayList<>();
 		this.OccupedApplicationVM = new ArrayList<>();
 		this.processorController = new ProcessorsController("controller", ProcessorControllerManagementInboundPortURI);
-
 	}
 
 	@Override
@@ -190,7 +207,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	 
 	
 	private void allocVm(String appURI, String[] dispatcherUri, ApplicationVMInfo wrap) throws Exception {
-		
+		//Ajout dans les VMs réservés
+		this.OccupedApplicationVM.add(wrap);
 		//TODO : a surveiller
 		ReflectionOutboundPort rop = null;
 		try {
@@ -209,10 +227,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		rdmopMap.get(appURI).connectVirtualMachine(wrap.getApplicationVM(), wrap.getSubmission(), dispatcherUri[7]+"-");
 		this.avmOutPort.get(wrap.getApplicationVM()).connectWithRequestSubmissioner(dispatcherUri[0], dispatcherUri[4]);
 		rop.doConnection(wrap.getApplicationVM(), ReflectionConnector.class.getCanonicalName());
-		
 		rop.toggleTracing();
 		rop.toggleLogging();
-
 		rop.doDisconnection();
 		}
 
@@ -259,10 +275,12 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	
 	private String[] createController(String appURI, String requestDispatcherDynamicStateDataInboundPortURI, String rdURI) throws Exception
 	{
-		String controllerURIs[] = new String[2];
+		String controllerURIs[] = new String[4];
 		controllerURIs[0] = appURI+"-controller";
 		controllerURIs[1] = controllerURIs[0]+"-rddsdop";
-		
+		controllerURIs[2] = controllerURIs[0]+"-"+ControllerDataRingOutboundPortURI;
+		controllerURIs[3] = controllerURIs[0]+"-"+ ControllerDataRingInboundPortURI;
+
 		this.portTControllerJVM.createComponent(
 				Controller.class.getCanonicalName(),
 				new Object[] {
@@ -272,8 +290,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 						requestDispatcherDynamicStateDataInboundPortURI,
 						this.acmip.getPortURI(),
 						ProcessorControllerManagementInboundPortURI,
-						ControllerDataRingOutboundPortURI,
-						ControllerDataRingInboundPortURI
+						controllerURIs[2],
+						controllerURIs[3]
 		});
 		
 		/*ReflectionOutboundPort rop = new ReflectionOutboundPort(this);
@@ -338,7 +356,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		this.allocVm(appURI, dispatcherUri, vm);
 		this.createController(appURI,dispatcherUri[6],dispatcherUri[0]);
 		return dispatcherUri;
-
 	}
 	
 	@Override
@@ -348,6 +365,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
 		ApplicationVMInfo vm;
+		
 		synchronized(o){
 			if(this.FreeApplicationVM.size() > 2) {
 				vm = FreeApplicationVM.remove(0);
@@ -359,6 +377,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		interface_dispatcher_map.put(submissionInterface, dispa);
 		String dispatcherUri[] = createDispatcher(appURI, dispa.getCanonicalName());
 		this.allocVm(appURI, dispatcherUri, vm);
+		this.createController(appURI,dispatcherUri[6],dispatcherUri[0]);
 		return dispatcherUri;
 	}
 	
@@ -511,7 +530,11 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 					ApplicationVMManagementConnector.class.getCanonicalName());
 		avmPort.allocateCores(allocatedCore);
 		this.avmOutPort.put(applicationVM[0], avmPort);
-		this.FreeApplicationVM.add(new ApplicationVMInfo(applicationVM[0], applicationVM[4], applicationVM[2]));
+		
+		synchronized (o) {
+			this.FreeApplicationVM.add(new ApplicationVMInfo(applicationVM[0], applicationVM[4], applicationVM[2]));
+		}
+		
 		return applicationVM[0];
 	}
 
@@ -525,5 +548,111 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			this.logMessage("Failed to allocates core for a new application." + e.getMessage());
 			return false;
 		}
-	}	
+	}
+
+	/*@Override
+	public void startUnlimitedPushing(int interval) throws Exception {
+		// first, send the static state if the corresponding port is connected
+		//this.sendStaticState() ;
+		final AdmissionControllerDynamic c = this ;
+		this.pushingFuture =
+				this.scheduleTaskAtFixedRate(
+						new ComponentI.ComponentTask() {
+							@Override
+							public void run() {
+								try {
+									c.sendDynamicState() ;
+								} catch (Exception e) {
+									throw new RuntimeException(e) ;
+								}
+							}
+						}, interval, interval, TimeUnit.MILLISECONDS) ;
+
+	}
+
+	@Override
+	public void startLimitedPushing(final int interval, final int n) throws Exception {
+		assert	n > 0 ;
+		this.logMessage(this.acURI + " startLimitedPushing with interval "
+				+ interval + " ms for " + n + " times.") ;
+
+		// first, send the static state if the corresponding port is connected
+		//this.sendStaticState() ;
+
+		final AdmissionControllerDynamic c = this ;
+		this.pushingFuture =
+				this.scheduleTask(
+						new ComponentI.ComponentTask() {
+							@Override
+							public void run() {
+								try {
+									c.sendDynamicState(interval, n) ;
+								} catch (Exception e) {
+									throw new RuntimeException(e) ;
+								}
+							}
+						}, interval, TimeUnit.MILLISECONDS) ;
+	}
+
+	@Override
+	public void stopPushing() throws Exception {
+		if (this.pushingFuture != null &&
+				!(this.pushingFuture.isCancelled() ||
+						this.pushingFuture.isDone())) {
+			this.pushingFuture.cancel(false) ;
+		}
+	}
+*/
+	@Override
+	public void acceptRingDynamicData(String requestDispatcherURI, RingDynamicStateI currentDynamicState)
+			throws Exception {
+		synchronized(o){
+			if(!currentDynamicState.getApplicationVMsInfo().isEmpty())
+				FreeApplicationVM.addAll(currentDynamicState.getApplicationVMsInfo()); 
+		}
+
+	}
+
+	public void			sendDynamicState() throws Exception
+	{
+		if (this.rdsdip.connected()) {
+			RingDynamicStateI rds = this.getDynamicState() ;
+			this.rdsdip.send(rds) ;
+		}
+	}
+
+	public void			sendDynamicState(
+			final int interval,
+			int numberOfRemainingPushes) throws Exception{
+		this.sendDynamicState() ;
+		final int fNumberOfRemainingPushes = numberOfRemainingPushes - 1 ;
+		if (fNumberOfRemainingPushes > 0) {
+			final AdmissionControllerDynamic c = this ;
+			this.pushingFuture =
+					this.scheduleTask(
+							new ComponentI.ComponentTask() {
+								@Override
+								public void run() {
+									try {
+										c.sendDynamicState(
+												interval,
+												fNumberOfRemainingPushes) ;
+									} catch (Exception e) {
+										throw new RuntimeException(e) ;
+									}
+								}
+							}, interval, TimeUnit.MILLISECONDS) ;
+		}
+	}
+
+	
+	public RingDynamicState getDynamicState() throws UnknownHostException {
+		synchronized(o){
+			ArrayList<ApplicationVMInfo> copy=new ArrayList<>(FreeApplicationVM);
+			RingDynamicState rds = new RingDynamicState(copy);
+			//Suppression car envoie
+			FreeApplicationVM.clear();
+			return rds;
+		}
+	}
 }

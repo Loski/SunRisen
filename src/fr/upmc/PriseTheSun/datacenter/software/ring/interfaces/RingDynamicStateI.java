@@ -14,5 +14,5 @@ import fr.upmc.datacenter.interfaces.TimeStampingI;
 public interface RingDynamicStateI extends 	DataOfferedI.DataI,
 DataRequiredI.DataI,
 TimeStampingI{
-	List<ApplicationVMInfo> getVMDataList();
+	List<ApplicationVMInfo> getApplicationVMsInfo();
 }

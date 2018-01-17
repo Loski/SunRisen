@@ -4,10 +4,5 @@ package fr.upmc.PriseTheSun.datacenter.software.ring.interfaces;
  */
 
 public interface RingDataI {
-	
-	
-		public void			acceptRingDynamicData(
-			String					requestDispatcherURI,
-			RingDynamicStateI	currentDynamicState
-			) throws Exception ;
+	public void	acceptRingDynamicData(String requestDispatcherURI,RingDynamicStateI	currentDynamicState) throws Exception ;
 }

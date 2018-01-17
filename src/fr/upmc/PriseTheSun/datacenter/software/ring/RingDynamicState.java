@@ -49,10 +49,10 @@ public class RingDynamicState implements RingDynamicStateI{
 
 	
 	/**
-	 * @see fr.upmc.datacenter.ring.interfaces.RingDynamicStateI#getVMDataList()
+	 * @see fr.upmc.datacenter.ring.interfaces.RingDynamicStateI#getApplicationVMsInfo()
 	 */
 	@Override
-	public List<ApplicationVMInfo> getVMDataList() {
+	public List<ApplicationVMInfo> getApplicationVMsInfo() {
 		return vmDataInfo;
 	}
 

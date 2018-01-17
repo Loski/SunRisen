@@ -13,11 +13,15 @@ import fr.upmc.PriseTheSun.datacenter.hardware.processors.ports.ProcessorsContro
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.connector.AdmissionControllerManagementConnector;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementOutboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMInfo;
+import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.VirtualMachineData;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStateDataConsumerI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStaticStateI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherDynamicStateDataOutboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDataI;
+import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDynamicStateI;
 import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingDynamicStateDataInboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingDynamicStateDataOutboundPort;
 import fr.upmc.components.AbstractComponent;
@@ -30,7 +34,7 @@ import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
 
 
 
-public class Controller extends AbstractComponent implements RequestDispatcherStateDataConsumerI{
+public class Controller extends AbstractComponent implements RequestDispatcherStateDataConsumerI, RingDataI,ControllerManagementI{
 
 	protected String controllerURI;
 	protected String cmop;
@@ -40,7 +44,12 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	protected ProcessorsControllerManagementOutboundPort pcmop;
 	private RingDynamicStateDataOutboundPort rdsdop;
 	private RingDynamicStateDataInboundPort rdsdip;
-
+	
+	//Vm reserved
+	private List<ApplicationVMInfo> vmReserved;
+	//vm to propagate to other controller
+	private List<ApplicationVMInfo> vmFree;
+	private Object o;
 
 	public Controller(String controllerURI,String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri, String RingDynamicStateDataOutboundPortURI, String RingDynamicStateDataInboundPortURI ) throws Exception
 	{
@@ -78,6 +87,9 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		rdsdip=new RingDynamicStateDataInboundPort(RingDynamicStateDataInboundPortURI, this);
 		this.addPort(rdsdip);
 		this.rdsdip.publishPort();
+		
+		this.vmFree = new ArrayList<>();
+		this.vmReserved = new ArrayList<>();
 	}
 	
 	@Override
@@ -197,5 +209,19 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		
 		public static int MIN_ALLOCATION = 2;
 
+	}
+
+	@Override
+	public void acceptRingDynamicData(String requestDispatcherURI, RingDynamicStateI currentDynamicState)
+			throws Exception {
+		
+		synchronized(o){
+			if(currentDynamicState.getApplicationVMsInfo().size() > 0)
+				vmFree.addAll(currentDynamicState.getApplicationVMsInfo());
+			if(!vmFree.isEmpty()) {
+				vmReserved.add(vmFree.get(0));
+			}
+		}
+		
 	}
 }
