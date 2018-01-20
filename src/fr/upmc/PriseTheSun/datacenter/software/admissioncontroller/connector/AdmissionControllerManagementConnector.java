@@ -1,8 +1,6 @@
 package fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.connector;
 
 
-import java.util.ArrayList;
-
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.components.connectors.AbstractConnector;
@@ -18,9 +16,9 @@ public class AdmissionControllerManagementConnector extends	AbstractConnector im
 
 	@Override
 	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
-			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI, ArrayList<String> processorsURI, ArrayList<String> pmipURIs, ArrayList<String> pssdURIs, ArrayList<String> pdssURIs)
+			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI)
 			throws Exception {
-		 ( ( AdmissionControllerManagementI ) this.offering ).linkComputer(computerURI, ComputerServicesInboundPortURI, ComputerStaticStateDataInboundPortURI, ComputerDynamicStateDataInboundPortURI, processorsURI, pmipURIs, pssdURIs, pdssURIs);
+		 ( ( AdmissionControllerManagementI ) this.offering ).linkComputer(computerURI, ComputerServicesInboundPortURI, ComputerStaticStateDataInboundPortURI, ComputerDynamicStateDataInboundPortURI);
 	}
 
 	@Override

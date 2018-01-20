@@ -193,27 +193,8 @@ extends		AbstractCVM
                     numberOfProcessors, numberOfCores, csip[i], cssdip[i], cdsdip[i]);
             this.addDeployedComponent(c);
             
-            // map associate processor uri with uri of inbound port
-            //TODO A déplacer dans l'admission !!
-            ArrayList<String> processorsURIs = new ArrayList<String>();
-            ArrayList<String> pmipURIs = new ArrayList<String>();
-            ArrayList<String> pssdURIs = new ArrayList<String>();
-            ArrayList<String> pdsdURIs = new ArrayList<String>();
-            Map<Integer, String> processorURIsMap = c.getStaticState().getProcessorURIs();
             
-            
-            for (Map.Entry<Integer, String> entry : processorURIsMap.entrySet()) {
-                Map<ProcessorPortTypes, String> pPortsList = c.getStaticState().getProcessorPortMap()
-                        .get(entry.getValue());
-                processorsURIs.add(entry.getValue());
-                pmipURIs.add(pPortsList.get(Processor.ProcessorPortTypes.MANAGEMENT));
-                pssdURIs.add(pPortsList.get(Processor.ProcessorPortTypes.STATIC_STATE));
-                pdsdURIs.add(pPortsList.get(Processor.ProcessorPortTypes.DYNAMIC_STATE));
-            }
-            System.out.println(pmipURIs);
-            System.out.println(pssdURIs);
-            
-            this.acmop.linkComputer(computer[i], csip[i], cssdip[i], cdsdip[i], processorsURIs , pmipURIs, pssdURIs, pdsdURIs);
+            this.acmop.linkComputer(computer[i], csip[i], cssdip[i], cdsdip[i]);
             
 
             // --------------------------------------------------------------------

@@ -49,6 +49,8 @@ import fr.upmc.datacenter.hardware.computers.interfaces.ComputerStaticStateI;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerDynamicStateDataOutboundPort;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerStaticStateDataOutboundPort;
+import fr.upmc.datacenter.hardware.processors.Processor;
+import fr.upmc.datacenter.hardware.processors.Processor.ProcessorPortTypes;
 import fr.upmc.datacenter.interfaces.PushModeControllingI;
 import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagementConnector;
@@ -489,8 +491,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 
 	@Override
 	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
-			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI,
-			ArrayList<String> processorsURI, ArrayList<String> pmipURIs, ArrayList<String> pssdURIs, ArrayList<String> pdssURIs)
+			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI)
 			throws Exception {
 		
 			String csopUri = AdmissionControllerDynamic.computerServiceOutboundPortURI + "_" +  this.csops.size();
@@ -530,8 +531,23 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 					ControlledDataConnector.class.getCanonicalName());
 			this.cdsdops.add(cdsdop);
 			
-			for(int i = 0; i < processorsURI.size(); i++) {
-				this.processorController.bindProcessor(processorsURI.get(i), "ACHANGER", pmipURIs.get(i), pssdURIs.get(i), pdssURIs.get(i));
+            ArrayList<String> processorsURIs = new ArrayList<String>();
+            ArrayList<String> pmipURIs = new ArrayList<String>();
+            ArrayList<String> pssdURIs = new ArrayList<String>();
+            ArrayList<String> pdsdURIs = new ArrayList<String>();
+            Map<Integer, String> processorURIsMap = staticState.getProcessorURIs();
+            
+            
+            for (Map.Entry<Integer, String> entry : processorURIsMap.entrySet()) {
+                Map<ProcessorPortTypes, String> pPortsList = staticState.getProcessorPortMap()
+                        .get(entry.getValue());
+                processorsURIs.add(entry.getValue());
+                pmipURIs.add(pPortsList.get(Processor.ProcessorPortTypes.MANAGEMENT));
+                pssdURIs.add(pPortsList.get(Processor.ProcessorPortTypes.STATIC_STATE));
+                pdsdURIs.add(pPortsList.get(Processor.ProcessorPortTypes.DYNAMIC_STATE));
+            }
+			for(int i = 0; i < processorsURIs.size(); i++) {
+				this.processorController.bindProcessor(processorsURIs.get(i), "ACHANGER", pmipURIs.get(i), pssdURIs.get(i), pdsdURIs.get(i));
 				createVM(this.processorController, ComputerServicesInboundPortURI, csop.allocateCores(nbCores/2));
 			}
 	}
@@ -599,7 +615,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 	public void	sendDynamicState() throws Exception
 	{
 		if (this.rdsdip.connected()) {
-			System.err.println("ça à l'air d'être send ISSOU DESU");
 			RingDynamicStateI rds = this.getDynamicState() ;
 			this.rdsdip.send(rds) ;
 		}
