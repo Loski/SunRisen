@@ -8,34 +8,38 @@ import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOu
 
 public class ApplicationVMInfo{
 
-	private String avm;
-	private String submission;
-	private String applicationVM;
 
-	public ApplicationVMInfo(String applicationVM, String avm, String submission) {
+	public ApplicationVMInfo(String applicationVM, String submissionInboundPortUri, String avmOutbound) {
+		super();
 		this.applicationVM = applicationVM;
-		this.avm = avm;
-		this.submission = submission;
-	}
-	
-	public String getAvm() {
-		return avm;
+		this.submissionInboundPortUri = submissionInboundPortUri;
+		this.avmOutbound = avmOutbound;
 	}
 
+	private String applicationVM;
+	private String submissionInboundPortUri;
 
-	public void setAvm(String avm) {
-		this.avm = avm;
-	}
+	private String avmOutbound;
 
 
-	public String getSubmission() {
-		return submission;
-	}
-	public void setSubmission(String submission) {
-		this.submission = submission;
-	}
 	public String getApplicationVM() {
 		return applicationVM;
+	}
+
+	public String getAvmOutbound() {
+		return avmOutbound;
+	}
+
+	public void setAvmOutbound(String avmOutbound) {
+		this.avmOutbound = avmOutbound;
+	}
+
+	public String getSubmissionInboundPortUri() {
+		return submissionInboundPortUri;
+	}
+
+	public void setSubmissionInboundPortUri(String submissionInboundPortUri) {
+		this.submissionInboundPortUri = submissionInboundPortUri;
 	}
 
 	public void setApplicationVM(String applicationVM) {

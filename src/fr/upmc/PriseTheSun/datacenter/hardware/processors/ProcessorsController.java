@@ -61,7 +61,6 @@ public class ProcessorsController extends AbstractComponent implements Processor
 	public void bindProcessor(String processorURI, String processorControllerInboundPortURI, String processorManagementURI, String ProcessorStaticStateDataInboundPortURI, String ProcessorDynamicStateDataInoundPortURI) throws Exception {
 		
 		int number = this.processorsStaticState.size();
-		System.err.println("Processor n "+ number);
 		String processorStaticStateDataOutboundPortUri = ProcessorStaticStateDataOutboundPortURI + "_" +  number;
 		String processorDynamicStateDataUriOutboundPort = ProcessorDynamicStateDataOutboundPortURI + "_" +  number;
 		

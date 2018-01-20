@@ -105,7 +105,6 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		rdsdop = new RingDynamicStateDataOutboundPort(this, RingDynamicStateDataOutboundPortURI);
 		this.addPort(rdsdop);
 		this.rdsdop.publishPort();
-		System.out.println(nextRingDynamicStateDataInboundPort);
 		this.rdsdop.doConnection(nextRingDynamicStateDataInboundPort, ControlledDataConnector.class.getCanonicalName());
 		this.startUnlimitedPushing(100);
 		
@@ -126,10 +125,19 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		if(currentDynamicState.getAvgExecutionTime()!=null) {
 			this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
 			processControl(currentDynamicState.getAvgExecutionTime(), currentDynamicState.getVirtualMachineDynamicStates());
+			
+			//On redonne les VMs au prochain controller.
+			while(!vmReserved.isEmpty()) {
+				synchronized (o) {
+					vmFree.add(vmReserved.remove(0));
+				}
+			}
+
 		}
 		else {
-			this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,"pas assez de données pour calculer la moyenne"));
+		//	this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,"pas assez de données pour calculer la moyenne"));
 		}
+
 	}
 	@Override
 	public void acceptRequestDispatcherStaticData(String dispatcherURI, RequestDispatcherStaticStateI staticState)
@@ -138,7 +146,6 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		System.out.println("Dispatcher Static Data : ");
 	}
 	
-
 
 	@Override
     public void shutdown() throws ComponentShutdownException {
@@ -183,7 +190,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 				boolean set = pcmop.setCoreFrequency(CoreAsk.HIGHER, randomVM.getProcessorURI(), randomVM.getAllocatedCoresNumber()[i]);
 
 				if(set) {
-					this.logMessage("Frequece was set");
+				//	this.logMessage("Frequece was set");
 				}
 			}
 			this.acmop.addCores(null, 1, randomVM.getApplicationVMURI());
@@ -227,7 +234,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		public static double LOWER_PERCENT=0.5;
 		public static double HIGHER_PERCENT=0.3;
 		public static int DISPATCHER_PUSH_INTERVAL=5000;
-		
+		public static int NB_VM_RESERVED = 5;
 		//Max core
 		public static int MAX_ALLOCATION=25;
 		
@@ -238,15 +245,16 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	@Override
 	public void acceptRingDynamicData(String requestDispatcherURI, RingDynamicStateI currentDynamicState)
 			throws Exception {;
-		this.logMessage(this.controllerURI + " a re�u " + currentDynamicState.getApplicationVMsInfo().size() + "vms");
+		//this.logMessage(this.controllerURI + " a re�u " + currentDynamicState.getApplicationVMsInfo().size() + "vms");
 		synchronized(o){
-			if(!currentDynamicState.getApplicationVMsInfo().isEmpty())
+			if(!currentDynamicState.getApplicationVMsInfo().isEmpty()) {
+				this.logMessage(this.controllerURI + " a re�u " + currentDynamicState.getApplicationVMsInfo().size() + "vms, will now try to reserve " + StaticData.NB_VM_RESERVED + " vms");
 				vmFree.addAll(currentDynamicState.getApplicationVMsInfo());
-			if(!vmFree.isEmpty()) {
-				vmReserved.add(vmFree.remove(0));
+				while(vmReserved.size() < + StaticData.NB_VM_RESERVED && !vmFree.isEmpty()) {
+					vmReserved.add(vmFree.remove(0));
+				}
 			}
 		}
-		
 	}
 	
 
@@ -296,14 +304,14 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 
 	public void	sendDynamicState() throws Exception
 	{
-		System.out.println(this.controllerURI + " rdsip is connected " + this.rdsdip.connected());
+		//System.out.println(this.controllerURI + " rdsip is connected " + this.rdsdip.connected());
 		if (this.rdsdip.connected()) {
 			RingDynamicStateI rds = this.getDynamicState() ;
 			this.rdsdip.send(rds) ;
 		}
 	}
 
-	public void			sendDynamicState(
+	public void	sendDynamicState(
 			final int interval,
 			int numberOfRemainingPushes) throws Exception{
 		this.sendDynamicState() ;
@@ -341,7 +349,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		synchronized(o){
 			ArrayList<ApplicationVMInfo> copy= new ArrayList<>(vmFree);
 			RingDynamicState rds = new RingDynamicState(copy);
-			//Suppression car envoie
+			//Suppression car envoie les vms appartiennent aux controller suivant
 			vmFree.clear();
 			return rds;
 		}
