@@ -238,7 +238,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		rdmopMap.get(appURI).connectVirtualMachine(wrap.getApplicationVM(), wrap.getSubmission());
+		rdmopMap.get(appURI).connectVirtualMachine(wrap.getApplicationVM(), wrap.getSubmissionInboundPortUri());
 		this.avmOutPort.get(wrap.getApplicationVM()).connectWithRequestSubmissioner(dispatcherUri[0], dispatcherUri[4]);
 		rop.doConnection(wrap.getApplicationVM(), ReflectionConnector.class.getCanonicalName());
 		rop.toggleTracing();
