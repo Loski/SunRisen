@@ -328,13 +328,13 @@ implements
 	}
 
 	@Override
-	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI, String RequestSubmissionOutboundPortURI) throws Exception {
+	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception {
 		
 		/*if(this.requestSubmissionOutboundPortList.get(indexVM)!=null && this.requestSubmissionOutboundPortList.get(indexVM).getPortURI().equals(RequestSubmissionOutboundPortURI))
 			throw new Exception("VM déjà connecté sur ce port");*/
 		
-		RequestSubmissionOutboundPort rsobp = new RequestSubmissionOutboundPort( RequestSubmissionOutboundPortURI, this );
-		ApplicationVMIntrospectionOutboundPort avmiovp = new ApplicationVMIntrospectionOutboundPort( RequestSubmissionOutboundPortURI, this );
+		RequestSubmissionOutboundPort rsobp = new RequestSubmissionOutboundPort( rdURI+"-rsbop-"+this.virtualMachineDataList.size(), this );
+		ApplicationVMIntrospectionOutboundPort avmiovp = new ApplicationVMIntrospectionOutboundPort( vmURI+"-introObp", this );
 		
 		this.virtualMachineDataList.add(new VirtualMachineData(vmURI, rsobp,avmiovp));
 		this.addPort( rsobp );

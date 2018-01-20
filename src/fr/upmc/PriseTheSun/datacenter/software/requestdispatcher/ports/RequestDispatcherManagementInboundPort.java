@@ -37,7 +37,7 @@ implements	RequestDispatcherManagementI
 	}
 
 	@Override
-	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI, String RequestSubmissionOutboundPortURI) throws Exception {
+	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception {
 		
 		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
 		
@@ -45,7 +45,7 @@ implements	RequestDispatcherManagementI
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
-						rdm.connectVirtualMachine(vmURI, requestSubmissionInboundPortURI, RequestSubmissionOutboundPortURI ) ;
+						rdm.connectVirtualMachine(vmURI, requestSubmissionInboundPortURI ) ;
 						return null;
 					}
 				}) ;

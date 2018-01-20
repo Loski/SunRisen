@@ -10,8 +10,8 @@ extends		AbstractConnector
 implements	RequestDispatcherManagementI
 {
 	@Override
-	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI, String RequestSubmissionOutboundPortURI) throws Exception {
-		( ( RequestDispatcherManagementI ) this.offering ).connectVirtualMachine(vmURI, requestSubmissionInboundPortURI, RequestSubmissionOutboundPortURI);
+	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception {
+		( ( RequestDispatcherManagementI ) this.offering ).connectVirtualMachine(vmURI, requestSubmissionInboundPortURI);
 	}
 
 	@Override
