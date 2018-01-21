@@ -9,6 +9,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
+
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.ProcessorsController.CoreAsk;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.connector.ProcessorControllerManagementConnector;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.interfaces.ProcessorsControllerManagementI;
@@ -208,8 +210,8 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		
 		ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
 		Integer cores = getNumberOfCoresAllocatedFrom(vms);
-		w.write(cores.toString());
-		w.write(((Integer)vms.size()).toString());
+		
+		
 		
 		switch(getThreeshold(time)){
 		case HIGHER :
@@ -225,7 +227,9 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 				//	this.logMessage("Frequece was set");
 				}
 			}
-			this.acmop.addCores(null, randomVM.getApplicationVMURI(), 1);
+			if(!vmReserved.isEmpty())
+				this.acmop.allocVm(appURI, vmReserved.remove(0) , this.rdUri, this.requestDispatcherNotificationInboundPort);
+			//this.acmop.addCores(null, randomVM.getApplicationVMURI(), 1);
 			break;
 		case LOWER :
 			factor = (StaticData.AVERAGE_TARGET/time);
@@ -245,6 +249,9 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		default:
 			break;
 		}
+		
+		w.write(Arrays.asList(cores.toString(), ((Integer)vms.size()).toString()));
+
 	}
 
 	/**

@@ -19,7 +19,7 @@ public class Writter {
 	
 	public void write(List<String> s) {
 		try {
-			FileWriter fw = new FileWriter(name);
+			FileWriter fw = new FileWriter(name, true);
 			CVSUtils.writeLine(fw, s);
 			fw.flush();
 			fw.close();
