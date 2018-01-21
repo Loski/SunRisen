@@ -20,8 +20,8 @@ implements	fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interface
 	}
 
 	@Override
-	public boolean addCores(String rdURI, int nbCores, String vmUri) throws Exception {
-		return ( ( AdmissionControllerManagementI ) this.connector ).addCores(rdURI, nbCores, null);
+	public int addCores(String controllerURI, String vmUri, int nbCores) throws Exception {
+		return ( ( AdmissionControllerManagementI ) this.connector ).addCores(controllerURI, null, nbCores);
 	}
 
 	@Override
@@ -34,5 +34,10 @@ implements	fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interface
 	@Override
 	public boolean supCores(int nbCores, String vmUri) throws Exception {
 		return ( ( AdmissionControllerManagementI ) this.connector ).supCores(nbCores, vmUri);
+	}
+
+	@Override
+	public void releaseCore(String controllerURI, String VMURI) throws Exception {
+		( ( AdmissionControllerManagementI ) this.connector ).releaseCore(controllerURI, VMURI);
 	}
 }

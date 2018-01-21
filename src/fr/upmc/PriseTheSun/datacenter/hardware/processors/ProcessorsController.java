@@ -75,7 +75,6 @@ public class ProcessorsController extends AbstractComponent implements Processor
 		ProcessorStaticStateI staticState= (ProcessorStaticStateI) pssdop.request();
 		processorsStaticState.put(processorURI, staticState);
 		
-		
 		ProcessorDynamicStateDataOutboundPort pdsdop = new ProcessorDynamicStateDataOutboundPort(this, processorDynamicStateDataUriOutboundPort);
 		this.addPort(pssdop);
 		pdsdop.publishPort();

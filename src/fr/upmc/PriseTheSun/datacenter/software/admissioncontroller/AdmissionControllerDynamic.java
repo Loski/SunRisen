@@ -74,7 +74,7 @@ import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOu
  * 
  * @author	Maxime LAVASTE Loïc LAFONTAINE
  */
-public class AdmissionControllerDynamic extends AbstractComponent implements ComputerStateDataConsumerI, ApplicationSubmissionI, AdmissionControllerManagementI, RingDataI, PushModeControllingI{
+public class AdmissionControllerDynamic extends AbstractComponent implements ApplicationSubmissionI, AdmissionControllerManagementI, RingDataI, PushModeControllingI{
 
 	public static int DEBUG_LEVEL = 1 ;
 	protected String acURI;
@@ -420,74 +420,22 @@ public class AdmissionControllerDynamic extends AbstractComponent implements Com
 		return dispatcherUri;
 	}
 	
-	/**
-	 * Return the index of the first available computer
-	 * @param nbCores
-	 * @return index 
-	 * @throws Exception 
-	 */
-	private AllocatedCore[] getAvailableCores(int nbCores) throws Exception {
-		for(int i = 0; i < nbAvailablesCores.size(); i++) {
-			if(this.nbAvailablesCores.get(i) >= nbCores) {
-				return tryAllocated(csops.get(i), i, nbCores);
-			}
-		}
-		throw new Exception("Impossible d'allouer des cores");
-	}
-	
-	
-	private AllocatedCore[] getAvailableCores(ComputerServicesOutboundPort csop, int nbCores) throws Exception {
-		for(int i = 0; i < csops.size(); i++) {
-			if(csops.get(i) == csop) {
-				if(this.nbAvailablesCores.get(i) >= nbCores) {
-					return tryAllocated(csop, i, nbCores);
-				}else {
-					break;
-				}
-			}
-		}
-		throw new Exception("Impossible d'allouer des cores");
-	}
-	
-	private AllocatedCore[] tryAllocated(ComputerServicesOutboundPort csop, int index,  int nbCores) throws Exception {
-		AllocatedCore[] allocatedCore = csop.allocateCores(nbCores);
-		if(allocatedCore!=null && allocatedCore.length != 0) {
-			this.nbAvailablesCores.set(index, this.nbAvailablesCores.get(index));
-			return allocatedCore;
-		}
-		else {
-			throw new Exception("Impossible d'allouer des cores");
-		}
-	}
-
 	@Override
-	public boolean addCores(String rdURI, int nbCores, String vmUri) {
+	public int addCores(String controllerURI, String vmUri, int nbCores) {
 		ComputerServicesOutboundPort csop = csopMap.get(vmUri);
 		try {
-			
-			AllocatedCore[] ac = getAvailableCores(csop, nbCores);
-			findVM(vmUri).allocateCores(ac);
-			return true;
+			return csop.reserveCoresForMe(controllerURI, nbCores);
+		
 		} catch (Exception e) {
 			this.logMessage("Failed to allocates core for a new application." + e.getMessage());
-			return false;
+			return 0;
 		}
 	}
 
 	private ApplicationVMManagementOutboundPort findVM(String vmUri) throws Exception {
 		return avmOutPort.get(vmUri);
 	}
-	@Override
-	public void acceptComputerStaticData(String computerURI, ComputerStaticStateI staticState) throws Exception {
-		// TODO Auto-generated method stub
-		
-	}
 
-	@Override
-	public void acceptComputerDynamicData(String computerURI, ComputerDynamicStateI currentDynamicState)
-			throws Exception {
-		//this.reservedCores.put(computerURI, currentDynamicState.getCurrentCoreReservations());
-	} 
 
 	@Override
 	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,

@@ -97,4 +97,8 @@ extends		OfferedI,
 	 */
 	public AllocatedCore[]	allocateCores(final int numberRequested)
 	throws Exception ;
+	
+	public int reserveCoresForMe(String controllerUri, int nbCore) throws Exception;
+	
+	
 }

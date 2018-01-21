@@ -102,4 +102,9 @@ implements	ComputerServicesI
 		return ((ComputerServicesI)this.connector).
 											allocateCores(numberRequested) ;
 	}
+
+	@Override
+	public int reserveCoresForMe(String controllerUri, int nbCore) throws Exception {
+		return ((ComputerServicesI)this.connector).reserveCoresForMe(controllerUri, nbCore);
+	}
 }

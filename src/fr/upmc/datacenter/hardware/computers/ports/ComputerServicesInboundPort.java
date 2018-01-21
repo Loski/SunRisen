@@ -123,4 +123,16 @@ implements	ComputerServicesI
 						}
 					}) ;
 	}
+
+	@Override
+	public int reserveCoresForMe(String controllerUri, int nbCore) throws Exception {
+		final Computer c = (Computer) this.owner ;
+		return c.handleRequestSync(
+					new ComponentI.ComponentService<Integer>() {
+						@Override
+						public Integer call() throws Exception {
+							return c.reserveCoresForMe(controllerUri, nbCore);
+						}
+					}) ;
+	}
 }

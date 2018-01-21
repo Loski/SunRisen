@@ -1,5 +1,7 @@
 package fr.upmc.datacenter.hardware.computers;
 
+import java.awt.Point;
+
 //Copyright Jacques Malenfant, Univ. Pierre et Marie Curie.
 //
 //Jacques.Malenfant@lip6.fr
@@ -35,14 +37,19 @@ package fr.upmc.datacenter.hardware.computers;
 //knowledge of the CeCILL-C license and that you accept its terms.
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
+
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.connectors.DataConnector;
@@ -124,7 +131,8 @@ import fr.upmc.datacenter.interfaces.PushModeControllingI;
 public class				Computer
 extends		AbstractComponent
 implements	ProcessorStateDataConsumerI,
-			PushModeControllingI
+			PushModeControllingI,
+			ComputerServicesI
 {
 	/** The three types of interfaces offered by Computer.					*/
 	public static enum ComputerPortTypes {
@@ -190,7 +198,7 @@ implements	ProcessorStateDataConsumerI,
 		 * @param coreNo
 		 * @param processorInboundPortURI
 		 */
-		public			AllocatedCore(
+		public	AllocatedCore(
 			int processorNo,
 			String processorURI,
 			int coreNo,
@@ -241,7 +249,7 @@ implements	ProcessorStateDataConsumerI,
 	protected final Map<String, Map<Processor.ProcessorPortTypes, String>>
 											processorsInboundPortURI ;
 	/** array collecting the reservation status of the cores.				*/
-	protected boolean[][]					reservedCores ;
+	protected boolean[][]					reservedCores;
 	/** computer inbound port through which management methods are called.	*/
 	protected ComputerServicesInboundPort	computerServicesInboundPort ;
 	/** computer data inbound port through which it pushes its static data.	*/
@@ -252,7 +260,11 @@ implements	ProcessorStateDataConsumerI,
 											computerDynamicStateDataInboundPort ;
 	/** future of the task scheduled to push dynamic data.					*/
 	protected ScheduledFuture<?>			pushingFuture ;
+	private Map<String, ArrayList<Point>> reservedCoresByController;
 
+	
+	
+	
 	// ------------------------------------------------------------------------
 	// Component constructor
 	// ------------------------------------------------------------------------
@@ -418,7 +430,8 @@ implements	ProcessorStateDataConsumerI,
 				this.reservedCores[np][nc] = false ;
 			}
 		}
-
+		
+		this.reservedCoresByController = new HashMap<>();
 		// Adding computer interfaces, creating and publishing the related ports
 		this.addOfferedInterface(ComputerServicesI.class) ;
 		this.computerServicesInboundPort =
@@ -442,6 +455,9 @@ implements	ProcessorStateDataConsumerI,
 								computerDynamicStateDataInboundPortURI, this) ;
 		this.addPort(computerDynamicStateDataInboundPort) ;
 		this.computerDynamicStateDataInboundPort.publishPort() ;
+		
+		
+		
 	}
 
 	// ------------------------------------------------------------------------
@@ -976,7 +992,7 @@ implements	ProcessorStateDataConsumerI,
 	 * @param acs			array of priorly allocated cores data.
 	 * @throws Exception
 	 */
-	public void				releaseCores(AllocatedCore[] acs) throws Exception
+	public void	releaseCores(AllocatedCore[] acs) throws Exception
 	{
 		for (int i = 0 ; i < acs.length ; i++) {
 			this.releaseCore(acs[i]) ;
@@ -1077,6 +1093,7 @@ implements	ProcessorStateDataConsumerI,
 		for (int p = 0 ; p < processorsURI.size() ; p++) {
 			sb.append(leading + processorsURI.get(p) + "\n") ;
 			Map<Processor.ProcessorPortTypes,String> pURIs =
+					
 				processorsInboundPortURI.get(processorsURI.get(p)) ;
 			for (Processor.ProcessorPortTypes pt : pURIs.keySet()) {
 				sb.append(leading + "    " + pt + "  " + pURIs.get(pt) + "\n") ;
@@ -1084,4 +1101,71 @@ implements	ProcessorStateDataConsumerI,
 		}
 		return sb.toString() ;
 	}
+	
+	@Override
+	public int reserveCoresForMe(String controllerUri, int nbCore) {
+		if(!reservedCoresByController.containsKey(controllerUri)) {
+			this.reservedCoresByController.put(controllerUri, new ArrayList<Point>());
+		}
+		int x = 0, y = 0;
+		while(reservedCoresByController.get(controllerUri).size() < nbCore ) {
+			Point core = findFreeCore(x, y);
+			if(core == null) {
+				break;
+			}else {
+				this.reservedCoresByController.get(controllerUri).add(core);
+				x = (int) core.getX();
+				y = (int) core.getY();
+			}
+		}
+		return reservedCoresByController.get(controllerUri).size();
+	}
+	
+	private Point findFreeCore(int i, int j) {
+		for( ; i < this.numberOfProcessors; i++) {
+			for(; j < this.numberOfCores; j++) {
+				try {
+					if(!isReserved(i, j)) {
+						this.reserveCore(i, j);
+						return new Point(i, j);
+					}
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		return null;
+	}
+
+	private AllocatedCore[] allocateCore(String controllerUri) {
+		ArrayList<Point> tmp = this.reservedCoresByController.remove(controllerUri);
+		AllocatedCore cores[] = new AllocatedCore[reservedCoresByController.size()];
+		int i = 0;
+		while(!tmp.isEmpty()) {
+			Point pt =  tmp.remove(0);
+			cores[i] = new AllocatedCore(
+					(int) pt.getX(),
+					this.processorsURI.get(pt.getX()), 
+					pt.y,
+					this.processorsInboundPortURI.get(
+										this.processorsURI.get(pt.getX()))) ;
+			i++;
+		}
+		return cores;
+	}
+	
+	private void releaseCore(String controllerURI) {
+		ArrayList<Point> tmp = this.reservedCoresByController.remove(controllerURI);
+		while(!tmp.isEmpty()) {
+			Point pt = tmp.remove(0);
+			this.releaseCore((int) pt.getX(), (int) pt.getY());
+		}
+		return;
+	}
+
+	private void releaseCore(int processorNo, int coreNo) {
+		this.reservedCores[processorNo][coreNo] = false;
+	}
+
 }

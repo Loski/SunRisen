@@ -193,7 +193,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 				//	this.logMessage("Frequece was set");
 				}
 			}
-			this.acmop.addCores(null, 1, randomVM.getApplicationVMURI());
+			this.acmop.addCores(null, randomVM.getApplicationVMURI(), 1);
 			break;
 		case LOWER :
 			factor = (StaticData.AVERAGE_TARGET/time);

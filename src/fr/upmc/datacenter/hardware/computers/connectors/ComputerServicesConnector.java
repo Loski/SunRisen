@@ -81,4 +81,11 @@ implements	ComputerServicesI
 		return ((ComputerServicesI)this.offering).
 											allocateCores(numberRequested) ;
 	}
+
+	@Override
+	public int reserveCoresForMe(String controllerUri, int nbCore) throws Exception {
+		return ((ComputerServicesI)this.offering).reserveCoresForMe(controllerUri, nbCore);
+	}
+
+
 }
