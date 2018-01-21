@@ -551,9 +551,9 @@ implements
 		HashMap<RequestDispatcherPortTypes, String> ret =
 						new HashMap<RequestDispatcherPortTypes, String>() ;
 		ret.put(RequestDispatcherPortTypes.REQUEST_SUBMISSION,
-						this.requestSubmissionInboundPort.getClientPortURI()) ;
+						this.requestSubmissionInboundPort.getPortURI()) ;
 		ret.put(RequestDispatcherPortTypes.REQUEST_NOTIFICATION,
-				this.requestNotificationInboundPort.getClientPortURI()) ;
+				this.requestNotificationInboundPort.getPortURI()) ;
 		ret.put(RequestDispatcherPortTypes.MANAGEMENT,
 						this.requestDispatcherManagementInboundPort.getPortURI()) ;
 		ret.put(RequestDispatcherPortTypes.INTROSPECTION,
