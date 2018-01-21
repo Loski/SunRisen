@@ -9,7 +9,7 @@ import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOu
 public class ApplicationVMInfo{
 
 
-	public ApplicationVMInfo(String applicationVM, String submissionInboundPortUri, String avmOutbound) {
+	public ApplicationVMInfo(String applicationVM, String avmOutbound, String submissionInboundPortUri) {
 		super();
 		this.applicationVM = applicationVM;
 		this.submissionInboundPortUri = submissionInboundPortUri;
