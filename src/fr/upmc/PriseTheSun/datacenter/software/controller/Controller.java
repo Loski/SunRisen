@@ -34,6 +34,7 @@ import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDataI;
 import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDynamicStateI;
 import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingDynamicStateDataInboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingDynamicStateDataOutboundPort;
+import fr.upmc.PriseTheSun.datacenter.tools.Writter;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.ComponentI;
 import fr.upmc.datacenter.connectors.ControlledDataConnector;
@@ -72,12 +73,16 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	private String requestDispatcherNotificationInboundPort;
 	private String requestDispatcherManagementOutboundPort;
 	private String appURI; 
+	
+	private Writter w;
+	
 	public Controller(String appURI, String controllerURI, String controllerManagement, String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri, String RingDynamicStateDataOutboundPortURI, String RingDynamicStateDataInboundPortURI, String nextRingDynamicStateDataInboundPort) throws Exception
 	{
 		super(controllerURI,1,1);
 		
 		this.toggleLogging();
 		this.toggleTracing();
+		w = new Writter(controllerURI+ ".csv");
 		
 		this.controllerURI = controllerURI;
 		this.rdUri = rdURI;
@@ -200,8 +205,12 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	private synchronized void processControl(Double time, Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		double factor=0;
 		int number=0;
+		
 		ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
-		int cores = getNumberOfCoresAllocatedFrom(vms);
+		Integer cores = getNumberOfCoresAllocatedFrom(vms);
+		w.write(cores.toString());
+		w.write(((Integer)vms.size()).toString());
+		
 		switch(getThreeshold(time)){
 		case HIGHER :
 			factor = (time/StaticData.AVERAGE_TARGET);
