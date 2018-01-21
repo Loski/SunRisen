@@ -20,11 +20,15 @@ import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMInfo;
 import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.controller.ports.ControllerManagementInboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.controller.ports.ControllerManagementOutboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatcher;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatcher.RequestDispatcherPortTypes;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.VirtualMachineData;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.connectors.RequestDispatcherIntrospectionConnector;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStateDataConsumerI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStaticStateI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherDynamicStateDataOutboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherIntrospectionOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.ring.RingDynamicState;
 import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDataI;
 import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDynamicStateI;
@@ -36,7 +40,9 @@ import fr.upmc.datacenter.connectors.ControlledDataConnector;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
 import fr.upmc.datacenter.interfaces.PushModeControllingI;
+import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMIntrospectionConnector;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamicStateI;
+import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMIntrospectionOutboundPort;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationI;
 import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
 
@@ -60,8 +66,10 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	private Object o = new Object();
 	private ScheduledFuture<?> pushingFuture;
 	private ControllerManagementInboundPort cmip;
+	
+	private RequestDispatcherIntrospectionOutboundPort rdiobp;
 
-	public Controller(String controllerURI, String controllerManagement, String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri, String RingDynamicStateDataOutboundPortURI, String RingDynamicStateDataInboundPortURI, String nextRingDynamicStateDataInboundPort ) throws Exception
+	public Controller(String controllerURI, String controllerManagement, String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri, String RingDynamicStateDataOutboundPortURI, String RingDynamicStateDataInboundPortURI, String nextRingDynamicStateDataInboundPort) throws Exception
 	{
 		super(controllerURI,1,1);
 		
@@ -71,6 +79,17 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		this.controllerURI = controllerURI;
 		this.rdUri = rdURI;
 		
+		this.rdiobp = new RequestDispatcherIntrospectionOutboundPort( rdURI+"-introObp", this );
+		
+		this.addPort( rdiobp );
+		rdiobp.publishPort();
+		
+		this.doPortConnection(
+				rdiobp.getPortURI(),
+				rdURI+"-intro",
+				RequestDispatcherIntrospectionConnector.class.getCanonicalName());
+		
+		System.err.println("PORT DE NOTIF RD IN : "+this.rdiobp.getRequestDispatcherPortsURI().get(RequestDispatcherPortTypes.REQUEST_NOTIFICATION));
 		
 		this.addRequiredInterface(ControllerManagementI.class);
 		this.cmip = new ControllerManagementInboundPort(controllerManagement, this);
