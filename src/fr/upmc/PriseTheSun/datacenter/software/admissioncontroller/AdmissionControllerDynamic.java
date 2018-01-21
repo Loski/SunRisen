@@ -623,7 +623,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 							@Override
 							public void run() {
 								try {
-									System.err.println("je tente de send..");
 									c.sendDynamicState() ;
 								} catch (Exception e) {
 									throw new RuntimeException(e) ;

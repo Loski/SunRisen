@@ -267,7 +267,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		//this.logMessage(this.controllerURI + " a re�u " + currentDynamicState.getApplicationVMsInfo().size() + "vms");
 		synchronized(o){
 			if(!currentDynamicState.getApplicationVMsInfo().isEmpty()) {
-				this.logMessage(this.controllerURI + " a re�u " + currentDynamicState.getApplicationVMsInfo().size() + "vms, will now try to reserve " + StaticData.NB_VM_RESERVED + " vms");
+				//this.logMessage(this.controllerURI + " a re�u " + currentDynamicState.getApplicationVMsInfo().size() + "vms, will now try to reserve " + StaticData.NB_VM_RESERVED + " vms");
 				vmFree.addAll(currentDynamicState.getApplicationVMsInfo());
 				while(vmReserved.size() < + StaticData.NB_VM_RESERVED && !vmFree.isEmpty()) {
 					vmReserved.add(vmFree.remove(0));
