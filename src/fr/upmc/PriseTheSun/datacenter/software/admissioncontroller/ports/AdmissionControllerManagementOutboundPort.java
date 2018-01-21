@@ -1,6 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports;
 
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
+import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMInfo;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ports.AbstractOutboundPort;
@@ -39,5 +40,11 @@ implements	fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interface
 	@Override
 	public void releaseCore(String controllerURI, String VMURI) throws Exception {
 		( ( AdmissionControllerManagementI ) this.connector ).releaseCore(controllerURI, VMURI);
+	}
+
+	@Override
+	public void allocVm(String appURI, ApplicationVMInfo vm, String dispatcherURI,
+			String dispatcherNotificationInboundPort) throws Exception {
+		( ( AdmissionControllerManagementI ) this.connector ).allocVm(appURI, vm, dispatcherURI, dispatcherNotificationInboundPort);
 	}
 }

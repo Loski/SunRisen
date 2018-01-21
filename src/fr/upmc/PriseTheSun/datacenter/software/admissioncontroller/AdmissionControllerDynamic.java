@@ -238,14 +238,17 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		rdmopMap.get(appURI).connectVirtualMachine(wrap.getApplicationVM(), wrap.getSubmissionInboundPortUri());
-		this.avmOutPort.get(wrap.getApplicationVM()).connectWithRequestSubmissioner(dispatcherUri[0], dispatcherUri[4]);
+		allocVm(appURI, wrap, dispatcherUri[0], dispatcherUri[4]);
 		rop.doConnection(wrap.getApplicationVM(), ReflectionConnector.class.getCanonicalName());
 		rop.toggleTracing();
 		rop.toggleLogging();
 		rop.doDisconnection();
-		}
+	}
 
+	public void allocVm(String appURI, ApplicationVMInfo vm, String dispatcherURI, String dispatcherNotificationInboundPort) throws Exception {
+		rdmopMap.get(appURI).connectVirtualMachine(vm.getApplicationVM(), vm.getSubmissionInboundPortUri());
+		this.avmOutPort.get(vm.getApplicationVM()).connectWithRequestSubmissioner(dispatcherURI, dispatcherNotificationInboundPort);
+	}
 	
 	@Override
 	public void submitGenerator(String RequestNotificationInboundPort, String appUri, String rgURI) throws Exception {
@@ -312,10 +315,10 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		
 		nextControllerDataRingUri = controllerURIs[4];
 
-		System.out.println("my nxt managment" + nextControllerDataRingUri);
 		this.portTControllerJVM.createComponent(
 				Controller.class.getCanonicalName(),
 				new Object[] {
+						appURI,
 						controllerURIs[0],
 						controllerURIs[1],
 						controllerURIs[2],

@@ -69,7 +69,10 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	
 	private RequestDispatcherIntrospectionOutboundPort rdiobp;
 
-	public Controller(String controllerURI, String controllerManagement, String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri, String RingDynamicStateDataOutboundPortURI, String RingDynamicStateDataInboundPortURI, String nextRingDynamicStateDataInboundPort) throws Exception
+	private String requestDispatcherNotificationInboundPort;
+	private String requestDispatcherManagementOutboundPort;
+	private String appURI; 
+	public Controller(String appURI, String controllerURI, String controllerManagement, String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri, String RingDynamicStateDataOutboundPortURI, String RingDynamicStateDataInboundPortURI, String nextRingDynamicStateDataInboundPort) throws Exception
 	{
 		super(controllerURI,1,1);
 		
@@ -78,7 +81,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		
 		this.controllerURI = controllerURI;
 		this.rdUri = rdURI;
-		
+		this.appURI = appURI;
 		this.rdiobp = new RequestDispatcherIntrospectionOutboundPort( rdURI+"-introObp", this );
 		
 		this.addPort( rdiobp );
@@ -89,8 +92,9 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 				rdURI+"-intro",
 				RequestDispatcherIntrospectionConnector.class.getCanonicalName());
 		
-		System.err.println("PORT DE NOTIF RD IN : "+this.rdiobp.getRequestDispatcherPortsURI().get(RequestDispatcherPortTypes.REQUEST_NOTIFICATION));
-		
+		requestDispatcherNotificationInboundPort = this.rdiobp.getRequestDispatcherPortsURI().get(RequestDispatcherPortTypes.REQUEST_NOTIFICATION);
+		requestDispatcherManagementOutboundPort = this.rdiobp.getRequestDispatcherPortsURI().get(RequestDispatcherPortTypes.MANAGEMENT);
+
 		this.addRequiredInterface(ControllerManagementI.class);
 		this.cmip = new ControllerManagementInboundPort(controllerManagement, this);
 		this.cmip.publishPort();
@@ -379,6 +383,15 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		if(rdsdop.connected())
 			rdsdop.doDisconnection();
 		rdsdop.doConnection(DataInboundPortUri, ControlledDataConnector.class.getCanonicalName());
+	}
+	
+	public void addVm(ApplicationVMInfo vm) {
+		try {
+			this.acmop.allocVm(appURI, vm, rdUri, requestDispatcherNotificationInboundPort);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
 

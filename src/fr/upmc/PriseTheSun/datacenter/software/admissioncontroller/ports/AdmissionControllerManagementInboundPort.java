@@ -1,6 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports;
 
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
+import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMInfo;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ComponentI.ComponentService;
@@ -69,6 +70,20 @@ public class AdmissionControllerManagementInboundPort extends AbstractInboundPor
 					@Override
 					public Void call() throws Exception {
 						 acm.releaseCore(controllerURI, VMURI);
+						return null;
+					}
+				});
+	}
+
+	@Override
+	public void allocVm(String appURI, ApplicationVMInfo vm, String dispatcherURI,
+			String dispatcherNotificationInboundPort) throws Exception {
+		final AdmissionControllerManagementI acm = ( AdmissionControllerManagementI ) this.owner;
+		this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Void>() {
+					@Override
+					public Void call() throws Exception {
+						 acm.allocVm(appURI, vm, dispatcherURI, dispatcherNotificationInboundPort);
 						return null;
 					}
 				});

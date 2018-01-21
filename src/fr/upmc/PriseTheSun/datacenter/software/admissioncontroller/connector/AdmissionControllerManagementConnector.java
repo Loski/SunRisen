@@ -2,6 +2,7 @@ package fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.connector;
 
 
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
+import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMInfo;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.components.connectors.AbstractConnector;
 
@@ -30,6 +31,13 @@ public class AdmissionControllerManagementConnector extends	AbstractConnector im
 	@Override
 	public void releaseCore(String controllerURI, String VMURI) throws Exception {
 		( ( AdmissionControllerManagementI ) this.offering ).releaseCore(controllerURI, VMURI);
+		
+	}
+
+	@Override
+	public void allocVm(String appURI, ApplicationVMInfo vm, String dispatcherURI,
+			String dispatcherNotificationInboundPort) throws Exception {
+		( ( AdmissionControllerManagementI ) this.offering ).allocVm(appURI, vm, dispatcherURI, dispatcherNotificationInboundPort);
 		
 	}
 	
