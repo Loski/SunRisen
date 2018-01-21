@@ -11,8 +11,11 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherIntrospectionI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStaticStateI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherDynamicStateDataInboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherIntrospectionInboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementInboundPort;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.ComponentI;
@@ -20,9 +23,11 @@ import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.TimeManagement;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
 import fr.upmc.datacenter.interfaces.PushModeControllingI;
+import fr.upmc.datacenter.software.applicationvm.ApplicationVM.ApplicationVMPortTypes;
 import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMIntrospectionConnector;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamicStateI;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMIntrospectionI;
+import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMIntrospectionInboundPort;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMIntrospectionOutboundPort;
 import fr.upmc.datacenter.software.connectors.RequestNotificationConnector;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
@@ -52,6 +57,12 @@ implements
 			RequestDispatcherManagementI,
 			PushModeControllingI
 {
+	
+	public static enum RequestDispatcherPortTypes {
+		REQUEST_SUBMISSION, REQUEST_NOTIFICATION, MANAGEMENT, INTROSPECTION, STATIC_STATE,
+		DYNAMIC_STATE
+	}
+
 
 	public static int	DEBUG_LEVEL = 2 ;
 	public static int NB_REQUEST_NEEDED_FOR_AVG = 5;
@@ -82,6 +93,8 @@ implements
 	
 	/** dispatcher data inbound port through which it pushes its dynamic data.	*/
 	protected RequestDispatcherDynamicStateDataInboundPort requestDispatcherDynamicStateDataInboundPort ;
+	
+	protected RequestDispatcherIntrospectionInboundPort rdIntrospectionInboundPort ;
 	
 	/** future of the task scheduled to push dynamic data.					*/
 	protected ScheduledFuture<?>			pushingFuture ;
@@ -174,6 +187,14 @@ implements
 				this.nbRequestRecevedSinceAverage = 0;
 				
 				this.lock = new Object(); 
+				
+				this.addOfferedInterface(RequestDispatcherIntrospectionI.class) ;
+				this.rdIntrospectionInboundPort =
+					new RequestDispatcherIntrospectionInboundPort(
+											rdURI + "-intro",
+											this) ;
+				this.addPort(this.rdIntrospectionInboundPort) ;
+				this.rdIntrospectionInboundPort.publishPort() ;
 	}
 	
 	private void nextVM()
@@ -522,6 +543,27 @@ implements
 									this.pushingFuture.isDone())) {
 			this.pushingFuture.cancel(false) ;
 		}
+	}
+	
+	public Map<RequestDispatcherPortTypes, String>	getDispatcherPortsURI()
+	throws Exception
+	{
+		HashMap<RequestDispatcherPortTypes, String> ret =
+						new HashMap<RequestDispatcherPortTypes, String>() ;
+		ret.put(RequestDispatcherPortTypes.REQUEST_SUBMISSION,
+						this.requestSubmissionInboundPort.getClientPortURI()) ;
+		ret.put(RequestDispatcherPortTypes.MANAGEMENT,
+						this.requestDispatcherManagementInboundPort.getPortURI()) ;
+		ret.put(RequestDispatcherPortTypes.INTROSPECTION,
+						this.rdIntrospectionInboundPort.getPortURI()) ;
+		ret.put(RequestDispatcherPortTypes.DYNAMIC_STATE,
+						this.requestDispatcherDynamicStateDataInboundPort.getPortURI()) ;
+		return ret ;
+	}
+
+	public RequestDispatcherStaticStateI getStaticState() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
