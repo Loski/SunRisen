@@ -135,4 +135,17 @@ implements	ComputerServicesI
 						}
 					}) ;
 	}
+
+	@Override
+	public void releaseCore(String controllerURI) throws Exception {
+		final Computer c = (Computer) this.owner ;
+		c.handleRequestSync(
+					new ComponentI.ComponentService<Void>() {
+						@Override
+						public Void call() throws Exception {
+							 c.releaseCore(controllerURI);
+							return null;
+						}
+					}) ;
+	}
 }

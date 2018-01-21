@@ -107,4 +107,9 @@ implements	ComputerServicesI
 	public int reserveCoresForMe(String controllerUri, int nbCore) throws Exception {
 		return ((ComputerServicesI)this.connector).reserveCoresForMe(controllerUri, nbCore);
 	}
+
+	@Override
+	public void releaseCore(String controllerURI) throws Exception {
+		((ComputerServicesI)this.connector).releaseCore(controllerURI);
+	}
 }

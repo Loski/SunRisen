@@ -26,5 +26,11 @@ public class AdmissionControllerManagementConnector extends	AbstractConnector im
 		return ( ( AdmissionControllerManagementI ) this.offering ).supCores(nbCores, vmUri);
 
 	}
+
+	@Override
+	public void releaseCore(String controllerURI, String VMURI) throws Exception {
+		( ( AdmissionControllerManagementI ) this.offering ).releaseCore(controllerURI, VMURI);
+		
+	}
 	
 }

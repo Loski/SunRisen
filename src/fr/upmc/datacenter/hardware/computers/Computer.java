@@ -1155,7 +1155,7 @@ implements	ProcessorStateDataConsumerI,
 		return cores;
 	}
 	
-	private void releaseCore(String controllerURI) {
+	public void releaseCore(String controllerURI) {
 		ArrayList<Point> tmp = this.reservedCoresByController.remove(controllerURI);
 		while(!tmp.isEmpty()) {
 			Point pt = tmp.remove(0);

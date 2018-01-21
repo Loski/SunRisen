@@ -87,5 +87,10 @@ implements	ComputerServicesI
 		return ((ComputerServicesI)this.offering).reserveCoresForMe(controllerUri, nbCore);
 	}
 
+	@Override
+	public void releaseCore(String controllerURI) throws Exception {
+		((ComputerServicesI)this.offering).releaseCore(controllerURI);
+	}
+
 
 }

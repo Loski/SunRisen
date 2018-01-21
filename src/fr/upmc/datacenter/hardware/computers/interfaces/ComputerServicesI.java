@@ -99,6 +99,7 @@ extends		OfferedI,
 	throws Exception ;
 	
 	public int reserveCoresForMe(String controllerUri, int nbCore) throws Exception;
-	
+	public void releaseCore(String controllerURI) throws Exception;
+
 	
 }

@@ -431,6 +431,16 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 			return 0;
 		}
 	}
+	
+	@Override
+	public void releaseCore(String controllerURI, String VMURI) throws Exception {
+		ComputerServicesOutboundPort csop = csopMap.get(VMURI);
+		try {
+			csop.releaseCore(controllerURI);
+		} catch (Exception e) {
+			this.logMessage("Failed to realease core for " + VMURI +  e.getMessage());
+		}
+	}
 
 	private ApplicationVMManagementOutboundPort findVM(String vmUri) throws Exception {
 		return avmOutPort.get(vmUri);
@@ -655,6 +665,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 			this.pushingFuture.cancel(false) ;
 		}
 }
+
+
 
 
 }
