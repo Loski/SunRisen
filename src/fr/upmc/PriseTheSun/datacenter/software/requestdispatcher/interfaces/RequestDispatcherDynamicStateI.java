@@ -17,6 +17,6 @@ extends 		DataOfferedI.DataI,
 {
 	public String			getDispatcherURI() ;
 	public Double getAvgExecutionTime();
-	public Map<String,Double> getVrtualMachineExecutionAverageTime();
+	public Map<String,Double> getVirtualMachineExecutionAverageTime();
 	public Map<String,ApplicationVMDynamicStateI> getVirtualMachineDynamicStates();
 }

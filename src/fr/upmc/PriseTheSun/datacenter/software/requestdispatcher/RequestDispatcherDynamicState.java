@@ -64,7 +64,7 @@ public class RequestDispatcherDynamicState implements RequestDispatcherDynamicSt
 	}
 
 	@Override
-	public Map<String, Double> getVrtualMachineExecutionAverageTime() {
+	public Map<String, Double> getVirtualMachineExecutionAverageTime() {
 		return this.virtualMachineExecutionAverageTime;
 	}
 
