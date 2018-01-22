@@ -17,7 +17,7 @@ public class VirtualMachineData {
 	private List<RequestTimeData> requestTimeDataList;
 	private int currentRequest;
 
-	public VirtualMachineData(String uri,RequestSubmissionOutboundPort rsobp,ApplicationVMIntrospectionOutboundPort avmiovp)
+	public VirtualMachineData(String uri, RequestSubmissionOutboundPort rsobp, ApplicationVMIntrospectionOutboundPort avmiovp)
 	{
 		this.vmURI=uri;
 		this.rsobp=rsobp;

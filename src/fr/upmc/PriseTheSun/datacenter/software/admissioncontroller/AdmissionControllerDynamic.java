@@ -79,7 +79,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	public static int DEBUG_LEVEL = 1 ;
 	protected String acURI;
 
-	protected static final String RequestDispatcherManagementInboundPortURI = "rdmi";
+	protected static final String RequestDispatcherManagementInboundPortURI = "rdmip";
 	protected static final String RequestNotificationInboundPortURI = "rnip";
 	protected static final String RequestSubmissionInboundPortURI = "rsip";
 	protected static final String RequestNotificationOutboundPortURI = "rnop";
@@ -374,7 +374,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 				this);
 		
 		rdmop.publishPort();
-		
 		rdmop.doConnection(dispatcherURI[1], RequestDispatcherManagementConnector.class.getCanonicalName());
 		rdmopMap.put(appURI, rdmop);
 		return dispatcherURI;
@@ -415,6 +414,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 				return null;
 			}
 		}
+		
 		Class<?> dispa = RequestDispatcherCreator.createRequestDispatcher("JAVASSIST-dispa", RequestDispatcher.class, submissionInterface);
 		interface_dispatcher_map.put(submissionInterface, dispa);
 		String dispatcherUri[] = createDispatcher(appURI, dispa.getCanonicalName());
@@ -545,7 +545,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.avmOutPort.put(applicationVM[0], avmPort);
 		
 		synchronized (o) {
-			this.FreeApplicationVM.add(new ApplicationVMInfo(applicationVM[0], applicationVM[4], applicationVM[2]));
+			this.FreeApplicationVM.add(new ApplicationVMInfo(applicationVM[0], applicationVM[1], applicationVM[4], applicationVM[2]));
 		}
 		
 		return applicationVM[0];

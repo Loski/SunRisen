@@ -26,11 +26,14 @@ import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatch
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatcher.RequestDispatcherPortTypes;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.VirtualMachineData;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.connectors.RequestDispatcherIntrospectionConnector;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStateDataConsumerI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStaticStateI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherDynamicStateDataOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherIntrospectionOutboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.ring.RingDynamicState;
 import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDataI;
 import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDynamicStateI;
@@ -40,12 +43,16 @@ import fr.upmc.PriseTheSun.datacenter.tools.Writter;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.ComponentI;
 import fr.upmc.datacenter.connectors.ControlledDataConnector;
+import fr.upmc.datacenter.hardware.processors.UnacceptableFrequencyException;
+import fr.upmc.datacenter.hardware.processors.UnavailableFrequencyException;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
 import fr.upmc.datacenter.interfaces.PushModeControllingI;
 import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMIntrospectionConnector;
+import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagementConnector;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamicStateI;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMIntrospectionOutboundPort;
+import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
 import fr.upmc.datacenter.software.interfaces.RequestNotificationI;
 import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
 
@@ -54,14 +61,13 @@ import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
 public class Controller extends AbstractComponent implements RequestDispatcherStateDataConsumerI, RingDataI,ControllerManagementI, PushModeControllingI{
 
 	protected String controllerURI;
-	protected String cmop;
 	protected String rdUri;
 	protected AdmissionControllerManagementOutboundPort acmop;
 	protected RequestDispatcherDynamicStateDataOutboundPort rddsdop;
 	protected ProcessorsControllerManagementOutboundPort pcmop;
 	private RingDynamicStateDataOutboundPort rdsdop;
 	private RingDynamicStateDataInboundPort rdsdip;
-	
+	int idVm = 0;
 	//Vm reserved
 	private List<ApplicationVMInfo> vmReserved;
 	//vm to propagate to other controller
@@ -73,10 +79,11 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	private RequestDispatcherIntrospectionOutboundPort rdiobp;
 
 	private String requestDispatcherNotificationInboundPort;
-	private String requestDispatcherManagementOutboundPort;
+	private String requestDispatcherManagementInboundPort;
 	private String appURI; 
 	
 	private Writter w;
+	private RequestDispatcherManagementOutboundPort rdmop;
 	
 	public Controller(String appURI, String controllerURI, String controllerManagement, String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri, String RingDynamicStateDataOutboundPortURI, String RingDynamicStateDataInboundPortURI, String nextRingDynamicStateDataInboundPort) throws Exception
 	{
@@ -100,7 +107,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 				RequestDispatcherIntrospectionConnector.class.getCanonicalName());
 		
 		requestDispatcherNotificationInboundPort = this.rdiobp.getRequestDispatcherPortsURI().get(RequestDispatcherPortTypes.REQUEST_NOTIFICATION);
-		requestDispatcherManagementOutboundPort = this.rdiobp.getRequestDispatcherPortsURI().get(RequestDispatcherPortTypes.MANAGEMENT);
+		requestDispatcherManagementInboundPort = this.rdiobp.getRequestDispatcherPortsURI().get(RequestDispatcherPortTypes.MANAGEMENT);
 
 		this.addRequiredInterface(ControllerManagementI.class);
 		this.cmip = new ControllerManagementInboundPort(controllerManagement, this);
@@ -143,7 +150,16 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		this.addPort(rdsdip);
 		this.rdsdip.publishPort();
 		
+		this.addRequiredInterface(RequestDispatcherManagementI.class);
+
+		rdmop = new RequestDispatcherManagementOutboundPort(controllerURI + "-rdmop",
+				this);
+
+		this.addPort(rdmop);
+		this.rdmop.publishPort();
 		
+		this.rdmop.doConnection(requestDispatcherManagementInboundPort, RequestDispatcherManagementConnector.class.getCanonicalName());
+
 		this.vmFree = new ArrayList<>();
 		this.vmReserved = new ArrayList<>();
 	}
@@ -151,11 +167,9 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	@Override
 	public void acceptRequestDispatcherDynamicData(String dispatcherURI,
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
-		
 		if(currentDynamicState.getAvgExecutionTime()!=null) {
 			this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
 			processControl(currentDynamicState.getAvgExecutionTime(), currentDynamicState.getVirtualMachineDynamicStates());
-			
 			//On redonne les VMs au prochain controller.
 			while(!vmReserved.isEmpty()) {
 				synchronized (o) {
@@ -196,61 +210,51 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		return Threeshold.HIGHER;
 	}
 
-	public boolean isHigher(Double time){
+	private boolean isHigher(Double time){
 		return Double.compare(time, (StaticData.AVERAGE_TARGET*StaticData.HIGHER_PERCENT + StaticData.AVERAGE_TARGET)) == 1 ? true : false;
 	}
 
-	public boolean isLower(Double time){
+	private boolean isLower(Double time){
 		return Double.compare(time, (StaticData.AVERAGE_TARGET*StaticData.LOWER_PERCENT - StaticData.AVERAGE_TARGET)) == -1 ? true : false;
 	}
 	
 	private synchronized void processControl(Double time, Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		double factor=0;
 		int number=0;
-		
-		ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
-		Integer cores = getNumberOfCoresAllocatedFrom(vms);
-		
+		System.out.println(time);
+		Integer coresAllocates = getNumberOfCoresAllocatedFrom(vms);
 		
 		
-		switch(getThreeshold(time)){
-		case HIGHER :
-			factor = (time/StaticData.AVERAGE_TARGET);
-			number = Math.max(1, (int)(cores*factor));
-			number = Math.min(StaticData.MAX_ALLOCATION, number);
-			
-			//Try to change frequency
-			for(int i = 0; i < randomVM.getAllocatedCoresNumber().length;i++) {
-				boolean set = pcmop.setCoreFrequency(CoreAsk.HIGHER, randomVM.getProcessorURI(), randomVM.getAllocatedCoresNumber()[i]);
-
-				if(set) {
-				//	this.logMessage("Frequece was set");
-				}
-			}
-			if(!vmReserved.isEmpty())
-				this.acmop.allocVm(appURI, vmReserved.remove(0) , this.rdUri, this.requestDispatcherNotificationInboundPort);
-			//this.acmop.addCores(null, randomVM.getApplicationVMURI(), 1);
-			break;
-		case LOWER :
-			factor = (StaticData.AVERAGE_TARGET/time);
-			number =Math.max(1, (int)(cores-(cores/factor)));
-			number =Math.min(StaticData.MIN_ALLOCATION, number);
-			if(vms.size()==1 && cores == StaticData.MIN_ALLOCATION) {
-				//TODO add proco
+		try {
+			switch(getThreeshold(time)){
+			case HIGHER :
+				factor = (time/StaticData.AVERAGE_TARGET);
+				number = Math.max(1, (int)(coresAllocates*factor));
+				number = Math.min(StaticData.MAX_ALLOCATION, number);
+				
+	
+				HighterCase(vms, coresAllocates);
+				//this.acmop.addCores(null, randomVM.getApplicationVMURI(), 1);
+				break;
+			case LOWER :
+				factor = (StaticData.AVERAGE_TARGET/time);
+				number =Math.max(1, (int)(coresAllocates-(coresAllocates/factor)));
+				number =Math.min(StaticData.MIN_ALLOCATION, number);
+	
+			//	processDeallocate(factor,number,vms,double1,nbreq,cores);
+				
+				// add Reset request stat?
+	
+				break;
+			case GOOD :
+				break;
+			default:
 				break;
 			}
-		//	processDeallocate(factor,number,vms,double1,nbreq,cores);
-			
-			// add Reset request stat?
-
-			break;
-		case GOOD :
-			break;
-		default:
-			break;
+		}catch (Exception e) {
+			e.printStackTrace();
 		}
-		
-		w.write(Arrays.asList(cores.toString(), ((Integer)vms.size()).toString()));
+		w.write(Arrays.asList(coresAllocates.toString(), ((Integer)vms.size()).toString()));
 
 	}
 
@@ -266,6 +270,76 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		   number+= entry.getValue().getAllocatedCoresNumber().length;
 		}
 		return number;
+	}
+
+	/**
+	 * Cas où les machines virtuelles ne vont pas assez vite.
+	 * Nous devons donc augmenter la puissance du système responsable de la résolution de requêtes.
+	 * 
+	 * @param vms
+	 * @throws Exception 
+	 */
+	private void LowerCase(Map<String, ApplicationVMDynamicStateI > vms, int coresAllocates) throws Exception {
+		
+		//Add a vm
+		if(!vmReserved.isEmpty())
+			this.acmop.allocVm(appURI, vmReserved.remove(0) , this.rdUri, this.requestDispatcherNotificationInboundPort);
+		
+		ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
+		
+		
+		//Try to up frequency
+		int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.HIGHER, randomVM);
+	}
+	
+	
+	/**
+	 * Cas où les machines virtuelles ne vont pas assez vite.
+	 * Nous devons donc augmenter la puissance du système responsable de la résolution de requêtes.
+	 * 
+	 * @param vms
+	 * @throws Exception 
+	 */
+	private void HighterCase(Map<String, ApplicationVMDynamicStateI > vms, int coresAllocates) throws Exception {
+		
+		boolean canRemoveVM = vms.size()== 1;
+		boolean canDesalocate = coresAllocates  == StaticData.MIN_ALLOCATION;
+		
+		
+		/*if(!canRemoveVM && !canDesalocate) {
+			this.logMessage("Can't lower anymore...");
+			return;
+		}*/
+		
+		
+		//Add a VM
+		this.addVm(vmReserved.remove(0));
+
+		ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
+		
+		
+		
+		
+		//Try to lower frequency
+		int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.LOWER, randomVM);
+		
+	}
+	
+	
+	private int setCoreFrequency(CoreAsk ask, ApplicationVMDynamicStateI vm){
+		this.logMessage("Try to " + ask.toString() + " for " + vm.getApplicationVMURI());
+		int nb = 0;
+		for(int i = 0; i < vm.getAllocatedCoresNumber().length; i++) {
+			try {
+				nb +=  (pcmop.setCoreFrequency(ask, vm.getProcessorURI(), vm.getAllocatedCoresNumber()[i])) ? 1 : 0;
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		this.logMessage(nb + " cores was set for " + vm.getApplicationVMURI());
+
+		return nb;
 	}
 	
 	static class StaticData {
@@ -296,7 +370,6 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		}
 	}
 	
-
 	@Override
 	public void startUnlimitedPushing(int interval) throws Exception {
 		// first, send the static state if the corresponding port is connected
@@ -401,13 +474,25 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		rdsdop.doConnection(DataInboundPortUri, ControlledDataConnector.class.getCanonicalName());
 	}
 	
-	public void addVm(ApplicationVMInfo vm) {
+	public synchronized void addVm(ApplicationVMInfo vm){
+		
+		// Create a mock up port to manage the AVM component (allocate cores).
+		ApplicationVMManagementOutboundPort avmPort;
 		try {
-			this.acmop.allocVm(appURI, vm, rdUri, requestDispatcherNotificationInboundPort);
+			idVm++;
+			avmPort = new ApplicationVMManagementOutboundPort(
+					vm.getAvmOutbound()+"-" + controllerURI+idVm, this);
+			avmPort.publishPort() ;
+			avmPort.doConnection(vm.getAvmInbound(),
+						ApplicationVMManagementConnector.class.getCanonicalName());
+			
+			rdmop.connectVirtualMachine(vm.getApplicationVM(), vm.getSubmissionInboundPortUri());
+			avmPort.connectWithRequestSubmissioner(rdUri, requestDispatcherNotificationInboundPort);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
 	}
 }
 
