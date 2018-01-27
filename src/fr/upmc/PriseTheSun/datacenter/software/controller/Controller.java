@@ -282,9 +282,9 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	private void LowerCase(Map<String, ApplicationVMDynamicStateI > vms, int coresAllocates) throws Exception {
 		
 		//Add a vm
-		if(!vmReserved.isEmpty())
-			this.acmop.allocVm(appURI, vmReserved.remove(0) , this.rdUri, this.requestDispatcherNotificationInboundPort);
-		
+		/*if(!vmReserved.isEmpty())
+			this.addVM(vmReserved.remove(0));
+		*/
 		ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
 		
 		

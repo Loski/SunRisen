@@ -9,11 +9,6 @@ import fr.upmc.components.connectors.AbstractConnector;
 public class AdmissionControllerManagementConnector extends	AbstractConnector implements AdmissionControllerManagementI
 {
 
-	@Override
-	public int addCores(String controllerURI, String vmUri, int nbCores) throws Exception {
-		return ( ( AdmissionControllerManagementI ) this.offering ).addCores( controllerURI,  null, nbCores);
-
-	}
 
 	@Override
 	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
@@ -22,23 +17,6 @@ public class AdmissionControllerManagementConnector extends	AbstractConnector im
 		 ( ( AdmissionControllerManagementI ) this.offering ).linkComputer(computerURI, ComputerServicesInboundPortURI, ComputerStaticStateDataInboundPortURI, ComputerDynamicStateDataInboundPortURI);
 	}
 
-	@Override
-	public boolean supCores(int nbCores, String vmUri) throws Exception {
-		return ( ( AdmissionControllerManagementI ) this.offering ).supCores(nbCores, vmUri);
 
-	}
-
-	@Override
-	public void releaseCore(String controllerURI, String VMURI) throws Exception {
-		( ( AdmissionControllerManagementI ) this.offering ).releaseCore(controllerURI, VMURI);
-		
-	}
-
-	@Override
-	public void allocVm(String appURI, ApplicationVMInfo vm, String dispatcherURI,
-			String dispatcherNotificationInboundPort) throws Exception {
-		( ( AdmissionControllerManagementI ) this.offering ).allocVm(appURI, vm, dispatcherURI, dispatcherNotificationInboundPort);
-		
-	}
 	
 }

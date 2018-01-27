@@ -1,5 +1,8 @@
 package fr.upmc.datacenter.hardware.computers.ports;
 
+import java.awt.Point;
+import java.util.ArrayList;
+
 //Copyright Jacques Malenfant, Univ. Pierre et Marie Curie.
 //
 //Jacques.Malenfant@lip6.fr
@@ -124,27 +127,41 @@ implements	ComputerServicesI
 					}) ;
 	}
 
+
 	@Override
-	public int reserveCoresForMe(String controllerUri, int nbCore) throws Exception {
+	public ArrayList<Point> reserveCores(int nbCore) throws Exception {
 		final Computer c = (Computer) this.owner ;
 		return c.handleRequestSync(
-					new ComponentI.ComponentService<Integer>() {
-						@Override
-						public Integer call() throws Exception {
-							return c.reserveCoresForMe(controllerUri, nbCore);
-						}
-					}) ;
+			new ComponentI.ComponentService<ArrayList<Point>>() {
+				@Override
+				public ArrayList<Point> call() throws Exception {
+					 return c.reserveCores(nbCore);
+				}
+		});
+	}
+
+
+	@Override
+	public void releaseCore(ArrayList<Point> pts) throws Exception {
+		final Computer c = (Computer) this.owner ;
+		c.handleRequestSync(
+			new ComponentI.ComponentService<Void>() {
+				@Override
+				public Void call() throws Exception {
+					  c.releaseCore(pts);
+					  return null;
+				}
+		});
 	}
 
 	@Override
-	public void releaseCore(String controllerURI) throws Exception {
+	public AllocatedCore[] allocateCores(ArrayList<Point> cores) throws Exception {
 		final Computer c = (Computer) this.owner ;
-		c.handleRequestSync(
-					new ComponentI.ComponentService<Void>() {
+		return c.handleRequestSync(
+					new ComponentI.ComponentService<AllocatedCore[]>() {
 						@Override
-						public Void call() throws Exception {
-							 c.releaseCore(controllerURI);
-							return null;
+						public AllocatedCore[] call() throws Exception {
+							return c.allocateCores(cores) ;
 						}
 					}) ;
 	}

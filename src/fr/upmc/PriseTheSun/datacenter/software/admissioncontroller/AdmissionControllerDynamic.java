@@ -423,27 +423,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		return dispatcherUri;
 	}
 	
-	@Override
-	public int addCores(String controllerURI, String vmUri, int nbCores) {
-		ComputerServicesOutboundPort csop = csopMap.get(vmUri);
-		try {
-			return csop.reserveCoresForMe(controllerURI, nbCores);
-		
-		} catch (Exception e) {
-			this.logMessage("Failed to allocates core for a new application." + e.getMessage());
-			return 0;
-		}
-	}
-	
-	@Override
-	public void releaseCore(String controllerURI, String VMURI) throws Exception {
-		ComputerServicesOutboundPort csop = csopMap.get(VMURI);
-		try {
-			csop.releaseCore(controllerURI);
-		} catch (Exception e) {
-			this.logMessage("Failed to realease core for " + VMURI +  e.getMessage());
-		}
-	}
+
+
 
 	private ApplicationVMManagementOutboundPort findVM(String vmUri) throws Exception {
 		return avmOutPort.get(vmUri);
@@ -551,17 +532,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		return applicationVM[0];
 	}
 
-	@Override
-	public boolean supCores(int nbCores, String vmUri) throws Exception {
-		ComputerServicesOutboundPort csop = csopMap.get(vmUri);
-		try {
-			findVM(vmUri).desallocateCores(nbCores);
-			return true;
-		} catch (Exception e) {
-			this.logMessage("Failed to allocates core for a new application." + e.getMessage());
-			return false;
-		}
-	}
 
 	@Override
 	public void acceptRingDynamicData(String requestDispatcherURI, RingDynamicStateI currentDynamicState)

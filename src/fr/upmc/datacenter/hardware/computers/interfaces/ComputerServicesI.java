@@ -1,5 +1,8 @@
 package fr.upmc.datacenter.hardware.computers.interfaces;
 
+import java.awt.Point;
+import java.util.ArrayList;
+
 //Copyright Jacques Malenfant, Univ. Pierre et Marie Curie.
 //
 //Jacques.Malenfant@lip6.fr
@@ -97,9 +100,10 @@ extends		OfferedI,
 	 */
 	public AllocatedCore[]	allocateCores(final int numberRequested)
 	throws Exception ;
-	
-	public int reserveCoresForMe(String controllerUri, int nbCore) throws Exception;
-	public void releaseCore(String controllerURI) throws Exception;
 
+
+	public ArrayList<Point> reserveCores(int nbCore) throws Exception;
+	public void releaseCore(ArrayList<Point> pts) throws Exception;
+	public AllocatedCore[] allocateCores(ArrayList<Point> cores) throws Exception;
 	
 }

@@ -20,10 +20,6 @@ implements	fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interface
 		assert	owner != null && owner instanceof AdmissionControllerManagementI;
 	}
 
-	@Override
-	public int addCores(String controllerURI, String vmUri, int nbCores) throws Exception {
-		return ( ( AdmissionControllerManagementI ) this.connector ).addCores(controllerURI, null, nbCores);
-	}
 
 	@Override
 	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
@@ -32,19 +28,5 @@ implements	fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interface
 		((AdmissionControllerManagementI)this.connector).linkComputer(computerURI, ComputerServicesInboundPortURI, ComputerStaticStateDataInboundPortURI, ComputerDynamicStateDataInboundPortURI);	
 	}
 
-	@Override
-	public boolean supCores(int nbCores, String vmUri) throws Exception {
-		return ( ( AdmissionControllerManagementI ) this.connector ).supCores(nbCores, vmUri);
-	}
 
-	@Override
-	public void releaseCore(String controllerURI, String VMURI) throws Exception {
-		( ( AdmissionControllerManagementI ) this.connector ).releaseCore(controllerURI, VMURI);
-	}
-
-	@Override
-	public void allocVm(String appURI, ApplicationVMInfo vm, String dispatcherURI,
-			String dispatcherNotificationInboundPort) throws Exception {
-		( ( AdmissionControllerManagementI ) this.connector ).allocVm(appURI, vm, dispatcherURI, dispatcherNotificationInboundPort);
-	}
 }

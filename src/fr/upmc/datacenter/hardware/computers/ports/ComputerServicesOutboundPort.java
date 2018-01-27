@@ -1,5 +1,8 @@
 package fr.upmc.datacenter.hardware.computers.ports;
 
+import java.awt.Point;
+import java.util.ArrayList;
+
 //Copyright Jacques Malenfant, Univ. Pierre et Marie Curie.
 //
 //Jacques.Malenfant@lip6.fr
@@ -103,13 +106,19 @@ implements	ComputerServicesI
 											allocateCores(numberRequested) ;
 	}
 
+
 	@Override
-	public int reserveCoresForMe(String controllerUri, int nbCore) throws Exception {
-		return ((ComputerServicesI)this.connector).reserveCoresForMe(controllerUri, nbCore);
+	public ArrayList<Point> reserveCores(int nbCore) throws Exception {
+		return ((ComputerServicesI)this.connector).reserveCores(nbCore);
 	}
 
 	@Override
-	public void releaseCore(String controllerURI) throws Exception {
-		((ComputerServicesI)this.connector).releaseCore(controllerURI);
+	public void releaseCore(ArrayList<Point> pts) throws Exception {
+		((ComputerServicesI)this.connector).releaseCore(pts);
+	}
+
+	@Override
+	public AllocatedCore[] allocateCores(ArrayList<Point> cores) throws Exception {
+		return ((ComputerServicesI)this.connector).allocateCores(cores) ;
 	}
 }

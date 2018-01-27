@@ -21,18 +21,7 @@ public class AdmissionControllerManagementInboundPort extends AbstractInboundPor
 		assert	owner != null && owner instanceof AdmissionControllerManagementI ;
 	}
 
-	@Override
-	public int addCores(String controllerURI, String vmUri, int nbCores) throws Exception {
-		final AdmissionControllerManagementI acm = ( AdmissionControllerManagementI ) this.owner;
-		
-		return this.owner.handleRequestSync(
-				new ComponentI.ComponentService<Integer>() {
-					@Override
-					public Integer call() throws Exception {
-						return acm.addCores(controllerURI, vmUri, nbCores) ;
-					}
-				});
-		}
+
 
 	@Override
 	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
@@ -50,44 +39,7 @@ public class AdmissionControllerManagementInboundPort extends AbstractInboundPor
 				});
 	}
 
-	@Override
-	public boolean supCores(int nbCores, String vmUri) throws Exception {
-		final AdmissionControllerManagementI acm = ( AdmissionControllerManagementI ) this.owner;
-		return this.owner.handleRequestSync(
-				new ComponentI.ComponentService<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return acm.supCores(nbCores, vmUri) ;
-					}
-				});
-	}
 
-	@Override
-	public void releaseCore(String controllerURI, String VMURI) throws Exception {
-		final AdmissionControllerManagementI acm = ( AdmissionControllerManagementI ) this.owner;
-		this.owner.handleRequestSync(
-				new ComponentI.ComponentService<Void>() {
-					@Override
-					public Void call() throws Exception {
-						 acm.releaseCore(controllerURI, VMURI);
-						return null;
-					}
-				});
-	}
-
-	@Override
-	public void allocVm(String appURI, ApplicationVMInfo vm, String dispatcherURI,
-			String dispatcherNotificationInboundPort) throws Exception {
-		final AdmissionControllerManagementI acm = ( AdmissionControllerManagementI ) this.owner;
-		this.owner.handleRequestSync(
-				new ComponentI.ComponentService<Void>() {
-					@Override
-					public Void call() throws Exception {
-						 acm.allocVm(appURI, vm, dispatcherURI, dispatcherNotificationInboundPort);
-						return null;
-					}
-				});
-	}
 	
 	
 }

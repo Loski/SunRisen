@@ -260,7 +260,6 @@ implements	ProcessorStateDataConsumerI,
 											computerDynamicStateDataInboundPort ;
 	/** future of the task scheduled to push dynamic data.					*/
 	protected ScheduledFuture<?>			pushingFuture ;
-	private Map<String, ArrayList<Point>> reservedCoresByController;
 
 	
 	
@@ -431,7 +430,6 @@ implements	ProcessorStateDataConsumerI,
 			}
 		}
 		
-		this.reservedCoresByController = new HashMap<>();
 		// Adding computer interfaces, creating and publishing the related ports
 		this.addOfferedInterface(ComputerServicesI.class) ;
 		this.computerServicesInboundPort =
@@ -1102,24 +1100,7 @@ implements	ProcessorStateDataConsumerI,
 		return sb.toString() ;
 	}
 	
-	@Override
-	public int reserveCoresForMe(String controllerUri, int nbCore) {
-		if(!reservedCoresByController.containsKey(controllerUri)) {
-			this.reservedCoresByController.put(controllerUri, new ArrayList<Point>());
-		}
-		int x = 0, y = 0;
-		while(reservedCoresByController.get(controllerUri).size() < nbCore ) {
-			Point core = findFreeCore(x, y);
-			if(core == null) {
-				break;
-			}else {
-				this.reservedCoresByController.get(controllerUri).add(core);
-				x = (int) core.getX();
-				y = (int) core.getY();
-			}
-		}
-		return reservedCoresByController.get(controllerUri).size();
-	}
+
 	
 	private Point findFreeCore(int i, int j) {
 		for( ; i < this.numberOfProcessors; i++) {
@@ -1137,10 +1118,26 @@ implements	ProcessorStateDataConsumerI,
 		}
 		return null;
 	}
-
-	private AllocatedCore[] allocateCore(String controllerUri) {
-		ArrayList<Point> tmp = this.reservedCoresByController.remove(controllerUri);
-		AllocatedCore cores[] = new AllocatedCore[reservedCoresByController.size()];
+	
+	public ArrayList<Point> reserveCores(int numberToReserved) {
+		ArrayList<Point> cores = new ArrayList<Point>(numberToReserved);
+		int x = 0, y = 0;
+		while(cores.size() < numberToReserved ) {
+			Point core = findFreeCore(x, y);
+			if(core == null) {
+				break;
+			}else {
+				cores.add(core);
+				x = (int) core.getX();
+				y = (int) core.getY();
+			}
+		}
+		return cores;
+	}
+	
+	@Override
+	public AllocatedCore[] allocateCores(ArrayList<Point> tmp) {
+		AllocatedCore cores[] = new AllocatedCore[tmp.size()];
 		int i = 0;
 		while(!tmp.isEmpty()) {
 			Point pt =  tmp.remove(0);
@@ -1155,10 +1152,9 @@ implements	ProcessorStateDataConsumerI,
 		return cores;
 	}
 	
-	public void releaseCore(String controllerURI) {
-		ArrayList<Point> tmp = this.reservedCoresByController.remove(controllerURI);
-		while(!tmp.isEmpty()) {
-			Point pt = tmp.remove(0);
+	public void releaseCore(ArrayList<Point> cores) {
+		while(!cores.isEmpty()) {
+			Point pt = cores.remove(0);
 			this.releaseCore((int) pt.getX(), (int) pt.getY());
 		}
 		return;
