@@ -74,7 +74,7 @@ implements	ApplicationVMDynamicStateI
 	}
 
 	@Override
-	public int numberOfRequestInQueue() {
+	public int getNumberOfRequestInQueue() {
 		return this.numberOfRequestInQueue;
 	}
 
