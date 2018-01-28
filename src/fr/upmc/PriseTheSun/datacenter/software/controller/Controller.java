@@ -65,14 +65,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	protected AdmissionControllerManagementOutboundPort acmop;
 	protected RequestDispatcherDynamicStateDataOutboundPort rddsdop;
 	protected ProcessorsControllerManagementOutboundPort pcmop;
-	private RingDynamicStateDataOutboundPort rdsdop;
-	private RingDynamicStateDataInboundPort rdsdip;
-	int idVm = 0;
-	//Vm reserved
-	private List<ApplicationVMInfo> vmReserved;
-	//vm to propagate to other controller
-	private List<ApplicationVMInfo> vmFree;
-	private Object o = new Object();
+
 	private ScheduledFuture<?> pushingFuture;
 	private ControllerManagementInboundPort cmip;
 	
@@ -80,12 +73,28 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 
 	private String requestDispatcherNotificationInboundPort;
 	private String requestDispatcherManagementInboundPort;
-	private String appURI; 
-	
-	private Writter w;
 	private RequestDispatcherManagementOutboundPort rdmop;
+
 	
-	public Controller(String appURI, String controllerURI, String controllerManagement, String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri, String RingDynamicStateDataOutboundPortURI, String RingDynamicStateDataInboundPortURI, String nextRingDynamicStateDataInboundPort) throws Exception
+	int idVm = 0;
+	//Vm reserved
+	private List<ApplicationVMInfo> vmReserved;
+	//vm to propagate to other controller
+	private List<ApplicationVMInfo> vmFree;
+	 
+	private List<ApplicationVMInfo> myVMs;
+	
+	
+	private RingDynamicStateDataOutboundPort rdsdop;
+	private RingDynamicStateDataInboundPort rdsdip;
+	
+	
+	private String appURI; 	
+	private Writter w;
+	private Object o = new Object();
+
+	
+	public Controller(String appURI, String controllerURI, String controllerManagement, String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri, String RingDynamicStateDataOutboundPortURI, String RingDynamicStateDataInboundPortURI, String nextRingDynamicStateDataInboundPort, ApplicationVMInfo vm) throws Exception
 	{
 		super(controllerURI,1,1);
 		
@@ -160,8 +169,10 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		
 		this.rdmop.doConnection(requestDispatcherManagementInboundPort, RequestDispatcherManagementConnector.class.getCanonicalName());
 
-		this.vmFree = new ArrayList<>();
-		this.vmReserved = new ArrayList<>();
+		this.vmFree = new ArrayList<ApplicationVMInfo>();
+		this.vmReserved = new ArrayList<ApplicationVMInfo>();
+		this.myVMs =  new ArrayList<ApplicationVMInfo>();
+		this.addVm(vm);
 	}
 	
 	@Override
@@ -190,7 +201,6 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		System.out.println("Dispatcher Static Data : ");
 	}
 	
-
 	@Override
     public void shutdown() throws ComponentShutdownException {
         try {
@@ -291,8 +301,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		//Try to up frequency
 		int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.HIGHER, randomVM);
 	}
-	
-	
+
 	/**
 	 * Cas où les machines virtuelles ne vont pas assez vite.
 	 * Nous devons donc augmenter la puissance du système responsable de la résolution de requêtes.
@@ -324,7 +333,6 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.LOWER, randomVM);
 		
 	}
-	
 	
 	private int setCoreFrequency(CoreAsk ask, ApplicationVMDynamicStateI vm){
 		this.logMessage("Try to " + ask.toString() + " for " + vm.getApplicationVMURI());
@@ -481,18 +489,27 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		try {
 			idVm++;
 			avmPort = new ApplicationVMManagementOutboundPort(
-					vm.getAvmOutbound()+"-" + controllerURI+idVm, this);
+					"avmop"+"-" + controllerURI+idVm, this);
 			avmPort.publishPort() ;
 			avmPort.doConnection(vm.getAvmInbound(),
 						ApplicationVMManagementConnector.class.getCanonicalName());
-			
 			rdmop.connectVirtualMachine(vm.getApplicationVM(), vm.getSubmissionInboundPortUri());
 			avmPort.connectWithRequestSubmissioner(rdUri, requestDispatcherNotificationInboundPort);
+			this.myVMs.add(vm);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+	}
+	
+	public void noticeMeSempai(String vmURI) throws Exception {
+		for(int i = 0; i < this.myVMs.size(); i++) {
+			if(myVMs.get(i).getApplicationVM().equals(vmURI)) {
+				vmFree.add(myVMs.remove(i));
+				return;
+			}
+		}
+		throw new Exception("Vm was not found. Can't delete.");
 	}
 }
 

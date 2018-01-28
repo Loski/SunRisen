@@ -12,16 +12,15 @@ public class ApplicationVMInfo{
 
 	private String applicationVM;
 	public String avmInbound;
-	private String avmOutbound;
 	private String submissionInboundPortUri;
-
-	public ApplicationVMInfo(String applicationVM, String avmInbound, String avmOutbound,
-			String submissionInboundPortUri) {
+	private String computerManagementInboundPortURI;
+	
+	public ApplicationVMInfo(String applicationVM, String avmInbound, String submissionInboundPortUri, String computerManagementInboundPortURI2) {
 		super();
 		this.applicationVM = applicationVM;
 		this.avmInbound = avmInbound;
-		this.avmOutbound = avmOutbound;
 		this.submissionInboundPortUri = submissionInboundPortUri;
+		this.setComputerManagementInboundPortURI(computerManagementInboundPortURI2);
 	}
 
 	public String getApplicationVM() {
@@ -36,14 +35,6 @@ public class ApplicationVMInfo{
 		this.avmInbound = avmInbound;
 	}
 
-	public String getAvmOutbound() {
-		return avmOutbound;
-	}
-
-	public void setAvmOutbound(String avmOutbound) {
-		this.avmOutbound = avmOutbound;
-	}
-
 	public String getSubmissionInboundPortUri() {
 		return submissionInboundPortUri;
 	}
@@ -54,6 +45,14 @@ public class ApplicationVMInfo{
 
 	public void setApplicationVM(String applicationVM) {
 		this.applicationVM = applicationVM;
+	}
+
+	public String getComputerManagementInboundPortURI() {
+		return computerManagementInboundPortURI;
+	}
+
+	public void setComputerManagementInboundPortURI(String computerManagementInboundPortURI) {
+		this.computerManagementInboundPortURI = computerManagementInboundPortURI;
 	}
 
 }

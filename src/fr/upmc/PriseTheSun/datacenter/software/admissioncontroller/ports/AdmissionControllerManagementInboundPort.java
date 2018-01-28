@@ -36,7 +36,8 @@ public class AdmissionControllerManagementInboundPort extends AbstractInboundPor
 						acm.linkComputer(computerURI, ComputerServicesInboundPortURI, ComputerStaticStateDataInboundPortURI, ComputerDynamicStateDataInboundPortURI);
 						return null;
 					}
-				});
+				}
+		);
 	}
 
 

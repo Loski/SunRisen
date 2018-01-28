@@ -11,6 +11,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import fr.upmc.PriseTheSun.datacenter.hardware.computer.ComputerController;
+import fr.upmc.PriseTheSun.datacenter.hardware.computer.connector.ComputerControllerConnector;
+import fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagement;
+import fr.upmc.PriseTheSun.datacenter.hardware.computer.ports.ComputerControllerManagementInboundPort;
+import fr.upmc.PriseTheSun.datacenter.hardware.computer.ports.ComputerControllerManagementOutboutPort;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.ProcessorsController;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementInboundPort;
@@ -77,8 +83,8 @@ import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOu
 public class AdmissionControllerDynamic extends AbstractComponent implements ApplicationSubmissionI, AdmissionControllerManagementI, RingDataI, PushModeControllingI{
 
 	public static int DEBUG_LEVEL = 1 ;
+	
 	protected String acURI;
-
 	protected static final String RequestDispatcherManagementInboundPortURI = "rdmip";
 	protected static final String RequestNotificationInboundPortURI = "rnip";
 	protected static final String RequestSubmissionInboundPortURI = "rsip";
@@ -93,7 +99,10 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	protected static final String ProcessorControllerManagementInboundPortURI = "pcmip";
 	protected static final String ControllerDataRingInboundPortURI = "cdrip";
 	protected static final String ControllerDataRingOutboundPortURI = "cdrop";
-	
+	protected static final String ComputerControllerManagementInboundPortURI = "ccmip";
+	protected static final String ComputerControllerManagementUri = "ccm";
+
+
 	
 
 	protected AdmissionControllerManagementInboundPort acmip;
@@ -102,37 +111,39 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	
 	protected Map<String, ApplicationVMManagementOutboundPort> avmOutPort;
 	
-	
-	protected ArrayList<ComputerServicesOutboundPort> csops;
+
 	protected ArrayList<ComputerStaticStateDataOutboundPort> cssdops;
 	protected ArrayList<ComputerDynamicStateDataOutboundPort> cdsdops;
-	protected ArrayList<Integer> nbAvailablesCores;
-	protected ArrayList<String> computerUri;
-	
+	protected ArrayList<ComputerControllerManagementOutboutPort > cmops;
+
 	protected ScheduledFuture<?>	pushingFuture ;
-	 // Map between RequestDispatcher URIs and the management ports to call them.
+	
+	
+	// Map between RequestDispatcher URIs and the management ports to call them.
 	protected Map<String, RequestDispatcherManagementOutboundPort> rdmopMap;
 	
 	//Map Between a vm and his computer
-	protected Map<String, ComputerServicesOutboundPort> csopMap;
 	protected List<ApplicationVMInfo> FreeApplicationVM;
 	protected List<ApplicationVMInfo> OccupedApplicationVM;
-	protected LinkedHashMap<Class,Class> interface_dispatcher_map;
 	private ProcessorsController processorController;
+
 	Object o=new Object();
 	protected static final int NB_CORES = 2;
+	
 	private static final int RING_PUSH_INTERVAL = 50;
 	
 	private DynamicComponentCreationOutboundPort portToRequestDispatcherJVM;
 	private DynamicComponentCreationOutboundPort portToApplicationVMJVM;
 	private DynamicComponentCreationOutboundPort portTControllerJVM;
+	
+	/*Port du la structure en anneau pour relier chaque controller*/ 
 	private RingDynamicStateDataOutboundPort rdsdop;
 	private RingDynamicStateDataInboundPort rdsdip;
 	private String AdmissionControllerDataRingOutboundUri;
 	private String AdmissionControllerDataRingInboundUri;
 
 	private String nextControllerDataRingUri;
-	private Object previousControllerManagementUri;
+	private Object previousControllerDataRingUri;
 	
 
 	/*protected static final String RequestDispatcher_JVM_URI = "controller" ;
@@ -148,7 +159,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		
 		super(acURI,2, 2);
 		
-		this.computerUri = new ArrayList<String>();
 		this.toggleLogging();
 		this.toggleTracing();
 		this.acURI = acURI;	
@@ -204,11 +214,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.rdsdip.publishPort();
 		this.avmOutPort = new HashMap<String, ApplicationVMManagementOutboundPort>();
 		this.rdmopMap = new HashMap<String, RequestDispatcherManagementOutboundPort>();
-		this.interface_dispatcher_map = new LinkedHashMap<>();
-		this.csops = new ArrayList<ComputerServicesOutboundPort>();
 		this.cssdops = new ArrayList<ComputerStaticStateDataOutboundPort>();
 		this.cdsdops = new ArrayList<ComputerDynamicStateDataOutboundPort>();
-		this.nbAvailablesCores = new ArrayList<Integer>();
+		this.cmops = new ArrayList<ComputerControllerManagementOutboutPort>();
 		this.FreeApplicationVM = new ArrayList<>();
 		this.OccupedApplicationVM = new ArrayList<>();
 		this.processorController = new ProcessorsController("controller", ProcessorControllerManagementInboundPortURI);
@@ -219,7 +227,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		super.start();
 	}
 	 
-	
+	@Deprecated
 	private void allocVm(String appURI, String[] dispatcherUri, ApplicationVMInfo wrap) throws Exception {
 		//Ajout dans les VMs réservés
 		this.OccupedApplicationVM.add(wrap);
@@ -245,6 +253,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		rop.doDisconnection();
 	}
 
+	@Deprecated
 	public void allocVm(String appURI, ApplicationVMInfo vm, String dispatcherURI, String dispatcherNotificationInboundPort) throws Exception {
 		rdmopMap.get(appURI).connectVirtualMachine(vm.getApplicationVM(), vm.getSubmissionInboundPortUri());
 		this.avmOutPort.get(vm.getApplicationVM()).connectWithRequestSubmissioner(dispatcherURI, dispatcherNotificationInboundPort);
@@ -258,9 +267,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	@Override
 	public void shutdown() throws ComponentShutdownException {
 		try {			
-			for(ComputerServicesOutboundPort csop : csops) {
-				if (csop.connected()) {
-					csop.doDisconnection();
+			for(ComputerControllerManagementOutboutPort cmop : this.cmops) {
+				if (cmop.connected()) {
+					cmop.doDisconnection();
 				}
 			}
 			for(ComputerDynamicStateDataOutboundPort cdsdop : cdsdops) {
@@ -290,7 +299,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		super.shutdown();
 	}
 	
-	private String[] createController(String appURI, String requestDispatcherDynamicStateDataInboundPortURI, String rdURI) throws Exception
+	private String[] createController(String appURI, String requestDispatcherDynamicStateDataInboundPortURI, String rdURI, ApplicationVMInfo vm) throws Exception
 	{
 		String controllerURIs[] = new String[6];
 		controllerURIs[0] = appURI + "-controller";
@@ -328,11 +337,12 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 						ProcessorControllerManagementInboundPortURI,
 						controllerURIs[3],
 						controllerURIs[4],
-						controllerURIs[5]
+						controllerURIs[5],
+						vm
 		});
-
-		rdsdop.doConnection(controllerURIs[4], ControlledDataConnector.class.getCanonicalName());
 		
+		rdsdop.doConnection(controllerURIs[4], ControlledDataConnector.class.getCanonicalName());
+		this.OccupedApplicationVM.add(vm);
 		this.startUnlimitedPushing(10);
 		
 		
@@ -379,7 +389,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		return dispatcherURI;
 	}
 	
-
 	@Override
 	public synchronized String[] submitApplication(String appURI, int nbVM) throws Exception{
 		
@@ -394,8 +403,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		}
 		
 		String dispatcherUri[] = createDispatcher(appURI, RequestDispatcher.class.getCanonicalName());
-		this.allocVm(appURI, dispatcherUri, vm);
-		this.createController(appURI,dispatcherUri[6],dispatcherUri[0]);
+		this.createController(appURI,dispatcherUri[6],dispatcherUri[0], vm);
 		return dispatcherUri;
 	}
 	
@@ -416,85 +424,76 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		}
 		
 		Class<?> dispa = RequestDispatcherCreator.createRequestDispatcher("JAVASSIST-dispa", RequestDispatcher.class, submissionInterface);
-		interface_dispatcher_map.put(submissionInterface, dispa);
 		String dispatcherUri[] = createDispatcher(appURI, dispa.getCanonicalName());
-		this.allocVm(appURI, dispatcherUri, vm);
-		this.createController(appURI,dispatcherUri[6],dispatcherUri[0]);
+		this.createController(appURI,dispatcherUri[6],dispatcherUri[0], vm);
 		return dispatcherUri;
 	}
 	
-
-
-
 	private ApplicationVMManagementOutboundPort findVM(String vmUri) throws Exception {
 		return avmOutPort.get(vmUri);
 	}
 
-
 	@Override
 	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
-			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI)
-			throws Exception {
+		String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI)
+		throws Exception {
+	
+
+
+		String cssopUri = ComputerStaticStateDataOutboundPortURI + "_" +  this.cssdops.size();
+		ComputerStaticStateDataOutboundPort cssdop = new ComputerStaticStateDataOutboundPort(cssopUri, this, computerURI);
+		this.addPort(cssdop);
+		cssdop.publishPort();
+		cssdop.doConnection(
+				ComputerStaticStateDataInboundPortURI,
+				ControlledDataConnector.class.getCanonicalName());
 		
-			String csopUri = AdmissionControllerDynamic.computerServiceOutboundPortURI + "_" +  this.csops.size();
+		ComputerStaticStateI staticState= (ComputerStaticStateI) cssdop.request();
+		int nbCores = staticState.getNumberOfCoresPerProcessor();
+		int nbProc = staticState.getNumberOfProcessors();
+		this.cssdops.add(cssdop);
 
-			ComputerServicesOutboundPort csop = new ComputerServicesOutboundPort(csopUri, this);
-			this.addPort(csop);
-			
-			csop.publishPort();
-			csop.doConnection(
-					ComputerServicesInboundPortURI,
-					ComputerServicesConnector.class.getCanonicalName());
-			this.csops.add(csop);
+        ArrayList<String> processorsURIs = new ArrayList<String>();
+        ArrayList<String> pmipURIs = new ArrayList<String>();
+        ArrayList<String> pssdURIs = new ArrayList<String>();
+        ArrayList<String> pdsdURIs = new ArrayList<String>();
+        Map<Integer, String> processorURIsMap = staticState.getProcessorURIs();
+        
+        
+        for (Map.Entry<Integer, String> entry : processorURIsMap.entrySet()) {
+            Map<ProcessorPortTypes, String> pPortsList = staticState.getProcessorPortMap()
+                    .get(entry.getValue());
+            processorsURIs.add(entry.getValue());
+            pmipURIs.add(pPortsList.get(Processor.ProcessorPortTypes.MANAGEMENT));
+            pssdURIs.add(pPortsList.get(Processor.ProcessorPortTypes.STATIC_STATE));
+            pdsdURIs.add(pPortsList.get(Processor.ProcessorPortTypes.DYNAMIC_STATE));
+        }
+        
+        String computerController[] = new String[4];
+        computerController[0] = ComputerControllerManagementUri + cmops.size();						
+		computerController[1] = ComputerServicesInboundPortURI;
+		computerController[2] = ComputerControllerManagementInboundPortURI + cmops.size();
 
-			String cssopUri = ComputerStaticStateDataOutboundPortURI + "_" +  this.cssdops.size();
-			ComputerStaticStateDataOutboundPort cssdop = new ComputerStaticStateDataOutboundPort(cssopUri, this, computerURI);
-			this.addPort(cssdop);
-			cssdop.publishPort();
-			cssdop.doConnection(
-					ComputerStaticStateDataInboundPortURI,
-					ControlledDataConnector.class.getCanonicalName());
+		
+		
+       ComputerController tmp = new ComputerController(computerController[0], computerController[1], computerController[2]);
+       ComputerControllerManagementOutboutPort ccmop = new ComputerControllerManagementOutboutPort("ComputerControllerManagementOutboutPort" + cmops.size(), this);
+		
+         this.addPort(ccmop);
 			
-			ComputerStaticStateI staticState= (ComputerStaticStateI) cssdop.request();
-			int nbCores = staticState.getNumberOfCoresPerProcessor();
-			int nbProc = staticState.getNumberOfProcessors();
+			ccmop.publishPort();
+			ccmop.doConnection(
+					computerController[2],
+					ComputerControllerConnector.class.getCanonicalName());
+			this.cmops.add(ccmop);			
 			
-			this.nbAvailablesCores.add(nbCores*nbProc);
-			
-			
-			this.cssdops.add(cssdop);
-			String cdsdopUri = AdmissionControllerDynamic.computerDynamicStateDataOutboundPortURI + "_" +  this.cdsdops.size();
-			ComputerDynamicStateDataOutboundPort cdsdop = new ComputerDynamicStateDataOutboundPort(cdsdopUri, this, computerURI);
-			
-			this.addPort(cdsdop);
-			cdsdop.publishPort();
-			cdsdop.doConnection(
-					ComputerDynamicStateDataInboundPortURI,
-					ControlledDataConnector.class.getCanonicalName());
-			this.cdsdops.add(cdsdop);
-			
-            ArrayList<String> processorsURIs = new ArrayList<String>();
-            ArrayList<String> pmipURIs = new ArrayList<String>();
-            ArrayList<String> pssdURIs = new ArrayList<String>();
-            ArrayList<String> pdsdURIs = new ArrayList<String>();
-            Map<Integer, String> processorURIsMap = staticState.getProcessorURIs();
-            
-            
-            for (Map.Entry<Integer, String> entry : processorURIsMap.entrySet()) {
-                Map<ProcessorPortTypes, String> pPortsList = staticState.getProcessorPortMap()
-                        .get(entry.getValue());
-                processorsURIs.add(entry.getValue());
-                pmipURIs.add(pPortsList.get(Processor.ProcessorPortTypes.MANAGEMENT));
-                pssdURIs.add(pPortsList.get(Processor.ProcessorPortTypes.STATIC_STATE));
-                pdsdURIs.add(pPortsList.get(Processor.ProcessorPortTypes.DYNAMIC_STATE));
-            }
 			for(int i = 0; i < processorsURIs.size(); i++) {
 				this.processorController.bindProcessor(processorsURIs.get(i), "ACHANGER", pmipURIs.get(i), pssdURIs.get(i), pdsdURIs.get(i));
-				createVM(this.processorController, ComputerServicesInboundPortURI, csop.allocateCores(nbCores/2));
+				createVM(this.processorController, ComputerServicesInboundPortURI, ccmop.allocateCores(nbCores/2));
 			}
 	}
 	
-	private synchronized String createVM(ProcessorsController controller, String ComputerServicesInboundPortURI, AllocatedCore[] allocatedCore) throws Exception {
+	private synchronized String createVM(ProcessorsController controller, String computerManagementInboundPortURI, AllocatedCore[] allocatedCore) throws Exception {
 		
 		String applicationVM[] = new String[5];
 		int nbVM = avmOutPort.size(); //Add VM non occupé
@@ -526,12 +525,11 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.avmOutPort.put(applicationVM[0], avmPort);
 		
 		synchronized (o) {
-			this.FreeApplicationVM.add(new ApplicationVMInfo(applicationVM[0], applicationVM[1], applicationVM[4], applicationVM[2]));
+			this.FreeApplicationVM.add(new ApplicationVMInfo(applicationVM[0], applicationVM[1], applicationVM[2], computerManagementInboundPortURI ));
 		}
 		
 		return applicationVM[0];
 	}
-
 
 	@Override
 	public void acceptRingDynamicData(String requestDispatcherURI, RingDynamicStateI currentDynamicState)
@@ -573,7 +571,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 							}, interval, TimeUnit.MILLISECONDS) ;
 		}
 	}
-
 	
 	public RingDynamicState getDynamicState() throws UnknownHostException {
 		synchronized(o){
@@ -637,8 +634,5 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 			this.pushingFuture.cancel(false) ;
 		}
 }
-
-
-
 
 }

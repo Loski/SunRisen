@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagement;
+import fr.upmc.PriseTheSun.datacenter.hardware.computer.ports.ComputerControllerManagementInboundPort;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.components.exceptions.ComponentStartException;
@@ -19,11 +20,12 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 	
 	private ComputerServicesOutboundPort csop;
 	private Map<String, ArrayList<Point>> reservedCore;
-
+	private ComputerControllerManagementInboundPort ccmip;
 	
-	public ComputerController(final String ComputerControllerUri, final String ComputerServicesInboundPortURI, final String ComputerControllerManagementIboundPort) throws Exception {
+	public ComputerController(final String ComputerControllerUri, final String ComputerServicesInboundPortURI, final String ComputerControllerManagementInboundPort) throws Exception {
 		super(ComputerControllerUri, 1, 1);
 		this.reservedCore = new HashMap<String, ArrayList<Point>>();
+		
 		this.addOfferedInterface(ComputerServicesI.class);
 		this.csop = new ComputerServicesOutboundPort(ComputerControllerUri + "-csop", this);
 		this.addPort(csop);		
@@ -31,18 +33,20 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 		csop.doConnection(
 				ComputerServicesInboundPortURI,
 				ComputerServicesConnector.class.getCanonicalName());
+		
+		this.addOfferedInterface(ComputerControllerManagement.class);
+		ccmip = new ComputerControllerManagementInboundPort(ComputerControllerManagementInboundPort, ComputerControllerManagement.class, this);
+		this.addPort(ccmip);
+		this.ccmip.publishPort();
 	}
 
-	
-	
 	public AllocatedCore[] addCores(String controllerURI) throws Exception {
 		return csop.allocateCores(reservedCore.get(controllerURI));
 	}
 
 	@Override
 	public boolean supCores(int nbCores, String vmUri) throws Exception {
-		// TODO Auto-generated method stub
-		return false;
+		throw new Exception("TODO");
 	}
 
 	@Override
@@ -80,5 +84,10 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 			}
 		}
 		super.shutdown();
+	}
+
+	@Override
+	public AllocatedCore[] allocateCores(int i) throws Exception {
+		return this.csop.allocateCores(i);
 	}
 }
