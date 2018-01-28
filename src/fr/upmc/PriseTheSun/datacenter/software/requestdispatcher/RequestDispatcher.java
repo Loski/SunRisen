@@ -2,6 +2,7 @@ package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -100,6 +101,10 @@ implements
 	protected ScheduledFuture<?>			pushingFuture ;
 	
 	/** */
+	protected HashSet<String> virtualMachineWaitingForDisconnection;
+	protected HashMap<String,VirtualMachineData> taskExecutedBy;
+	
+	/** */
 	private int nbRequestRecevedSinceAverage;
 	
 	private Object lock;
@@ -195,11 +200,19 @@ implements
 											this) ;
 				this.addPort(this.rdIntrospectionInboundPort) ;
 				this.rdIntrospectionInboundPort.publishPort() ;
+				
+				this.virtualMachineWaitingForDisconnection = new HashSet<String>();
+				this.taskExecutedBy = new HashMap<String,VirtualMachineData>();
 	}
 	
 	private void nextVM()
 	{
 		this.currentVM = (this.currentVM+1)%this.virtualMachineDataList.size();
+	}
+	
+	private VirtualMachineData getCurrentVMData()
+	{
+		return this.virtualMachineDataList.get(this.currentVM);
 	}
 
 	private RequestSubmissionOutboundPort getCurrentVMPort()
@@ -279,6 +292,8 @@ implements
 		RequestSubmissionOutboundPort port = getCurrentVMPort();
 		port.submitRequest(r);
 
+		this.taskExecutedBy.put(r.getRequestURI(),getCurrentVMData());
+		
 		this.nextVM();
 	}
 
@@ -296,13 +311,14 @@ implements
 		
 		port.submitRequestAndNotify(r);
 		
+		this.taskExecutedBy.put(r.getRequestURI(),getCurrentVMData());
+		
 		this.nextVM();
 	}
 
 	@Override
 	public void acceptRequestTerminationNotification(RequestI r) throws Exception {
-		
-		try {
+
 		assert r != null;
 		
 		this.endRequestTime(r.getRequestURI());
@@ -310,16 +326,23 @@ implements
 		if (RequestGenerator.DEBUG_LEVEL >= 1) 
 			this.logMessage(String.format("RequestDispatcher [%s] notifies end of request %s",this.rdURI,r.getRequestURI()));
 		
-		this.requestNotificationOutboundPort.notifyRequestTermination( r );
-		}
-		catch(Exception e)
+		VirtualMachineData vm = this.taskExecutedBy.remove(r.getRequestURI());
+		if(this.virtualMachineWaitingForDisconnection.contains(vm.getVmURI()))
 		{
-			e.printStackTrace();
-			System.err.println(r.getRequestURI());
-			System.out.println(this.requestVirtalMachineDataMap);
+			if(vm.getAvmiovp().getDynamicState().getNumberOfRequestInQueue()==0)
+			{
+				//TODO : notify controller
+				RequestSubmissionOutboundPort port = vm.getRsobp();
+				
+				if(port!=null && port.connected())
+				{
+					port.doDisconnection();
+				}
+			}
 		}
+
+		this.requestNotificationOutboundPort.notifyRequestTermination( r );
 	}
-	
 	
 	@Override
 	public void shutdown() throws ComponentShutdownException {
@@ -381,7 +404,11 @@ implements
 	@Override
 	public void disconnectVirtualMachine(String vmURI) throws Exception {
 		
-		ListIterator<VirtualMachineData> iterator = this.virtualMachineDataList.listIterator();
+		this.virtualMachineWaitingForDisconnection.add(vmURI);
+		VirtualMachineData vmData = this.requestVirtalMachineDataMap.remove(vmURI);
+		this.virtualMachineDataList.remove(vmData);
+		
+		/*ListIterator<VirtualMachineData> iterator = this.virtualMachineDataList.listIterator();
 		
 		while(iterator.hasNext()){
 			VirtualMachineData data = iterator.next();
@@ -399,7 +426,7 @@ implements
 			{
 				data.resetRequestTimeDataList();
 			}
-		}
+		}*/
 	}
 	
 	public String getConnectorClassName()

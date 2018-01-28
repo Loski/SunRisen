@@ -71,5 +71,5 @@ extends		DataOfferedI.DataI,
 	
 	public int[] getAllocatedCoresNumber();
 	
-	public int numberOfRequestInQueue();
+	public int getNumberOfRequestInQueue();
 }
