@@ -104,8 +104,6 @@ implements
 	protected HashSet<String> virtualMachineWaitingForDisconnection;
 	protected HashMap<String,VirtualMachineData> taskExecutedBy;
 	
-	/** */
-	private int nbRequestRecevedSinceAverage;
 	
 	private Object lock;
 	
@@ -189,7 +187,6 @@ implements
 				this.requestDispatcherDynamicStateDataInboundPort.publishPort() ;
 				
 				this.requestVirtalMachineDataMap = new HashMap<>();
-				this.nbRequestRecevedSinceAverage = 0;
 				
 				this.lock = new Object(); 
 				
@@ -237,48 +234,37 @@ implements
 	private void endRequestTime(String requestURI)
 	{		
 		VirtualMachineData vmData  = this.requestVirtalMachineDataMap.remove(requestURI);
-		vmData.endRequest();
-		
-		this.nbRequestRecevedSinceAverage++;
+		vmData.endRequest(requestURI);
 	}
 	
 	private Double averageTime()
-	{
-		int nbRequestRemoved = 0;
-		
-		System.err.println("BEFORE :"+this.nbRequestRecevedSinceAverage);
-		
+	{		
 		synchronized(this.lock)
 		{
-			if(this.nbRequestRecevedSinceAverage >= NB_REQUEST_NEEDED_FOR_AVG)
-			{	
-				double averageTime = 0.0;
-				
-				for(VirtualMachineData vmData: this.virtualMachineDataList)
+			double averageTime = 0.0;
+			boolean oneRequestFound = false;
+			
+			for(VirtualMachineData vmData: this.virtualMachineDataList)
+			{
+				vmData.calculateAverageTime();
+				Double average = vmData.getAverageTime();
+				if(average!=null)
 				{
-					int nbRequest = vmData.calculateAverageTime();
-					if(vmData.getAverageTime()!=null)
-					{
-						double average = vmData.getAverageTime();
-						
-						nbRequestRemoved+=nbRequest;
-						averageTime+=average;
-					}
-					
-					vmData.resetRequestTimeDataList();
+					averageTime+=average;
+					oneRequestFound=true;
 				}
-				
+			}
+			
+			if(oneRequestFound)
+			{
 				averageTime = averageTime/this.virtualMachineDataList.size();
-		
-				System.err.println("removed :"+nbRequestRemoved);
-				this.nbRequestRecevedSinceAverage-=nbRequestRemoved;
-				
-				System.err.println("AFTER :"+this.nbRequestRecevedSinceAverage);
 				
 				return averageTime;
 			}
 			else
+			{
 				return null;
+			}
 		}
 	}
 	

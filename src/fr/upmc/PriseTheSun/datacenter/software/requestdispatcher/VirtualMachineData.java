@@ -1,6 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -14,8 +15,8 @@ public class VirtualMachineData {
 	private ApplicationVMIntrospectionOutboundPort avmiovp;
 	private Double averageTime;
 	/**  */
-	private List<RequestTimeData> requestTimeDataList;
-	private int currentRequest;
+	private HashMap<String,RequestTimeData> requestInQueue;
+	private List<RequestTimeData> requestTerminated;
 
 	public VirtualMachineData(String uri, RequestSubmissionOutboundPort rsobp, ApplicationVMIntrospectionOutboundPort avmiovp)
 	{
@@ -23,8 +24,8 @@ public class VirtualMachineData {
 		this.rsobp=rsobp;
 		this.avmiovp=avmiovp;
 		this.averageTime=null;
-		this.requestTimeDataList = new ArrayList<RequestTimeData>();
-		this.currentRequest = 0;
+		this.requestInQueue = new  HashMap<String,RequestTimeData>();
+		this.requestTerminated = new  ArrayList<RequestTimeData>();
 	}
 	
 	public String getVmURI() {
@@ -37,11 +38,15 @@ public class VirtualMachineData {
 		return averageTime;
 	}
 	
-	public List<RequestTimeData> getRequestTimeDataList() {
-		return this.requestTimeDataList;
+	public HashMap<String,RequestTimeData> getRequestInQueue() {
+		return this.requestInQueue;
 	}
 	
-	public void resetRequestTimeDataList()
+	public List<RequestTimeData> getRequestTerminated() {
+		return this.requestTerminated;
+	}
+	
+	/*public void resetRequestTimeDataList()
 	{
 		ListIterator<RequestTimeData> iterator = this.requestTimeDataList.listIterator();
 		
@@ -52,55 +57,40 @@ public class VirtualMachineData {
 				iterator.remove();
 			}
 		}
-		
-		this.currentRequest=0;
 		this.averageTime=null;
-	}
+	}*/
 	
 	public void addRequest(String dispatcherURI,String requestURI)
 	{
 		RequestTimeData req = new RequestTimeData(dispatcherURI, vmURI,requestURI);
-		this.requestTimeDataList.add(req);
+		this.requestInQueue.put(requestURI,req);
 		req.begin();
 	}
 	
-	public void endRequest()
+	public void endRequest(String requestURI)
 	{
-		this.requestTimeDataList.get(currentRequest).terminate();
-		currentRequest++;
+		RequestTimeData req = this.requestInQueue.remove(requestURI);
+		this.requestTerminated.add(req);
+		req.terminate();
 	}
 	
-	public int calculateAverageTime()
-	{		
-		int nbRequest = 0;
-		
-		if(this.requestTimeDataList.size()>0)
+	public void calculateAverageTime()
+	{				
+		if(this.requestTerminated.size()>0)
 		{
 			Double res = 0.0;
 
-			for(RequestTimeData timeData : this.requestTimeDataList)
+			for(RequestTimeData timeData : this.requestTerminated)
 			{
-				if(timeData.isFinished())
-				{
-					res+=timeData.getDuration();
-					nbRequest++;
-				}
-			}		
+				res+=timeData.getDuration();
+			}
 			
-			System.err.println("REQ :"+nbRequest);
-			System.err.println(String.format("res : %4.3f",res/1000000/1000));
-			
-			if(nbRequest>0)
-				this.averageTime = res/nbRequest;
-			else
-				this.averageTime=null;
+			this.averageTime = res/this.requestTerminated.size();
 		}
 		else
 		{
 			this.averageTime=null;
 		}
-		
-		return nbRequest;
 	}
 
 	public ApplicationVMIntrospectionOutboundPort getAvmiovp() {
