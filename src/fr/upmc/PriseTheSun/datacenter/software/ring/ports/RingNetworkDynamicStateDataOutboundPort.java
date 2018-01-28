@@ -1,7 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.ring.ports;
 
-import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDataI;
-import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDynamicStateI;
+import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI;
+import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkDynamicStateI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.interfaces.DataRequiredI;
 import fr.upmc.datacenter.hardware.computers.interfaces.ComputerStateDataConsumerI;
@@ -16,11 +16,11 @@ import fr.upmc.datacenter.ports.AbstractControlledDataOutboundPort;
 * 
 * @author	Maxime Lavaste and Loïc Lafontaine
 */
-public class RingDynamicStateDataOutboundPort extends AbstractControlledDataOutboundPort{
+public class RingNetworkDynamicStateDataOutboundPort extends AbstractControlledDataOutboundPort{
 	private static final long serialVersionUID = 1L;
 	protected String			ringURI ;
 
-	public				RingDynamicStateDataOutboundPort(
+	public				RingNetworkDynamicStateDataOutboundPort(
 			ComponentI owner,
 			String ringURI
 			) throws Exception
@@ -31,7 +31,7 @@ public class RingDynamicStateDataOutboundPort extends AbstractControlledDataOutb
 		assert	owner instanceof ComputerStateDataConsumerI ;
 	}
 
-	public				RingDynamicStateDataOutboundPort(
+	public				RingNetworkDynamicStateDataOutboundPort(
 			String uri,
 			ComponentI owner,
 			String ringURI
@@ -48,13 +48,13 @@ public class RingDynamicStateDataOutboundPort extends AbstractControlledDataOutb
 	 */
 	public void	receive(final DataRequiredI.DataI d) throws Exception
 	{
-		final RingDataI psdc = (RingDataI) this.owner ;
+		final RingNetworkStateDataConsumerI psdc = (RingNetworkStateDataConsumerI) this.owner ;
 		final String uri = this.ringURI ;
 		this.owner.handleRequestAsync(
 						new ComponentI.ComponentService<Void>() {
 							@Override
 							public Void call() throws Exception {
-								psdc.acceptRingDynamicData(uri, (RingDynamicStateI) d);
+								psdc.acceptRingNetworkDynamicData(uri, (RingNetworkDynamicStateI) d);
 								return null;
 							}
 						}) ;

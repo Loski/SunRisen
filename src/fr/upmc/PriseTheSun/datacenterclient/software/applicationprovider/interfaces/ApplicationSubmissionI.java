@@ -12,6 +12,7 @@ import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagemen
  *
  */
 public interface ApplicationSubmissionI extends	OfferedI, RequiredI {
+	
 	/**
 	 * Send an app to the administrationControler.
 	 * The Controller checks if he can accept this application

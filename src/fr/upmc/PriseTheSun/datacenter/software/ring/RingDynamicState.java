@@ -5,14 +5,14 @@ import java.net.UnknownHostException;
 import java.util.List;
 
 import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMInfo;
-import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDynamicStateI;
+import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkDynamicStateI;
 
 
 
 /**
  * @author	Maxime Lavaste and Loïc Lafontaine
  */
-public class RingDynamicState implements RingDynamicStateI{
+public class RingDynamicState implements RingNetworkDynamicStateI{
 
 	private static final long serialVersionUID = 1L ;
 	/** timestamp in Unix time format, local time of the timestamper.		*/
@@ -49,7 +49,7 @@ public class RingDynamicState implements RingDynamicStateI{
 
 	
 	/**
-	 * @see fr.upmc.datacenter.ring.interfaces.RingDynamicStateI#getApplicationVMsInfo()
+	 * @see fr.upmc.datacenter.RingNetworkDynamicStateI.interfaces.RingDynamicStateI#getApplicationVMsInfo()
 	 */
 	@Override
 	public List<ApplicationVMInfo> getApplicationVMsInfo() {

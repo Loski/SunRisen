@@ -185,7 +185,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 		
 		System.out.println("Waiting acception of Application ["+this.apURI+"] with submissionInterface ["+submissionInterface.getCanonicalName()+"]");
 		rdUri = this.asop.submitApplication(apURI, 2, submissionInterface);
-		System.out.println("Request submitted, the reply is : ");
+		System.err.println("Request submitted, the reply is : " + rdUri[0]);
 		
         if ( rdUri != null ) {
             // Creation dynamique du request generator

@@ -30,10 +30,10 @@ import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.VirtualMachineD
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.ring.RingDynamicState;
-import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDataI;
-import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDynamicStateI;
-import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingDynamicStateDataInboundPort;
-import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingDynamicStateDataOutboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI;
+import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkDynamicStateI;
+import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingNetworkDynamicStateDataInboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingNetworkDynamicStateDataOutboundPort;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.ports.ApplicationSubmissionInboundPort;
 import fr.upmc.components.AbstractComponent;
@@ -75,16 +75,15 @@ import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOu
  * The Admission Controller receive new Request Generator through the <code>ApplicationSubmissionI</code> Interface.
  * When receiving a new request generator, it check if he has enough Virtual Machine at disposition and create
  * a Request Dispatcher linked to the request generator and a Controller linked to the request Dispatcher.
- * He then bind the Virtual Machine to the request Dispatcher.
  * 
  * 
  * @author	Maxime LAVASTE Loïc LAFONTAINE
  */
-public class AdmissionControllerDynamic extends AbstractComponent implements ApplicationSubmissionI, AdmissionControllerManagementI, RingDataI, PushModeControllingI{
+public class AdmissionControllerDynamic extends AbstractComponent implements ApplicationSubmissionI, AdmissionControllerManagementI, RingNetworkStateDataConsumerI, PushModeControllingI{
 
 	public static int DEBUG_LEVEL = 1 ;
 	
-	protected String acURI;
+	protected String admissionControllerURI;
 	protected static final String RequestDispatcherManagementInboundPortURI = "rdmip";
 	protected static final String RequestNotificationInboundPortURI = "rnip";
 	protected static final String RequestSubmissionInboundPortURI = "rsip";
@@ -124,7 +123,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	
 	//Map Between a vm and his computer
 	protected List<ApplicationVMInfo> FreeApplicationVM;
-	protected List<ApplicationVMInfo> OccupedApplicationVM;
 	private ProcessorsController processorController;
 
 	Object o=new Object();
@@ -132,32 +130,43 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	
 	private static final int RING_PUSH_INTERVAL = 50;
 
+	private static final int MIN_VM = 5;
+
 	private DynamicComponentCreationOutboundPort portTControllerJVM;
 	
 	/*Port du la structure en anneau pour relier chaque controller*/ 
-	private RingDynamicStateDataOutboundPort rdsdop;
-	private RingDynamicStateDataInboundPort rdsdip;
+	private RingNetworkDynamicStateDataOutboundPort rdsdop;
+	private RingNetworkDynamicStateDataInboundPort rdsdip;
 	private String AdmissionControllerDataRingOutboundUri;
 	private String AdmissionControllerDataRingInboundUri;
 
 	private String nextControllerDataRingUri;
 	private Object previousControllerDataRingUri;
+
+	private ArrayList<ApplicationVMInfo> VMforNewApplication;
 	
 
 	/*protected static final String RequestDispatcher_JVM_URI = "controller" ;
 	protected static final String Application_VM_JVM_URI = "controller";*/
-	
-	public AdmissionControllerDynamic(String acURI,
+	/**
+	 * Créer un <code>AdmissionControllerDynamic</code> à partir des URIs donnés en paramètre
+	 * @param admissionControllerURI
+	 * @param applicationSubmissionInboundPortURI
+	 * @param AdmissionControllerManagementInboundPortURI
+	 * @param Controller_JVM_URI URI pour repérer la JVM en mode DCVM
+	 * @throws Exception
+	 */
+	public AdmissionControllerDynamic(String admissionControllerURI,
 			String applicationSubmissionInboundPortURI,
 			String AdmissionControllerManagementInboundPortURI,
 			String Controller_JVM_URI
 			) throws Exception {
 		
-		super(acURI,2, 2);
+		super(admissionControllerURI,2, 2);
 		
 		this.toggleLogging();
 		this.toggleTracing();
-		this.acURI = acURI;	
+		this.admissionControllerURI = admissionControllerURI;	
 		
 		this.addOfferedInterface(ApplicationSubmissionI.class);
 		this.asip = new ApplicationSubmissionInboundPort(applicationSubmissionInboundPortURI, this);
@@ -180,17 +189,17 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.addRequiredInterface(ComputerServicesI.class);
 		
 		
-		this.AdmissionControllerDataRingInboundUri = this.acURI +"-"+ControllerDataRingInboundPortURI;
-		this.AdmissionControllerDataRingOutboundUri = this.acURI +"-"+ControllerDataRingOutboundPortURI;
+		this.AdmissionControllerDataRingInboundUri = this.admissionControllerURI +"-"+ControllerDataRingInboundPortURI;
+		this.AdmissionControllerDataRingOutboundUri = this.admissionControllerURI +"-"+ControllerDataRingOutboundPortURI;
 		
-		this.addRequiredInterface(RingDynamicStateI.class);
-		this.addOfferedInterface(RingDynamicStateI.class);
+		this.addRequiredInterface(RingNetworkDynamicStateI.class);
+		this.addOfferedInterface(RingNetworkDynamicStateI.class);
 		
-		rdsdop = new RingDynamicStateDataOutboundPort(this,  this.AdmissionControllerDataRingOutboundUri);
+		rdsdop = new RingNetworkDynamicStateDataOutboundPort(this,  this.AdmissionControllerDataRingOutboundUri);
 		this.addPort(rdsdop);
 		this.rdsdop.publishPort();
 
-		rdsdip=new RingDynamicStateDataInboundPort(this.AdmissionControllerDataRingInboundUri, this);
+		rdsdip=new RingNetworkDynamicStateDataInboundPort(this.AdmissionControllerDataRingInboundUri, this);
 		this.addPort(rdsdip) ;
 		this.rdsdip.publishPort();
 		this.avmOutPort = new HashMap<String, ApplicationVMManagementOutboundPort>();
@@ -199,7 +208,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.cdsdops = new ArrayList<ComputerDynamicStateDataOutboundPort>();
 		this.cmops = new ArrayList<ComputerControllerManagementOutboutPort>();
 		this.FreeApplicationVM = new ArrayList<>();
-		this.OccupedApplicationVM = new ArrayList<>();
+		this.VMforNewApplication = new ArrayList<>();
 		this.processorController = new ProcessorsController("controller", ProcessorControllerManagementInboundPortURI);
 	}
 
@@ -208,38 +217,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		super.start();
 	}
 	 
-	@Deprecated
-	private void allocVm(String appURI, String[] dispatcherUri, ApplicationVMInfo wrap) throws Exception {
-		//Ajout dans les VMs réservés
-		this.OccupedApplicationVM.add(wrap);
-		//TODO : a surveiller
-		ReflectionOutboundPort rop = null;
-		try {
-			rop = new ReflectionOutboundPort(this);
-			this.addPort(rop);
-			rop.publishPort();
-			rop.doConnection(dispatcherUri[0], ReflectionConnector.class.getCanonicalName());
-			rop.toggleLogging();
-			rop.toggleTracing();
-			rop.doDisconnection();
-			
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		allocVm(appURI, wrap, dispatcherUri[0], dispatcherUri[4]);
-		rop.doConnection(wrap.getApplicationVM(), ReflectionConnector.class.getCanonicalName());
-		rop.toggleTracing();
-		rop.toggleLogging();
-		rop.doDisconnection();
-	}
 
-	@Deprecated
-	public void allocVm(String appURI, ApplicationVMInfo vm, String dispatcherURI, String dispatcherNotificationInboundPort) throws Exception {
-		rdmopMap.get(appURI).connectVirtualMachine(vm.getApplicationVM(), vm.getSubmissionInboundPortUri());
-		this.avmOutPort.get(vm.getApplicationVM()).connectWithRequestSubmissioner(dispatcherURI, dispatcherNotificationInboundPort);
-	}
-	
 	@Override
 	public void submitGenerator(String RequestNotificationInboundPort, String appUri, String rgURI) throws Exception {
 		this.rdmopMap.get(appUri).connectWithRequestGenerator(rgURI, RequestNotificationInboundPort);
@@ -278,6 +256,16 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		super.shutdown();
 	}
 	
+	/**
+	 * Créer un nouveau controller lié à un dispatcher. Le controller aura accès à <code>RequestDispatcherDynamicStateI</code> ainsi que <code>RequestDispatcherManagementI</code>.
+	 * Le controller est ensuite inséré dans le réseau en anneau des controllers pour pouvoir recevoir des VMs.
+	 * @param appURI
+	 * @param requestDispatcherDynamicStateDataInboundPortURI
+	 * @param rdURI
+	 * @param vm Data d'une VM.
+	 * @return Tableau d'URI du controller.
+	 * @throws Exception
+	 */
 	private String[] createController(String appURI, String requestDispatcherDynamicStateDataInboundPortURI, String rdURI, ApplicationVMInfo vm) throws Exception
 	{
 		String controllerURIs[] = new String[6];
@@ -321,17 +309,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		});
 		
 		rdsdop.doConnection(controllerURIs[4], ControlledDataConnector.class.getCanonicalName());
-		this.OccupedApplicationVM.add(vm);
 		this.startUnlimitedPushing(10);
-		
-		
-		/*ReflectionOutboundPort rop = new ReflectionOutboundPort(this);
-		this.addPort(rop);
-		rop.publishPort();
-		rop.doConnection(controllerURIs[0], ReflectionConnector.class.getCanonicalName());
-		rop.doPortConnection(controllerURIs[1],requestDispatcherDynamicStateDataInboundPortURI, ControlledDataConnector.class.getCanonicalName());
-		rop.doDisconnection();*/
-		
 		return controllerURIs;
 	}
 	
@@ -374,8 +352,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
 		ApplicationVMInfo vm;
 		synchronized(o){
-			if(this.FreeApplicationVM.size() > 2) {
-				vm = FreeApplicationVM.remove(0);
+			if(this.VMforNewApplication.size() > 2) {
+				vm = VMforNewApplication.remove(0);
 			}else {
 				return null;
 			}
@@ -395,8 +373,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		ApplicationVMInfo vm;
 		
 		synchronized(o){
-			if(this.FreeApplicationVM.size() > 2) {
-				vm = FreeApplicationVM.remove(0);
+			if(this.VMforNewApplication.size() > 1) {
+				vm = VMforNewApplication.remove(0);
 			}else {
 				return null;
 			}
@@ -404,6 +382,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		
 		Class<?> dispa = RequestDispatcherCreator.createRequestDispatcher("JAVASSIST-dispa", RequestDispatcher.class, submissionInterface);
 		String dispatcherUri[] = createDispatcher(appURI, dispa.getCanonicalName());
+		
 		this.createController(appURI,dispatcherUri[6],dispatcherUri[0], vm);
 		return dispatcherUri;
 	}
@@ -417,8 +396,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI)
 		throws Exception {
 	
-
-
 		String cssopUri = ComputerStaticStateDataOutboundPortURI + "_" +  this.cssdops.size();
 		ComputerStaticStateDataOutboundPort cssdop = new ComputerStaticStateDataOutboundPort(cssopUri, this, computerURI);
 		this.addPort(cssdop);
@@ -471,7 +448,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 			}
 	}
 	
-	private synchronized String createVM(ProcessorsController controller, String computerManagementInboundPortURI, AllocatedCore[] allocatedCore) throws Exception {
+	private String createVM(ProcessorsController controller, String computerManagementInboundPortURI, AllocatedCore[] allocatedCore) throws Exception {
 		
 		String applicationVM[] = new String[5];
 		int nbVM = avmOutPort.size(); //Add VM non occupé
@@ -501,20 +478,28 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 					ApplicationVMManagementConnector.class.getCanonicalName());
 		avmPort.allocateCores(allocatedCore);
 		this.avmOutPort.put(applicationVM[0], avmPort);
-		
+		ApplicationVMInfo vm = new ApplicationVMInfo(applicationVM[0], applicationVM[1], applicationVM[2], computerManagementInboundPortURI);
 		synchronized (o) {
-			this.FreeApplicationVM.add(new ApplicationVMInfo(applicationVM[0], applicationVM[1], applicationVM[2], computerManagementInboundPortURI ));
+			if(this.VMforNewApplication.size() < MIN_VM) {
+				this.VMforNewApplication.add(vm);
+			}else {
+				this.FreeApplicationVM.add(vm);
+			}
 		}
 		
 		return applicationVM[0];
 	}
 
 	@Override
-	public void acceptRingDynamicData(String requestDispatcherURI, RingDynamicStateI currentDynamicState)
+	public void acceptRingNetworkDynamicData(String requestDispatcherURI, RingNetworkDynamicStateI currentDynamicState)
 			throws Exception {
 		synchronized(o){
-			if(!currentDynamicState.getApplicationVMsInfo().isEmpty())
-				FreeApplicationVM.addAll(currentDynamicState.getApplicationVMsInfo()); 
+			if(!currentDynamicState.getApplicationVMsInfo().isEmpty()) {
+				while(!currentDynamicState.getApplicationVMsInfo().isEmpty() && this.VMforNewApplication.size() < MIN_VM) {
+					this.VMforNewApplication.add(currentDynamicState.getApplicationVMsInfo().remove(0));
+				}
+				FreeApplicationVM.addAll(currentDynamicState.getApplicationVMsInfo());
+			}
 		}
 
 	}
@@ -522,7 +507,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	public void	sendDynamicState() throws Exception
 	{
 		if (this.rdsdip.connected()) {
-			RingDynamicStateI rds = this.getDynamicState() ;
+			RingNetworkDynamicStateI rds = this.getDynamicState() ;
 			this.rdsdip.send(rds) ;
 		}
 	}
@@ -583,7 +568,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	@Override
 	public void startLimitedPushing(final int interval, final int n) throws Exception {
 		assert	n > 0 ;
-		this.logMessage(this.acURI + " startLimitedPushing with interval "
+		this.logMessage(this.admissionControllerURI + " startLimitedPushing with interval "
 				+ interval + " ms for " + n + " times.") ;
 
 		// first, send the static state if the corresponding port is connected

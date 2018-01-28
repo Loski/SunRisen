@@ -38,10 +38,10 @@ import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDi
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherIntrospectionOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.ring.RingDynamicState;
-import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDataI;
-import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingDynamicStateI;
-import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingDynamicStateDataInboundPort;
-import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingDynamicStateDataOutboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI;
+import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkDynamicStateI;
+import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingNetworkDynamicStateDataInboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingNetworkDynamicStateDataOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.tools.Writter;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.ComponentI;
@@ -61,7 +61,7 @@ import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
 
 
 
-public class Controller extends AbstractComponent implements RequestDispatcherStateDataConsumerI, RingDataI,ControllerManagementI, PushModeControllingI{
+public class Controller extends AbstractComponent implements RequestDispatcherStateDataConsumerI, RingNetworkStateDataConsumerI,ControllerManagementI, PushModeControllingI{
 
 	protected String controllerURI;
 	protected String rdUri;
@@ -90,8 +90,8 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	
 	private Map<String, ComputerControllerManagementOutboutPort> cmops;
 	
-	private RingDynamicStateDataOutboundPort rdsdop;
-	private RingDynamicStateDataInboundPort rdsdip;
+	private RingNetworkDynamicStateDataOutboundPort rdsdop;
+	private RingNetworkDynamicStateDataInboundPort rdsdip;
 	
 	
 	private String appURI; 	
@@ -149,18 +149,18 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		this.pcmop.doConnection(ProcessorControllerManagementInboundUri, ProcessorControllerManagementConnector.class.getCanonicalName());
 		
 		
-		this.addRequiredInterface(RingDynamicStateI.class);
-		this.addOfferedInterface(RingDynamicStateI.class);
+		this.addRequiredInterface(RingNetworkDynamicStateI.class);
+		this.addOfferedInterface(RingNetworkDynamicStateI.class);
 		
 		
-		rdsdop = new RingDynamicStateDataOutboundPort(this, RingDynamicStateDataOutboundPortURI);
+		rdsdop = new RingNetworkDynamicStateDataOutboundPort(this, RingDynamicStateDataOutboundPortURI);
 		this.addPort(rdsdop);
 		this.rdsdop.publishPort();
 		this.rdsdop.doConnection(nextRingDynamicStateDataInboundPort, ControlledDataConnector.class.getCanonicalName());
 		this.startUnlimitedPushing(100);
 		
 		
-		rdsdip=new RingDynamicStateDataInboundPort(RingDynamicStateDataInboundPortURI, this);
+		rdsdip=new RingNetworkDynamicStateDataInboundPort(RingDynamicStateDataInboundPortURI, this);
 		this.addPort(rdsdip);
 		this.rdsdip.publishPort();
 		
@@ -376,7 +376,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	}
 
 	@Override
-	public void acceptRingDynamicData(String requestDispatcherURI, RingDynamicStateI currentDynamicState)
+	public void acceptRingNetworkDynamicData(String requestDispatcherURI, RingNetworkDynamicStateI currentDynamicState)
 			throws Exception {;
 		//this.logMessage(this.controllerURI + " a re�u " + currentDynamicState.getApplicationVMsInfo().size() + "vms");
 		synchronized(o){
@@ -438,7 +438,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	{
 		//System.out.println(this.controllerURI + " rdsip is connected " + this.rdsdip.connected());
 		if (this.rdsdip.connected()) {
-			RingDynamicStateI rds = this.getDynamicState() ;
+			RingNetworkDynamicStateI rds = this.getDynamicState() ;
 			this.rdsdip.send(rds) ;
 		}
 	}

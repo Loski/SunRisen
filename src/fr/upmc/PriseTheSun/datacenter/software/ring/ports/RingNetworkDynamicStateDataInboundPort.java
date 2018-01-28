@@ -12,14 +12,14 @@ import fr.upmc.datacenter.ports.AbstractControlledDataInboundPort;
 * 
 * @author	Maxime Lavaste and Loïc Lafontaine
 */
-public class RingDynamicStateDataInboundPort extends AbstractControlledDataInboundPort{
+public class RingNetworkDynamicStateDataInboundPort extends AbstractControlledDataInboundPort{
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public				RingDynamicStateDataInboundPort(
+	public				RingNetworkDynamicStateDataInboundPort(
 		ComponentI owner
 		) throws Exception
 	{
@@ -27,7 +27,7 @@ public class RingDynamicStateDataInboundPort extends AbstractControlledDataInbou
 		//assert owner instanceof RequestDispatcher ;
 	}
 
-	public				RingDynamicStateDataInboundPort(
+	public				RingNetworkDynamicStateDataInboundPort(
 		String uri,
 		ComponentI owner
 		) throws Exception
