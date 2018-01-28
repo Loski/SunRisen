@@ -131,9 +131,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	protected static final int NB_CORES = 2;
 	
 	private static final int RING_PUSH_INTERVAL = 50;
-	
-	private DynamicComponentCreationOutboundPort portToRequestDispatcherJVM;
-	private DynamicComponentCreationOutboundPort portToApplicationVMJVM;
+
 	private DynamicComponentCreationOutboundPort portTControllerJVM;
 	
 	/*Port du la structure en anneau pour relier chaque controller*/ 
@@ -152,8 +150,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	public AdmissionControllerDynamic(String acURI,
 			String applicationSubmissionInboundPortURI,
 			String AdmissionControllerManagementInboundPortURI,
-			String RequestDispatcher_JVM_URI,
-			String Application_VM_JVM_URI,
 			String Controller_JVM_URI
 			) throws Exception {
 		
@@ -173,21 +169,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.addPort(acmip);
 		this.acmip.publishPort();
 		
-		this.portToApplicationVMJVM = new DynamicComponentCreationOutboundPort(this);
-		this.portToApplicationVMJVM.publishPort();
-		this.addPort(this.portToApplicationVMJVM);
-		
-		this.portToApplicationVMJVM.doConnection(					
-				Application_VM_JVM_URI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
-				DynamicComponentCreationConnector.class.getCanonicalName());
-		
-		this.portToRequestDispatcherJVM = new DynamicComponentCreationOutboundPort(this);
-		this.portToRequestDispatcherJVM.publishPort();
-		this.addPort(this.portToRequestDispatcherJVM);
-		
-		this.portToRequestDispatcherJVM.doConnection(					
-				RequestDispatcher_JVM_URI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
-				DynamicComponentCreationConnector.class.getCanonicalName());
 		
 		this.portTControllerJVM = new DynamicComponentCreationOutboundPort(this);
 		this.portTControllerJVM.publishPort();
@@ -286,11 +267,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 					entry.getValue().doDisconnection();
 				}
 			}
-			if (this.portToApplicationVMJVM.connected()) {
-				this.portToApplicationVMJVM.doDisconnection();
-			}
-			if (this.portToRequestDispatcherJVM.connected()) {
-				this.portToRequestDispatcherJVM.doDisconnection();
+
+			if (this.portTControllerJVM.connected()) {
+				this.portTControllerJVM.doDisconnection();
 			}
 		} catch (Exception e) {
 			throw new ComponentShutdownException("Port disconnection error", e);
@@ -368,7 +347,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		dispatcherURI[6] = RequestDynamicDataInboundPortURI + "_"+ appURI;
 		dispatcherURI[7] = RequestSubmissionOutboundPortURI + "_"+ appURI;
 		
-		this.portToRequestDispatcherJVM.createComponent(
+		this.portTControllerJVM.createComponent(
 				className,
 				new Object[] {
 						dispatcherURI[0],							
@@ -476,20 +455,19 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 
 		
 		
-       ComputerController tmp = new ComputerController(computerController[0], computerController[1], computerController[2]);
-       ComputerControllerManagementOutboutPort ccmop = new ComputerControllerManagementOutboutPort("ComputerControllerManagementOutboutPort" + cmops.size(), this);
+        ComputerController tmp = new ComputerController(computerController[0], computerController[1], computerController[2]);
+        ComputerControllerManagementOutboutPort ccmop = new ComputerControllerManagementOutboutPort("ComputerControllerManagementOutboutPort" + cmops.size(), this);
 		
-         this.addPort(ccmop);
-			
-			ccmop.publishPort();
-			ccmop.doConnection(
-					computerController[2],
-					ComputerControllerConnector.class.getCanonicalName());
-			this.cmops.add(ccmop);			
+        this.addPort(ccmop);	
+		ccmop.publishPort();
+		ccmop.doConnection(
+				computerController[2],
+				ComputerControllerConnector.class.getCanonicalName());
+		this.cmops.add(ccmop);			
 			
 			for(int i = 0; i < processorsURIs.size(); i++) {
 				this.processorController.bindProcessor(processorsURIs.get(i), "ACHANGER", pmipURIs.get(i), pssdURIs.get(i), pdsdURIs.get(i));
-				createVM(this.processorController, ComputerServicesInboundPortURI, ccmop.allocateCores(nbCores/2));
+				createVM(this.processorController, computerController[2], ccmop.allocateCores(nbCores/2));
 			}
 	}
 	
@@ -506,7 +484,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		applicationVM[3] = "rnobpVM-"+nbVM;
 		applicationVM[4] = "avmobp-"+nbVM;
 		
-		this.portToRequestDispatcherJVM.createComponent(
+		this.portTControllerJVM.createComponent(
 				ApplicationVM.class.getCanonicalName(),
 				new Object[] {
 						applicationVM[0],							

@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Set;
 
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.AdmissionControllerDynamic;
+import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.connector.AdmissionControllerManagementConnector;
+import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.ApplicationProvider;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.connectors.ApplicationProviderManagementConnector;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.ports.ApplicationProviderManagementOutboundPort;
@@ -26,91 +28,59 @@ public class TestDCVM extends AbstractDistributedCVM{
 	protected static String		Application1 = "application1" ;
 	protected static String		Application2 = "application2" ;
 	
-	
-	public static final String	ComputerServicesInboundPortURI = "cs-ibp" ;
-	public static final String	ComputerServicesOutboundPortURI = "cs-obp" ;
-	public static final String	ComputerStaticStateDataInboundPortURI = "css-dip" ;
-	public static final String	ComputerStaticStateDataOutboundPortURI = "css-dop" ;
-	public static final String	ComputerDynamicStateDataInboundPortURI = "cds-dip" ;
-	public static final String	ComputerDynamicStateDataOutboundPortURI = "cds-dop" ;
-	
-	
-	protected ApplicationProvider ap;
-	protected ApplicationProvider ap2;
-	private String applicationSubmissionInboundPortURI = "asip";
-	private String AdmissionControllerManagementInboundPortURI = "acmip";
-	
-	/** Port connected to the computer component to access its services.	*/
-	protected static ComputerServicesOutboundPort			csPort ;
-	/** 	Computer monitor component.										*/
-	protected static ComputerMonitor						cm ;
+	public static final int NB_COMPUTER = 30;
+	private static final int NB_APPLICATION = 8;
 
-	private int nbAvailableCores = 26;
-	private String applicationSubmissionOutboundPortURI = "asop";
-	private String applicationManagementInboundPort = " amip";
 	protected AdmissionControllerDynamic ac;
+	protected AdmissionControllerManagementOutboundPort acmop;
+	//protected ApplicationProvider ap[];
+	//public ApplicationProviderManagementOutboundPort apmop[];
+
+	public static final  String applicationSubmissionInboundPortURI = "asip";
+	public static final String AdmissionControllerManagementInboundPortURI = "acmip";
+	public static final String applicationSubmissionOutboundPortURI = "asop";
+	public static final String applicationManagementInboundPort = " amip";
+	
 	private ApplicationProviderManagementOutboundPort apmop;
 	private ApplicationProviderManagementOutboundPort apmop2;
+	private ApplicationProvider ap2;
+	private ApplicationProvider ap;
 	
-	
+	private void createAdmissionController() throws Exception {
+
+		this.ac = new AdmissionControllerDynamic("AdmController", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, "controller");
+		this.acmop = new AdmissionControllerManagementOutboundPort("acmop", new AbstractComponent(0, 0) {});
+		this.acmop.publishPort();
+		this.acmop.doConnection(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementConnector.class.getCanonicalName());
+		
+		
+		int numberOfProcessors = 3;
+		int numberOfCores = 10;
+        Set<Integer> admissibleFrequencies = new HashSet<Integer>();
+        admissibleFrequencies.add(1500); // Cores can run at 1,5 GHz
+        admissibleFrequencies.add(3000); // and at 3 GHz
+        Map<Integer, Integer> processingPower = new HashMap<Integer, Integer>();
+        processingPower.put(1500, 1500000); // 1,5 GHz executes 1,5 Mips
+        processingPower.put(3000, 3000000); // 3 GHz executes 3 Mips
+
+        String csop[] = new String[NB_COMPUTER], csip[] = new String[NB_COMPUTER], cssdip[] = new String[NB_COMPUTER], computer[] = new String[NB_COMPUTER], cdsdip[] = new String[NB_COMPUTER];
+        for (int i = 0; i < NB_COMPUTER; ++i) {
+        	csop[i] = "csop"+i;
+            csip[i] = "csip"+i;
+            computer[i] = "computer"+i;
+            cssdip[i] = "cssdip"+i;
+            cdsdip[i] = "cdsdip"+i;
+            System.out.println("Creating computer " + i + "with " +numberOfProcessors + "proc of "+ numberOfCores + " cores");
+            Computer c = new Computer(computer[i], admissibleFrequencies, processingPower, 1500, 1500,
+                    numberOfProcessors, numberOfCores, csip[i], cssdip[i], cdsdip[i]);
+            this.addDeployedComponent(c); 
+            this.acmop.linkComputer(computer[i], csip[i], cssdip[i], cdsdip[i]);
+        }
+	}
 	@Override
 	public void instantiateAndPublish() throws Exception {
-
-		
 		if (thisJVMURI.equals(AdmissionController)) {
-			AbstractComponent.configureLogging("", "", 0, '|') ;
-			Processor.DEBUG = true ;
-
-			// --------------------------------------------------------------------
-			// Create and deploy a computer component with its 2 processors and
-			// each with 2 cores.
-			// --------------------------------------------------------------------
-			String computerURI = "computer0" ;
-			int numberOfProcessors = 2 ;
-			int numberOfCores = 20;
-			Set<Integer> admissibleFrequencies = new HashSet<Integer>() ;
-			admissibleFrequencies.add(1500) ;	// Cores can run at 1,5 GHz
-			admissibleFrequencies.add(3000) ;	// and at 3 GHz
-			Map<Integer,Integer> processingPower = new HashMap<Integer,Integer>() ;
-			processingPower.put(1500, 1500000) ;	// 1,5 GHz executes 1,5 Mips
-			processingPower.put(3000, 3000000) ;	// 3 GHz executes 3 Mips
-			Computer c = new Computer(
-								computerURI,
-								admissibleFrequencies,
-								processingPower,  
-								1500,		// Test scenario 1, frequency = 1,5 GHz
-								// 3000,	// Test scenario 2, frequency = 3 GHz
-								1500,		// max frequency gap within a processor
-								numberOfProcessors,
-								numberOfCores,
-								ComputerServicesInboundPortURI,
-								ComputerStaticStateDataInboundPortURI,
-								ComputerDynamicStateDataInboundPortURI) ;
-			this.addDeployedComponent(c) ;
-			// --------------------------------------------------------------------
-			// Create the computer monitor component and connect its to ports
-			// with the computer component.
-			// --------------------------------------------------------------------
-			this.cm = new ComputerMonitor(computerURI,
-										 true,
-										 ComputerStaticStateDataOutboundPortURI,
-										 ComputerDynamicStateDataOutboundPortURI) ;
-			this.addDeployedComponent(this.cm) ;
-			this.cm.doPortConnection(
-							ComputerStaticStateDataOutboundPortURI,
-							ComputerStaticStateDataInboundPortURI,
-							DataConnector.class.getCanonicalName()) ;
-
-			this.cm.doPortConnection(
-						ComputerDynamicStateDataOutboundPortURI,
-						ComputerDynamicStateDataInboundPortURI,
-						ControlledDataConnector.class.getCanonicalName()) ;
-			System.out.println("create controller");
-			if(true)
-				throw new Exception("not implemented frere");
-			//this.ac = new AdmissionControllerDynamic("Controller", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, ComputerServicesOutboundPortURI+"-controller", ComputerServicesInboundPortURI, nbAvailableCores, ComputerStaticStateDataOutboundPortURI+"-controller",AdmissionController,AdmissionController);
-			this.addDeployedComponent(this.ac);
-		//	this.cyclicBarrierClient.notifyAll();
+			createAdmissionController();
 		}else if(thisJVMURI.equals(Application1)) {
 			System.out.println("Appli 1 ");
 			Thread.sleep(500);

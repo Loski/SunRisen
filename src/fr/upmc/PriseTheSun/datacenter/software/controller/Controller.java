@@ -3,6 +3,7 @@ package fr.upmc.PriseTheSun.datacenter.software.controller;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -11,6 +12,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
+import fr.upmc.PriseTheSun.datacenter.hardware.computer.connector.ComputerControllerConnector;
+import fr.upmc.PriseTheSun.datacenter.hardware.computer.ports.ComputerControllerManagementOutboutPort;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.ProcessorsController.CoreAsk;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.connector.ProcessorControllerManagementConnector;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.interfaces.ProcessorsControllerManagementI;
@@ -62,6 +65,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 
 	protected String controllerURI;
 	protected String rdUri;
+	
 	protected AdmissionControllerManagementOutboundPort acmop;
 	protected RequestDispatcherDynamicStateDataOutboundPort rddsdop;
 	protected ProcessorsControllerManagementOutboundPort pcmop;
@@ -74,9 +78,9 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	private String requestDispatcherNotificationInboundPort;
 	private String requestDispatcherManagementInboundPort;
 	private RequestDispatcherManagementOutboundPort rdmop;
-
 	
 	int idVm = 0;
+	int waitDecision = 0;
 	//Vm reserved
 	private List<ApplicationVMInfo> vmReserved;
 	//vm to propagate to other controller
@@ -84,6 +88,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	 
 	private List<ApplicationVMInfo> myVMs;
 	
+	private Map<String, ComputerControllerManagementOutboutPort> cmops;
 	
 	private RingDynamicStateDataOutboundPort rdsdop;
 	private RingDynamicStateDataInboundPort rdsdip;
@@ -172,12 +177,15 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		this.vmFree = new ArrayList<ApplicationVMInfo>();
 		this.vmReserved = new ArrayList<ApplicationVMInfo>();
 		this.myVMs =  new ArrayList<ApplicationVMInfo>();
+		this.cmops = new HashMap<String, ComputerControllerManagementOutboutPort>();
 		this.addVm(vm);
 	}
 	
 	@Override
 	public void acceptRequestDispatcherDynamicData(String dispatcherURI,
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
+		
+		waitDecision++;
 		if(currentDynamicState.getAvgExecutionTime()!=null) {
 			this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
 			processControl(currentDynamicState.getAvgExecutionTime(), currentDynamicState.getVirtualMachineDynamicStates());
@@ -300,6 +308,9 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		
 		//Try to up frequency
 		int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.HIGHER, randomVM);
+		
+		
+		System.err.println("!!!!!!!!! " +this.cmops.get(randomVM.getApplicationVMURI()).reserveCore(randomVM.getApplicationVMURI()));
 	}
 
 	/**
@@ -327,10 +338,11 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
 		
 		
-		
+		System.err.println("!!!!!!!!! " +this.cmops.get(randomVM.getApplicationVMURI()).reserveCore(randomVM.getApplicationVMURI()));
+
 		
 		//Try to lower frequency
-		int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.LOWER, randomVM);
+		//int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.LOWER, randomVM);
 		
 	}
 	
@@ -486,16 +498,30 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		
 		// Create a mock up port to manage the AVM component (allocate cores).
 		ApplicationVMManagementOutboundPort avmPort;
+		int id = ++idVm;
+
 		try {
-			idVm++;
 			avmPort = new ApplicationVMManagementOutboundPort(
-					"avmop"+"-" + controllerURI+idVm, this);
+					"avmop"+"-" + controllerURI+id, this);
 			avmPort.publishPort() ;
 			avmPort.doConnection(vm.getAvmInbound(),
 						ApplicationVMManagementConnector.class.getCanonicalName());
 			rdmop.connectVirtualMachine(vm.getApplicationVM(), vm.getSubmissionInboundPortUri());
 			avmPort.connectWithRequestSubmissioner(rdUri, requestDispatcherNotificationInboundPort);
 			this.myVMs.add(vm);
+			
+			
+			ComputerControllerManagementOutboutPort ccmop = new ComputerControllerManagementOutboutPort("ComputerControllerManagementOutboutPort" + cmops.size(), this);
+			
+	         this.addPort(ccmop);
+				
+				ccmop.publishPort();
+				ccmop.doConnection(
+						vm.getComputerManagementInboundPortURI(),
+						ComputerControllerConnector.class.getCanonicalName());
+				
+				
+				this.cmops.put(vm.getApplicationVM(), ccmop);			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -506,6 +532,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		for(int i = 0; i < this.myVMs.size(); i++) {
 			if(myVMs.get(i).getApplicationVM().equals(vmURI)) {
 				vmFree.add(myVMs.remove(i));
+				this.cmops.remove(vmURI);
 				return;
 			}
 		}

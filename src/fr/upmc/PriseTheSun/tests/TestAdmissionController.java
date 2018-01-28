@@ -109,60 +109,26 @@ extends		AbstractCVM
 		super();
 	}
 
-	// Predefined URI of the different ports visible at the component assembly
-	// level.
-	public static final String	ComputerServicesInboundPortURI = "cs-ibp" ;
-	public static final String	ComputerServicesOutboundPortURI = "cs-obp" ;
-	public static final String	ComputerStaticStateDataInboundPortURI = "css-dip" ;
-	public static final String	ComputerStaticStateDataOutboundPortURI = "css-dop" ;
-	public static final String	ComputerDynamicStateDataInboundPortURI = "cds-dip" ;
-	public static final String	ComputerDynamicStateDataOutboundPortURI = "cds-dop" ;
-	public static final String	ApplicationVMManagementInboundPortURI = "avm-ibp" ;
-	public static final String	ApplicationVMManagementOutboundPortURI = "avm-obp" ;
-	public static final String	RequestDispatcherManagementInboundPortURI = "rdm-ibp" ;
-	public static final String	RequestDispatcherManagementOutboundPortURI = "rdm-obp" ;
-	public static final String	RequestSubmissionInboundPortURI = "rsibp" ;
-	public static final String	RequestSubmissionOutboundPortURI = "rsobp" ;
-	public static final String	RequestSubmissionOutboundPortDispatcherURI = "rsobp-dispatcher" ;
-	public static final String	RequestNotificationInboundPortURI = "rnibp" ;
-	public static final String  RequestNotificationInboundPortDispatcherURI = "rnibp-dispatcher";
-	public static final String	RequestNotificationOutboundPortURI = "rnobp" ;
-	public static final String	RequestSubmissionInboundPortVMURI = "rsibpVM" ;
-	public static final String	RequestNotificationOutboundPortVMURI = "rnobpVM" ;
-	public static final String	RequestGeneratorManagementInboundPortURI = "rgmip" ;
-	public static final String	RequestGeneratorManagementOutboundPortURI = "rgmop" ;
 	public static final int NB_COMPUTER = 30;
 	private static final int NB_APPLICATION = 8;
-	/** Port connected to the computer component to access its services.	*/
-	protected ComputerServicesOutboundPort			csPort ;
-	/** 	Computer monitor component.										*/
-	protected ComputerMonitor						cm ;
-	/** 	Application virtual machine component.							*/
-	protected ApplicationVM							vm ;
-
-	/** Port connected to the AVM component to allocate it cores.			*/
-	protected ApplicationVMManagementOutboundPort	avmPort ;
-
 
 	protected AdmissionControllerDynamic ac;
 	protected AdmissionControllerManagementOutboundPort acmop;
 	protected ApplicationProvider ap[];
 	public ApplicationProviderManagementOutboundPort apmop[];
 
-	private String applicationSubmissionInboundPortURI = "asip";
-	private String AdmissionControllerManagementInboundPortURI = "acmip";
-
-	private String applicationSubmissionOutboundPortURI = "asop";
-	private String applicationManagementInboundPort = " amip";
+	public static final  String applicationSubmissionInboundPortURI = "asip";
+	public static final String AdmissionControllerManagementInboundPortURI = "acmip";
+	public static final String applicationSubmissionOutboundPortURI = "asop";
+	public static final String applicationManagementInboundPort = " amip";
 
 	// ------------------------------------------------------------------------
 	// Component virtual machine methods
 	// ------------------------------------------------------------------------
 
 	private void createAdmissionController() throws Exception {
-		
-		
-		this.ac = new AdmissionControllerDynamic("AdmController", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, "","","");
+
+		this.ac = new AdmissionControllerDynamic("AdmController", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, "");
 		this.acmop = new AdmissionControllerManagementOutboundPort("acmop", new AbstractComponent(0, 0) {});
 		this.acmop.publishPort();
 		this.acmop.doConnection(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementConnector.class.getCanonicalName());
@@ -177,10 +143,6 @@ extends		AbstractCVM
         processingPower.put(1500, 1500000); // 1,5 GHz executes 1,5 Mips
         processingPower.put(3000, 3000000); // 3 GHz executes 3 Mips
 
-
-        Map<String, String> processorCoordinators = new HashMap<>();
-        
-        
         String csop[] = new String[NB_COMPUTER], csip[] = new String[NB_COMPUTER], cssdip[] = new String[NB_COMPUTER], computer[] = new String[NB_COMPUTER], cdsdip[] = new String[NB_COMPUTER];
         for (int i = 0; i < NB_COMPUTER; ++i) {
         	csop[i] = "csop"+i;
@@ -191,29 +153,11 @@ extends		AbstractCVM
             System.out.println("Creating computer " + i + "with " +numberOfProcessors + "proc of "+ numberOfCores + " cores");
             Computer c = new Computer(computer[i], admissibleFrequencies, processingPower, 1500, 1500,
                     numberOfProcessors, numberOfCores, csip[i], cssdip[i], cdsdip[i]);
-            this.addDeployedComponent(c);
-            
-            
+            this.addDeployedComponent(c); 
             this.acmop.linkComputer(computer[i], csip[i], cssdip[i], cdsdip[i]);
-            
-
-            // --------------------------------------------------------------------
-            // Create and deploy Processors coordinator
-            // --------------------------------------------------------------------
-          
-          /*  int j = 0;
-            for ( Map.Entry<Integer , String> entry : processorURIs.entrySet() ) {
-                ProcessorCoordinator pc = new ProcessorCoordinator("pc" + i , pmipURIs.get(entry.getValue()),1500, 1500, numberOfCores );
-                processorCoordinators.put(entry.getValue(), "pc" + j);
-                this.addDeployedComponent(pc);
-                pc.toggleLogging();
-                pc.toggleTracing();
-            }
-            */
         }
-        
-		
 	}
+	
 	
 	private void createApplication(int nbApplication) throws Exception {
 		this.ap = new ApplicationProvider[nbApplication];
@@ -253,8 +197,6 @@ extends		AbstractCVM
 	public void			shutdown() throws Exception
 	{
 		// disconnect all ports explicitly connected in the deploy phase.
-		this.csPort.doDisconnection() ;
-		this.avmPort.doDisconnection() ;
 		super.shutdown() ;
 	}
 

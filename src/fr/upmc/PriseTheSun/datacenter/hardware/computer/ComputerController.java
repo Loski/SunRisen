@@ -58,11 +58,13 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 	@Override
 	public int reserveCore(String controllerURI) throws Exception {
 		ArrayList<Point> cores =  csop.reserveCores(8);
-		if(reservedCore.size() > 0) {
+		/*if(reservedCore.size() > 0) {
 			reservedCore.get(controllerURI).addAll(cores);
 		}else {
 			reservedCore.put(controllerURI, cores);
-		}
+		}*/
+		reservedCore.put(controllerURI, cores);
+
 		return cores.size();
 	}
 
@@ -79,7 +81,6 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 		    try {
 				this.releaseCore(entry.getKey());
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

@@ -1115,6 +1115,7 @@ implements	ProcessorStateDataConsumerI,
 					e.printStackTrace();
 				}
 			}
+			j = 0;
 		}
 		return null;
 	}
@@ -1122,7 +1123,7 @@ implements	ProcessorStateDataConsumerI,
 	public ArrayList<Point> reserveCores(int numberToReserved) {
 		ArrayList<Point> cores = new ArrayList<Point>(numberToReserved);
 		int x = 0, y = 0;
-		while(cores.size() < numberToReserved ) {
+		while(cores.size() <= numberToReserved ) {
 			Point core = findFreeCore(x, y);
 			if(core == null) {
 				break;
