@@ -98,6 +98,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	private Writter w;
 	private Object o = new Object();
 
+	private Map<String, ArrayList<Double>> statistique;
 	
 	public Controller(String appURI, String controllerURI, String controllerManagement, String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri, String RingDynamicStateDataOutboundPortURI, String RingDynamicStateDataInboundPortURI, String nextRingDynamicStateDataInboundPort, ApplicationVMInfo vm) throws Exception
 	{
@@ -179,6 +180,24 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		this.myVMs =  new ArrayList<ApplicationVMInfo>();
 		this.cmops = new HashMap<String, ComputerControllerManagementOutboutPort>();
 		this.addVm(vm);
+		
+		this.statistique = new HashMap<String, ArrayList<Double>>();
+		
+		/** Moyenne de toute les VMs **/
+		this.statistique.put("All", new ArrayList<Double>());
+	}
+	
+	private Double calculAverage(String VMUri) {
+		ArrayList<Double> tmp = this.statistique.get(VMUri);
+		Double average = 0.0;
+		for(int i = 0; i < tmp.size(); i++) {
+			average += tmp.get(i);
+		}
+		return average / tmp.size();
+	}
+	
+	private Double calculAverage() {
+		return calculAverage("All");
 	}
 	
 	@Override
@@ -186,6 +205,19 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
 		
 		waitDecision++;
+		
+	    for (Entry<String, Double> entry : currentDynamicState.getVirtualMachineExecutionAverageTime().entrySet()) {
+	    	if(this.statistique.get(entry.getKey()) == null) {
+	    		ArrayList<Double> tmp = new ArrayList<Double>();
+	    		tmp.add(entry.getValue());
+	    		this.statistique.put(entry.getKey(), tmp);
+	    	}else {
+	    		this.statistique.get(entry.getKey()).add(entry.getValue());
+	    	}
+	    }
+	    
+	    this.statistique.get("All").add(currentDynamicState.getAvgExecutionTime());
+	    
 		if(currentDynamicState.getAvgExecutionTime()!=null) {
 			this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
 			processControl(currentDynamicState.getAvgExecutionTime(), currentDynamicState.getVirtualMachineDynamicStates());
