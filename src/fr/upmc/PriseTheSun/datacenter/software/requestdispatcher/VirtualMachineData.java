@@ -3,6 +3,7 @@ package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 
 import fr.upmc.datacenter.TimeManagement;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMIntrospectionOutboundPort;
@@ -17,8 +18,6 @@ public class VirtualMachineData {
 	/**  */
 	private HashMap<String,RequestTimeData> requestInQueue;
 	private List<RequestTimeData> requestTerminated;
-	/** timestamp in Unix time format, local time of the timestamper. stored when the average time is calculated*/
-	protected  long		timestamp ;
 
 	public VirtualMachineData(String uri, RequestSubmissionOutboundPort rsobp, ApplicationVMIntrospectionOutboundPort avmiovp)
 	{
@@ -93,12 +92,32 @@ public class VirtualMachineData {
 		{
 			this.averageTime=null;
 		}
-		
-		this.timestamp = TimeManagement.timeStamp() ;
 	}
 
 	public ApplicationVMIntrospectionOutboundPort getAvmiovp() {
 		return avmiovp;
+	}
+	
+	public void deleteDataAfterTimestamp(long timestamp)
+	{
+		ListIterator<RequestTimeData> iterator = this.requestTerminated.listIterator();
+		
+		while(iterator.hasNext()){
+			RequestTimeData data = iterator.next();
+			if(data.getTimestamp()<=timestamp)
+			{
+				iterator.remove();
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+	
+	public void deleteData()
+	{
+		this.requestTerminated.clear();
 	}
 	
 }
