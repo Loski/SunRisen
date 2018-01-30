@@ -32,7 +32,7 @@ public class RequestTimeData {
 	
 	public long getDuration()
 	{
-		System.err.println(this.request+""+handledBy+" "+operatedBy+" "+endedAt+" "+startedAt+" "+(endedAt - startedAt)/1000000/1000);
+		//System.err.println(this.request+""+handledBy+" "+operatedBy+" "+endedAt+" "+startedAt+" "+(endedAt - startedAt)/1000000/1000);
 		
 		return endedAt - startedAt;
 	}
