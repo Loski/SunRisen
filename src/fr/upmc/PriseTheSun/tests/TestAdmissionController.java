@@ -59,45 +59,9 @@ import fr.upmc.datacenter.hardware.processors.Processor.ProcessorPortTypes;
 import fr.upmc.datacenter.hardware.tests.ComputerMonitor;
 import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
+import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 
 
-/**
- * The class <code>TestRequestGenerator</code> deploys a test application for
- * request generation in a single JVM (no remote execution provided) for a data
- * center simulation.
- *
- * <p><strong>Description</strong></p>
- * 
- * A data center has a set of computers, each with several multi-core
- * processors. Application virtual machines (AVM) are created to run
- * requests of an application. Each AVM is allocated cores of different
- * processors of a computer. AVM then receive requests for their application.
- * See the data center simulator documentation for more details about the
- * implementation of this simulation.
- *  
- * This test creates one computer component with two processors, each having
- * two cores. It then creates an AVM and allocates it all four cores of the
- * two processors of this unique computer. A request generator component is
- * then created and linked to the application virtual machine.  The test
- * scenario starts the request generation, wait for a specified time and then
- * stops the generation. The overall test allots sufficient time to the
- * execution of the application so that it completes the execution of all the
- * generated requests.
- * 
- * The waiting time in the scenario and in the main method must be manually
- * set by the tester.
- * 
- * <p><strong>Invariant</strong></p>
- * 
- * <pre>
- * invariant	true
- * </pre>
- * 
- * <p>Created on : May 5, 2015</p>
- * 
- * @author	<a href="mailto:Jacques.Malenfant@lip6.fr">Jacques Malenfant</a>
- * @version	$Name$ -- $Revision$ -- $Date$
- */
 public class				TestAdmissionController
 extends		AbstractCVM
 {
@@ -109,7 +73,7 @@ extends		AbstractCVM
 		super();
 	}
 
-	public static final int NB_COMPUTER = 30;
+	public static final int NB_COMPUTER = 300;
 	private static final int NB_APPLICATION = 8;
 
 	protected AdmissionControllerDynamic ac;
@@ -212,7 +176,13 @@ extends		AbstractCVM
 	public void			testScenario() throws Exception
 	{
 		for(int i = 0; i < this.apmop.length;i++) {
-				this.apmop[i].createAndSendApplication();
+				Thread.sleep(500);
+				if(i%2 == 0) {
+					this.apmop[i].createAndSendApplication();
+				}
+				else {
+					//this.apmop[i].createAndSendApplication(RequestSubmissionI.class);
+				}
 		}
 	}
 

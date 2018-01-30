@@ -8,6 +8,9 @@ import fr.upmc.components.ports.AbstractInboundPort;
 public class ApplicationSubmissionInboundPort extends AbstractInboundPort implements ApplicationSubmissionI {
     private static final long serialVersionUID = 1L;
     
+    /**
+     * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int)
+     */
     @Override
     public String[] submitApplication(String appURI,  final int nbVM ) throws Exception {
         final ApplicationSubmissionI aps = ( ApplicationSubmissionI ) this.owner;
@@ -28,6 +31,9 @@ public class ApplicationSubmissionInboundPort extends AbstractInboundPort implem
 
     }
 
+	/**
+	 * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitGenerator(java.lang.String, java.lang.String, java.lang.String)
+	 */
 	@Override
 	public void submitGenerator(String requestNotificationInboundPort, String appURI, String rgURI) throws Exception {
 		final ApplicationSubmissionI aps = ( ApplicationSubmissionI ) this.owner;
@@ -42,6 +48,9 @@ public class ApplicationSubmissionInboundPort extends AbstractInboundPort implem
 				}) ;
 	}
 
+	/**
+	 * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int, java.lang.Class)
+	 */
 	@Override
 	public String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
         final ApplicationSubmissionI aps = ( ApplicationSubmissionI ) this.owner;

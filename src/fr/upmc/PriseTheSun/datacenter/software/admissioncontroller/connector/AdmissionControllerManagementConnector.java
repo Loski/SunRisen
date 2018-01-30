@@ -10,6 +10,9 @@ public class AdmissionControllerManagementConnector extends	AbstractConnector im
 {
 
 
+	/**
+	 * @see fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI#linkComputer(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+	 */
 	@Override
 	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
 			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI)

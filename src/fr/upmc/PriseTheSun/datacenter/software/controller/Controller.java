@@ -61,6 +61,10 @@ import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
 
 
 
+/**
+ * @author Maxime Lavaste
+ *
+ */
 public class Controller extends AbstractComponent implements RequestDispatcherStateDataConsumerI, RingNetworkStateDataConsumerI,ControllerManagementI, PushModeControllingI{
 
 	protected String controllerURI;
@@ -200,6 +204,10 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		return calculAverage("All");
 	}
 	
+	
+	/** 
+	 * @see fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStateDataConsumerI#acceptRequestDispatcherDynamicData(java.lang.String, fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI)
+	 */
 	@Override
 	public void acceptRequestDispatcherDynamicData(String dispatcherURI,
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
@@ -227,13 +235,16 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 					vmFree.add(vmReserved.remove(0));
 				}
 			}
-
 		}
 		else {
 		//	this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,"pas assez de données pour calculer la moyenne"));
 		}
 
 	}
+	
+	/**
+	 * @see fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStateDataConsumerI#acceptRequestDispatcherStaticData(java.lang.String, fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStaticStateI)
+	 */
 	@Override
 	public void acceptRequestDispatcherStaticData(String dispatcherURI, RequestDispatcherStaticStateI staticState)
 			throws Exception {
@@ -241,6 +252,9 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		System.out.println("Dispatcher Static Data : ");
 	}
 	
+	/**
+	 * @see fr.upmc.components.AbstractComponent#shutdown()
+	 */
 	@Override
     public void shutdown() throws ComponentShutdownException {
         try {
@@ -407,6 +421,9 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 
 	}
 
+	/**
+	 * @see fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI#acceptRingNetworkDynamicData(java.lang.String, fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkDynamicStateI)
+	 */
 	@Override
 	public void acceptRingNetworkDynamicData(String requestDispatcherURI, RingNetworkDynamicStateI currentDynamicState)
 			throws Exception {;
@@ -422,6 +439,10 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		}
 	}
 	
+	
+	/**
+	 * @see fr.upmc.datacenter.interfaces.PushModeControllingI#startUnlimitedPushing(int)
+	 */
 	@Override
 	public void startUnlimitedPushing(int interval) throws Exception {
 		// first, send the static state if the corresponding port is connected
@@ -442,6 +463,10 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 						}, interval, interval, TimeUnit.MILLISECONDS) ;
 	}
 
+	
+	/**
+	 * @see fr.upmc.datacenter.interfaces.PushModeControllingI#startLimitedPushing(int, int)
+	 */
 	@Override
 	public void startLimitedPushing(final int interval, final int n) throws Exception {
 		assert	n > 0 ;
@@ -475,6 +500,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		}
 	}
 
+	
 	public void	sendDynamicState(
 			final int interval,
 			int numberOfRemainingPushes) throws Exception{
@@ -500,6 +526,9 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		}
 	}
 
+	/**
+	 * @see fr.upmc.datacenter.interfaces.PushModeControllingI#stopPushing()
+	 */
 	@Override
 	public void stopPushing() throws Exception {
 		if (this.pushingFuture != null &&

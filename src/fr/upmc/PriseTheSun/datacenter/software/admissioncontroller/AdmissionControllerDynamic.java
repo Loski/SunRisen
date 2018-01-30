@@ -212,17 +212,26 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.processorController = new ProcessorsController("controller", ProcessorControllerManagementInboundPortURI);
 	}
 
+	/**
+	 * @see fr.upmc.components.AbstractComponent#start()
+	 */
 	@Override
 	public void start() throws ComponentStartException {
 		super.start();
 	}
 	 
 
+	/**
+	 * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitGenerator(java.lang.String, java.lang.String, java.lang.String)
+	 */
 	@Override
 	public void submitGenerator(String RequestNotificationInboundPort, String appUri, String rgURI) throws Exception {
 		this.rdmopMap.get(appUri).connectWithRequestGenerator(rgURI, RequestNotificationInboundPort);
 	}
 
+	/**
+	 * @see fr.upmc.components.AbstractComponent#shutdown()
+	 */
 	@Override
 	public void shutdown() throws ComponentShutdownException {
 		try {			
@@ -313,6 +322,21 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		return controllerURIs;
 	}
 	
+	/**
+	 * Créer un nouveau dispatcher
+	 * @param appURI URI de l'application acceptée
+	 * @param className Constructeur de dispatcher à appeler, soit celui créer dynamiquement par Javassist, soit le statique.
+	 * @return tableau des URI dus dispatcher
+	 * 	dispatcherURI[0] = RequestDispatcherURI
+	 *	dispatcherURI[1] = RequestDispatcherManagementInboundPortURI
+	 *	dispatcherURI[2] = RequestSubmissionInboundPortURI
+	 *	dispatcherURI[3] = RequestNotificationOutboundPortURI
+	 *	dispatcherURI[4] = RequestNotificationInboundPortURI
+	 *	dispatcherURI[5] = RequestStaticDataInboundPortURI
+	 *	dispatcherURI[6] = RequestDynamicDataInboundPortURI
+	 *	dispatcherURI[7] = RequestSubmissionOutboundPortURI
+	 * @throws Exception
+	 */
 	private String[] createDispatcher(String appURI, String className) throws Exception {
 		
 		String dispatcherURI[] = new String[8];
@@ -346,6 +370,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		return dispatcherURI;
 	}
 	
+	/**
+	 * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int)
+	 */
 	@Override
 	public synchronized String[] submitApplication(String appURI, int nbVM) throws Exception{
 		
@@ -364,6 +391,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		return dispatcherUri;
 	}
 	
+	/**
+	 * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int, java.lang.Class)
+	 */
 	@Override
 	public synchronized String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
 		
@@ -391,6 +421,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		return avmOutPort.get(vmUri);
 	}
 
+	/**
+	 * @see fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI#linkComputer(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+	 */
 	@Override
 	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
 		String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI)
@@ -490,6 +523,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		return applicationVM[0];
 	}
 
+	/**
+	 * @see fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI#acceptRingNetworkDynamicData(java.lang.String, fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkDynamicStateI)
+	 */
 	@Override
 	public void acceptRingNetworkDynamicData(String requestDispatcherURI, RingNetworkDynamicStateI currentDynamicState)
 			throws Exception {
@@ -545,6 +581,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		}
 	}
 
+	/**
+	 * @see fr.upmc.datacenter.interfaces.PushModeControllingI#startUnlimitedPushing(int)
+	 */
 	@Override
 	public void startUnlimitedPushing(int interval) throws Exception {
 		// first, send the static state if the corresponding port is connected
@@ -565,6 +604,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 
 	}
 
+	/**
+	 * @see fr.upmc.datacenter.interfaces.PushModeControllingI#startLimitedPushing(int, int)
+	 */
 	@Override
 	public void startLimitedPushing(final int interval, final int n) throws Exception {
 		assert	n > 0 ;
@@ -589,6 +631,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 						}, interval, TimeUnit.MILLISECONDS) ;
 	}
 
+	/**
+	 * @see fr.upmc.datacenter.interfaces.PushModeControllingI#stopPushing()
+	 */
 	@Override
 	public void stopPushing() throws Exception {
 		if (this.pushingFuture != null &&

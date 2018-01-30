@@ -7,15 +7,15 @@ import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenter.software.ports.RequestSubmissionInboundPort;
 import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementInboundPort;
 /**
- * This interface define the interaction to give an aplication to the administrationController.
- * @author maxim
+ * This interface define the interaction to give an application to the administrationController.
+ * @author Maxime Lavaste
  *
  */
 public interface ApplicationSubmissionI extends	OfferedI, RequiredI {
 	
 	/**
-	 * Send an app to the administrationControler.
-	 * The Controller checks if he can accept this application
+	 * Envoie une application au controller
+	 * Le controller vérifie s'il possède les ressources pour accepter l'application
 	 * @param appURI Uri of the Application
 	 * @param nbVM VM require for the application
 	 * @return The requestDispatcherUri if success with his inboundPort.
@@ -23,6 +23,16 @@ public interface ApplicationSubmissionI extends	OfferedI, RequiredI {
 	 */
 	public String[] submitApplication(String appURI, int nbVM) throws Exception;
 	
+	
+	
+	/**
+	 * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int)
+	 * @param appURI
+	 * @param nbVM
+	 * @param submissionInterface
+	 * @return
+	 * @throws Exception
+	 */
 	public String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception;
 	
 	/**

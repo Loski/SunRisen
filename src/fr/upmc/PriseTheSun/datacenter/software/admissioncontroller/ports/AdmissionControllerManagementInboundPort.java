@@ -15,6 +15,7 @@ public class AdmissionControllerManagementInboundPort extends AbstractInboundPor
 		assert	owner != null && owner instanceof AdmissionControllerManagementI ;
 	}
 
+	
 	public AdmissionControllerManagementInboundPort(String uri, Class<?> implementedInterface, ComponentI owner)
 			throws Exception {
 		super(uri, AdmissionControllerManagementI.class, owner);
@@ -23,6 +24,9 @@ public class AdmissionControllerManagementInboundPort extends AbstractInboundPor
 
 
 
+	/**
+	 * @see fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI#linkComputer(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+	 */
 	@Override
 	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
 			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI)
