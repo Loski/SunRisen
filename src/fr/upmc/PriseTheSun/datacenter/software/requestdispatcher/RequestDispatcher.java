@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import fr.upmc.PriseTheSun.datacenter.software.controller.connectors.VMDisconnectionNotificationConnector;
 import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.VMDisconnectionNotificationHandlerI;
 import fr.upmc.PriseTheSun.datacenter.software.controller.ports.VMDisconnectionNotificationHandlerOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI;
@@ -590,11 +591,12 @@ implements
 
 	@Override
 	public void connectController(String controllerURI, String VMDisconnectionHandlerInboundPortURI) throws Exception {
+
 		this.doPortConnection(
 				this.vmnobp.getPortURI(),
 				VMDisconnectionHandlerInboundPortURI,
-				VMDisconnectionNotificationHandlerI.class.getCanonicalName()
-		);
+				VMDisconnectionNotificationConnector.class.getCanonicalName()
+				);
 	}
 
 	@Override
