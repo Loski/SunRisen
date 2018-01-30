@@ -34,4 +34,9 @@ public class ApplicationSubmissionOutboundPort extends AbstractOutboundPort impl
     public String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
       return  ( ( ApplicationSubmissionI ) this.connector ).submitApplication(appURI, nbVM, submissionInterface);
     }
+
+	@Override
+	public void stopApplication(String rdURI) throws Exception {
+	      ( ( ApplicationSubmissionI ) this.connector ).stopApplication(rdURI);
+	}
 }

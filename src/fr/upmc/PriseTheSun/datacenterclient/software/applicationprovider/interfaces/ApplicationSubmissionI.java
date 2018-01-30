@@ -44,4 +44,14 @@ public interface ApplicationSubmissionI extends	OfferedI, RequiredI {
 	 * @throws Exception
 	 */
 	public void submitGenerator(String requestNotificationInboundPort, String appURI, String rgURI) throws Exception;
+	
+	
+	//TODO Passez en port de notification ?
+	/**
+	 * Signale l'arrêt d'une application à l'admission controller.
+	 * @param rdURI
+	 * @throws Exception
+	 */
+	
+	public void stopApplication(String rdURI) throws Exception;
 }
