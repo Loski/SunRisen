@@ -2,10 +2,6 @@ package fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interf
 
 import fr.upmc.components.interfaces.OfferedI;
 import fr.upmc.components.interfaces.RequiredI;
-import fr.upmc.datacenter.hardware.tests.TestApplicationVM.Request;
-import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
-import fr.upmc.datacenter.software.ports.RequestSubmissionInboundPort;
-import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagementInboundPort;
 /**
  * This interface define the interaction to give an application to the administrationController.
  * @author Maxime Lavaste

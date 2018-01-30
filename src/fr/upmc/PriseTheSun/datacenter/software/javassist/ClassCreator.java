@@ -2,26 +2,18 @@ package fr.upmc.PriseTheSun.datacenter.software.javassist;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.List;
 
 import fr.upmc.components.ComponentI;
-import fr.upmc.components.connectors.AbstractConnector;
 import fr.upmc.components.ports.AbstractInboundPort;
 import fr.upmc.components.ports.AbstractOutboundPort;
-
-import javassist.CannotCompileException;
-import javassist.ClassMap;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtField;
 import javassist.CtMethod;
 import javassist.CtNewConstructor;
-import javassist.CtNewMethod;
 import javassist.CtPrimitiveType;
 import javassist.NotFoundException;
-import javassist.bytecode.LocalVariableAttribute;
-import javassist.bytecode.MethodInfo;
 
 public abstract class ClassCreator {
 

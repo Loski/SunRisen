@@ -97,6 +97,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 	/** Ring Network Management port of previous and next nodes**/
 	private String controllerManagementNextInboundPort;
 	private String controllerManagementPreviousInboundPort;
+
+	
 	
 	private String appURI; 	
 	private Writter w;
@@ -117,7 +119,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 			String ProcessorControllerManagementInboundUri, 
 			String RingDynamicStateDataOutboundPortURI, 
 			String RingDynamicStateDataInboundPortURI, 
-			String nextRingDynamicStateDataInboundPort, 
+			String nextRingDynamicStateDataInboundPort,
+			String controllerManagementPreviousPort,
 			ApplicationVMInfo vm, 
 			String VMDisconnectionNotificationHandlerInboundPortURI
 	) throws Exception
@@ -144,7 +147,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		requestDispatcherNotificationInboundPort = this.rdiobp.getRequestDispatcherPortsURI().get(RequestDispatcherPortTypes.REQUEST_NOTIFICATION);
 		requestDispatcherManagementInboundPort = this.rdiobp.getRequestDispatcherPortsURI().get(RequestDispatcherPortTypes.MANAGEMENT);
 
-		this.addRequiredInterface(ControllerManagementI.class);
+		this.addRequiredInterface(ControllerRingManagementI.class);
 		this.cmip = new ControllerManagementInboundPort(controllerManagement, this);
 		this.cmip.publishPort();
 		this.addPort(cmip);
@@ -210,6 +213,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.vmnibp = new VMDisconnectionNotificationHandlerInboundPort(VMDisconnectionNotificationHandlerInboundPortURI,this);
 		this.addPort(vmnibp);
 		this.vmnibp.publishPort();
+		
 		
 		this.controllerManagementPreviousInboundPort = controllerManagementPreviousPort;
 	}

@@ -8,7 +8,6 @@ import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.Requ
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStaticStateI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ports.AbstractOutboundPort;
-import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMIntrospectionI;
 
 public class RequestDispatcherIntrospectionOutboundPort 
 extends		AbstractOutboundPort

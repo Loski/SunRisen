@@ -4,10 +4,6 @@ import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.Requ
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStateDataConsumerI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.interfaces.DataRequiredI;
-import fr.upmc.components.interfaces.DataRequiredI.DataI;
-import fr.upmc.datacenter.hardware.processors.interfaces.ProcessorDynamicStateI;
-import fr.upmc.datacenter.hardware.processors.interfaces.ProcessorStateDataConsumerI;
-import fr.upmc.datacenter.ports.AbstractControlledDataInboundPort;
 import fr.upmc.datacenter.ports.AbstractControlledDataOutboundPort;
 
 public class RequestDispatcherDynamicStateDataOutboundPort extends AbstractControlledDataOutboundPort{

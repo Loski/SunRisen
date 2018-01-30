@@ -1,6 +1,5 @@
 package fr.upmc.PriseTheSun.datacenter.software.controller.ports;
 
-import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerRingManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.VMDisconnectionNotificationHandlerI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ports.AbstractOutboundPort;

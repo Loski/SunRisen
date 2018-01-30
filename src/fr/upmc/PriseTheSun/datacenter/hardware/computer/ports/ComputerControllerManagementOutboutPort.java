@@ -1,9 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.hardware.computer.ports;
 
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagement;
-import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationProviderManagementI;
 import fr.upmc.components.ComponentI;
-import fr.upmc.components.ports.AbstractInboundPort;
 import fr.upmc.components.ports.AbstractOutboundPort;
 import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
 

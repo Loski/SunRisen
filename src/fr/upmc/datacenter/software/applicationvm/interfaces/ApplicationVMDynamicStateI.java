@@ -36,7 +36,6 @@ package fr.upmc.datacenter.software.applicationvm.interfaces;
 
 import fr.upmc.components.interfaces.DataOfferedI;
 import fr.upmc.components.interfaces.DataRequiredI;
-import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
 import fr.upmc.datacenter.interfaces.TimeStampingI;
 
 /**

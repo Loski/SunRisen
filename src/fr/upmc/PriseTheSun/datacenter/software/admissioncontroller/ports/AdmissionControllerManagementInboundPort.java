@@ -1,10 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports;
 
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
-import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMInfo;
-import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.components.ComponentI;
-import fr.upmc.components.ComponentI.ComponentService;
 import fr.upmc.components.ports.AbstractInboundPort;
 
 

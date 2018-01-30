@@ -1,14 +1,6 @@
 package fr.upmc.PriseTheSun.datacenter.software.applicationvm;
 
-import fr.upmc.PriseTheSun.datacenter.hardware.processors.ProcessorsController;
-import fr.upmc.components.AbstractComponent;
-import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
-import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagementConnector;
-import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
-
 public class ApplicationVMInfo{
-
-
 
 	private String applicationVM;
 	public String avmInbound;

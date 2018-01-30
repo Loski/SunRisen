@@ -1,12 +1,10 @@
 package fr.upmc.PriseTheSun.datacenter.software.ring.ports;
 
-import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI;
 import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkDynamicStateI;
+import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.interfaces.DataRequiredI;
 import fr.upmc.datacenter.hardware.computers.interfaces.ComputerStateDataConsumerI;
-import fr.upmc.datacenter.hardware.processors.interfaces.ProcessorDynamicStateI;
-import fr.upmc.datacenter.hardware.processors.interfaces.ProcessorStateDataConsumerI;
 import fr.upmc.datacenter.ports.AbstractControlledDataOutboundPort;
 
 /**

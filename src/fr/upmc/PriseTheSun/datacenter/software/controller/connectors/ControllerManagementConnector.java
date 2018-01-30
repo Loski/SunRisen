@@ -1,6 +1,5 @@
 package fr.upmc.PriseTheSun.datacenter.software.controller.connectors;
 
-import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerRingManagementI;
 import fr.upmc.components.connectors.AbstractConnector;
 

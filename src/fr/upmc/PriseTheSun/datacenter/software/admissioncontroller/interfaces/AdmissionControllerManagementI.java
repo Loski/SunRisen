@@ -1,6 +1,5 @@
 package fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces;
 
-import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMInfo;
 import fr.upmc.components.interfaces.OfferedI;
 import fr.upmc.components.interfaces.RequiredI;
 
