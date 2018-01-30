@@ -396,7 +396,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		String dispatcherUri[] = createDispatcher(appURI, RequestDispatcher.class.getCanonicalName());
 		String controllerUris[] = this.createController(appURI,dispatcherUri[6],dispatcherUri[8],dispatcherUri[0], vm);
 		
-		this.rdmopMap.get(dispatcherUri[0]).connectController(controllerUris[0],controllerUris[6]);
+		this.rdmopMap.get(appURI).connectController(controllerUris[0],controllerUris[6]);
 		
 		return dispatcherUri;
 	}
