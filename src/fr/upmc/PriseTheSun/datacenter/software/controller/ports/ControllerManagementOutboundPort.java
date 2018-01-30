@@ -1,6 +1,6 @@
 package fr.upmc.PriseTheSun.datacenter.software.controller.ports;
 
-import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerManagementI;
+import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerRingManagementI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ports.AbstractOutboundPort;
 /**
@@ -11,7 +11,7 @@ import fr.upmc.components.ports.AbstractOutboundPort;
 * @author	Maxime LAVASTE Lo�c Lafontaine
 */
 public class ControllerManagementOutboundPort extends AbstractOutboundPort
-implements	ControllerManagementI{
+implements	ControllerRingManagementI{
 
     /***
      * 
@@ -20,7 +20,7 @@ implements	ControllerManagementI{
      */
 	public	ControllerManagementOutboundPort(ComponentI owner) throws Exception
 	{
-		super(ControllerManagementI.class, owner) ;
+		super(ControllerRingManagementI.class, owner) ;
 		assert	owner != null ;
 	}
 
@@ -32,13 +32,25 @@ implements	ControllerManagementI{
 	 */
 	public	ControllerManagementOutboundPort(String uri, ComponentI owner) throws Exception
 	{
-		super(uri, ControllerManagementI.class, owner);
+		super(uri, ControllerRingManagementI.class, owner);
 		assert	owner != null;
 	}
 
 	@Override
 	public void bindSendingDataUri(String DataInboundPortUri) throws Exception {
-		((ControllerManagementI)this.connector).bindSendingDataUri(DataInboundPortUri);
+		((ControllerRingManagementI)this.connector).bindSendingDataUri(DataInboundPortUri);
+	}
+
+	@Override
+	public void informNextManagementInboundPort(String managementInboundPort) throws Exception {
+		((ControllerRingManagementI)this.connector).informNextManagementInboundPort(managementInboundPort);
+
+		
+	}
+
+	@Override
+	public void informPreviousManagementInboundPOrt(String managementInboundPort) throws Exception {
+		((ControllerRingManagementI)this.connector).informPreviousManagementInboundPOrt(managementInboundPort);
 	}
 
 }

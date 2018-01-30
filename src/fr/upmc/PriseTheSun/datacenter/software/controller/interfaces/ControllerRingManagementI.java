@@ -11,6 +11,14 @@ import fr.upmc.components.interfaces.RequiredI;
  * 
  * @author	Maxime LAVASTE Lo�c Lafontaine
  */
-public interface ControllerManagementI extends OfferedI,RequiredI{
+public interface ControllerRingManagementI extends OfferedI,RequiredI{
+	
+	/**
+	 * Modifie l'uri du port de reception
+	 * @param DataInboundPortUri nouveau controller a envoyer le <code>RingDynamicState</code>
+	 * @throws Exception
+	 */
 	public void bindSendingDataUri(String DataInboundPortUri) throws Exception;
+	public void informNextManagementInboundPort(String managementInboundPort ) throws Exception;
+	public void informPreviousManagementInboundPOrt(String managementInboundPort) throws Exception;
 }

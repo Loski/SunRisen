@@ -1,7 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.controller.ports;
 
 import fr.upmc.PriseTheSun.datacenter.software.controller.Controller;
-import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerManagementI;
+import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerRingManagementI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ports.AbstractInboundPort;
 
@@ -13,7 +13,7 @@ import fr.upmc.components.ports.AbstractInboundPort;
 * 
 * @author Maxime LAVASTE Loïc Lafontaine
 */
-public class ControllerManagementInboundPort extends AbstractInboundPort implements ControllerManagementI{
+public class ControllerManagementInboundPort extends AbstractInboundPort implements ControllerRingManagementI{
 	private static final long serialVersionUID = 1L;
 
 	/***
@@ -23,7 +23,7 @@ public class ControllerManagementInboundPort extends AbstractInboundPort impleme
 	 */
 	public	ControllerManagementInboundPort(ComponentI owner) throws Exception
 	{
-		super(ControllerManagementI.class, owner) ;
+		super(ControllerRingManagementI.class, owner) ;
 		assert	owner != null && owner instanceof Controller ;
 	}
 	
@@ -34,20 +34,48 @@ public class ControllerManagementInboundPort extends AbstractInboundPort impleme
 	 */
 	public	ControllerManagementInboundPort(String uri, ComponentI owner) throws Exception
 	{
-		super(uri, ControllerManagementI.class, owner);
+		super(uri, ControllerRingManagementI.class, owner);
 
 		assert	owner != null && owner instanceof Controller ;
 	}
 
 	@Override
 	public void bindSendingDataUri(String DataInboundPortUri) throws Exception {
-		final ControllerManagementI cm = ( ControllerManagementI ) this.owner;
+		final ControllerRingManagementI cm = ( ControllerRingManagementI ) this.owner;
 		
 		 this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
 						cm.bindSendingDataUri(DataInboundPortUri);
+						return null;
+					}
+		});
+	}
+
+	@Override
+	public void informNextManagementInboundPort(String managementInboundPort) throws Exception {
+		final ControllerRingManagementI cm = ( ControllerRingManagementI ) this.owner;
+		
+		 this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Void>() {
+					@Override
+					public Void call() throws Exception {
+						cm.informNextManagementInboundPort(managementInboundPort);
+						return null;
+					}
+		});
+	}
+
+	@Override
+	public void informPreviousManagementInboundPOrt(String managementInboundPort) throws Exception {
+		final ControllerRingManagementI cm = ( ControllerRingManagementI ) this.owner;
+		
+		 this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Void>() {
+					@Override
+					public Void call() throws Exception {
+						cm.informPreviousManagementInboundPOrt(managementInboundPort);
 						return null;
 					}
 		});

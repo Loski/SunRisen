@@ -13,4 +13,10 @@ implements	VMDisconnectionNotificationHandlerI {
 		((VMDisconnectionNotificationHandlerI)this.offering).receiveVMDisconnectionNotification(vmURI) ;
 	}
 
+	@Override
+	public void disconnectController() throws Exception {
+		((VMDisconnectionNotificationHandlerI)this.offering).disconnectController();
+
+	}
+
 }
