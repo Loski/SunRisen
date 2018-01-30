@@ -1,7 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.controller.connectors;
 
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
-import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerManagementI;
+import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerRingManagementI;
 import fr.upmc.components.connectors.AbstractConnector;
 
 /**
@@ -20,12 +20,22 @@ import fr.upmc.components.connectors.AbstractConnector;
  *
  */
 public class ControllerManagementConnector extends		AbstractConnector
-implements	ControllerManagementI{
+implements	ControllerRingManagementI{
 
 	@Override
 	public void bindSendingDataUri(String DataInboundPortUri) throws Exception {
-		((ControllerManagementI)this.offering ).bindSendingDataUri(DataInboundPortUri);
+		((ControllerRingManagementI)this.offering ).bindSendingDataUri(DataInboundPortUri);
 	}
 
+	@Override
+	public void informNextManagementInboundPort(String managementInboundPort) throws Exception {
+		((ControllerRingManagementI)this.offering ).informNextManagementInboundPort(managementInboundPort);
 
+	}
+
+	@Override
+	public void informPreviousManagementInboundPOrt(String managementInboundPort) throws Exception {
+		((ControllerRingManagementI)this.offering ).informPreviousManagementInboundPOrt(managementInboundPort);
+
+	}
 }

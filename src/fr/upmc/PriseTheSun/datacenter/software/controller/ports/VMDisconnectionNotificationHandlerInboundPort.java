@@ -38,4 +38,18 @@ public class VMDisconnectionNotificationHandlerInboundPort extends AbstractInbou
 		});
 	}
 
+	@Override
+	public void disconnectController() throws Exception {
+		final VMDisconnectionNotificationHandlerI handler = ( VMDisconnectionNotificationHandlerI ) this.owner;
+		
+		 this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Void>() {
+					@Override
+					public Void call() throws Exception {
+						handler.disconnectController();
+						return null;
+					}
+		});
+	}
+
 }

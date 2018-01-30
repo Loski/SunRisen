@@ -594,7 +594,7 @@ implements
 				this.vmnobp.getPortURI(),
 				VMDisconnectionHandlerInboundPortURI,
 				VMDisconnectionNotificationHandlerI.class.getCanonicalName()
-				);
+		);
 	}
 
 	@Override

@@ -7,4 +7,5 @@ public interface VMDisconnectionNotificationHandlerI extends		OfferedI,
 RequiredI{
 
 	public void receiveVMDisconnectionNotification(String vmURI) throws Exception;
+	public void disconnectController() throws Exception;
 }
