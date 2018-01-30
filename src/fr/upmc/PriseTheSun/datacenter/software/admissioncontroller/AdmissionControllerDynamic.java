@@ -275,9 +275,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	 * @return Tableau d'URI du controller.
 	 * @throws Exception
 	 */
-	private String[] createController(String appURI, String requestDispatcherDynamicStateDataInboundPortURI, String rdURI, ApplicationVMInfo vm) throws Exception
+	private String[] createController(String appURI, String requestDispatcherDynamicStateDataInboundPortURI, String VMDisconnectionHandlerOutboundPortURI, String rdURI, ApplicationVMInfo vm) throws Exception
 	{
-		String controllerURIs[] = new String[6];
+		String controllerURIs[] = new String[7];
 		controllerURIs[0] = appURI + "-controller";
 		controllerURIs[1] = appURI +"-controllermngt";
 		controllerURIs[2] = controllerURIs[0]+"-rddsdop";
@@ -285,6 +285,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		controllerURIs[4] = controllerURIs[0]+"-"+ ControllerDataRingInboundPortURI;
 		//next dataring inbound uri
 		controllerURIs[5] = null;
+		controllerURIs[6] = controllerURIs[0]+"-VMDisconnectionHandler";
 		
 		String previous = this.AdmissionControllerDataRingInboundUri;
 		/*Linking Ring*/
@@ -314,11 +315,13 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 						controllerURIs[3],
 						controllerURIs[4],
 						controllerURIs[5],
-						vm
+						vm,
+						controllerURIs[6]
 		});
 		
 		rdsdop.doConnection(controllerURIs[4], ControlledDataConnector.class.getCanonicalName());
 		this.startUnlimitedPushing(10);
+		
 		return controllerURIs;
 	}
 	
@@ -339,7 +342,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	 */
 	private String[] createDispatcher(String appURI, String className) throws Exception {
 		
-		String dispatcherURI[] = new String[8];
+		String dispatcherURI[] = new String[9];
 		dispatcherURI[0] = "RD_" + rdmopMap.size()+"_"+appURI;
 		dispatcherURI[1] = RequestDispatcherManagementInboundPortURI + "_" + appURI;
 		dispatcherURI[2] = RequestSubmissionInboundPortURI +"_" + appURI;
@@ -348,6 +351,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		dispatcherURI[5] = RequestStaticDataInboundPortURI + "_"+ appURI;
 		dispatcherURI[6] = RequestDynamicDataInboundPortURI + "_"+ appURI;
 		dispatcherURI[7] = RequestSubmissionOutboundPortURI + "_"+ appURI;
+		dispatcherURI[8] = "VMDisconnectionHandlerOutboundPort" + "_"+ appURI;
 		
 		this.portTControllerJVM.createComponent(
 				className,
@@ -357,7 +361,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 						dispatcherURI[2],
 						dispatcherURI[3],
 						dispatcherURI[4],
-						dispatcherURI[6]
+						dispatcherURI[6],
+						dispatcherURI[8]
 				});		
 	
 		RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
@@ -387,7 +392,10 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		}
 		
 		String dispatcherUri[] = createDispatcher(appURI, RequestDispatcher.class.getCanonicalName());
-		this.createController(appURI,dispatcherUri[6],dispatcherUri[0], vm);
+		String controllerUris[] = this.createController(appURI,dispatcherUri[6],dispatcherUri[8],dispatcherUri[0], vm);
+		
+		this.rdmopMap.get(dispatcherUri[0]).connectController(controllerUris[0],controllerUris[6]);
+		
 		return dispatcherUri;
 	}
 	
@@ -413,7 +421,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		Class<?> dispa = RequestDispatcherCreator.createRequestDispatcher("JAVASSIST-dispa", RequestDispatcher.class, submissionInterface);
 		String dispatcherUri[] = createDispatcher(appURI, dispa.getCanonicalName());
 		
-		this.createController(appURI,dispatcherUri[6],dispatcherUri[0], vm);
+		this.createController(appURI,dispatcherUri[6],dispatcherUri[8],dispatcherUri[0], vm);
 		return dispatcherUri;
 	}
 	

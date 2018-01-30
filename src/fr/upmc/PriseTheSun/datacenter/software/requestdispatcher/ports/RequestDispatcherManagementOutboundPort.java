@@ -51,4 +51,14 @@ implements	RequestDispatcherManagementI
 		( ( RequestDispatcherManagementI ) this.connector ).disconnectRequestGenerator();
 	}
 
+	@Override
+	public void connectController(String controllerURI, String VMDisconnectionHandlerInboundPortURI) throws Exception {
+		( ( RequestDispatcherManagementI ) this.connector ).connectController(controllerURI, VMDisconnectionHandlerInboundPortURI);
+	}
+
+	@Override
+	public void disconnectController() throws Exception {
+		( ( RequestDispatcherManagementI ) this.connector ).disconnectController();
+	}
+
 }

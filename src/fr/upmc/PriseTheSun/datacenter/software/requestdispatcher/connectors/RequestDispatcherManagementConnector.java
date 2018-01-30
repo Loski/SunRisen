@@ -22,13 +22,21 @@ implements	RequestDispatcherManagementI
 
 	@Override
 	public void connectWithRequestGenerator(String rgURI, String requestNotificationInboundPortURI) throws Exception {
-		// TODO Auto-generated method stub
 		( ( RequestDispatcherManagementI ) this.offering ).connectWithRequestGenerator(rgURI, requestNotificationInboundPortURI);
 	}
 
 	@Override
 	public void disconnectRequestGenerator() throws Exception {
-		// TODO Auto-generated method stub
 		( ( RequestDispatcherManagementI ) this.offering ).disconnectRequestGenerator();
+	}
+
+	@Override
+	public void connectController(String controllerURI, String VMDisconnectionHandlerInboundPortURI) throws Exception {
+		( ( RequestDispatcherManagementI ) this.offering ).connectController(controllerURI,VMDisconnectionHandlerInboundPortURI);
+	}
+
+	@Override
+	public void disconnectController() throws Exception {
+		( ( RequestDispatcherManagementI ) this.offering ).disconnectController();
 	}
 } 

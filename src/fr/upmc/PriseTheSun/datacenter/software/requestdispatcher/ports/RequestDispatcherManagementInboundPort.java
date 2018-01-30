@@ -95,6 +95,34 @@ implements	RequestDispatcherManagementI
 					}
 				}) ;
 	}
+
+	@Override
+	public void connectController(String controllerURI, String VMDisconnectionHandlerInboundPortURI) throws Exception {
+		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
+		
+		this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Void>() {
+					@Override
+					public Void call() throws Exception {
+						rdm.connectController(controllerURI, VMDisconnectionHandlerInboundPortURI) ;
+						return null;
+					}
+				}) ;
+	}
+
+	@Override
+	public void disconnectController() throws Exception {
+		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
+		
+		this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Void>() {
+					@Override
+					public Void call() throws Exception {
+						rdm.disconnectController();
+						return null;
+					}
+				}) ;
+	}
 	
 	
 }
