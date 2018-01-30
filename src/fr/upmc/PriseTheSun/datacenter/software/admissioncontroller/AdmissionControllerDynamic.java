@@ -122,7 +122,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	protected Map<String, RequestDispatcherManagementOutboundPort> rdmopMap;
 	
 	//Map Between a vm and his computer
-	protected List<ApplicationVMInfo> FreeApplicationVM;
+	protected List<ApplicationVMInfo> freeApplicationVM;
 	private ProcessorsController processorController;
 
 	Object o=new Object();
@@ -207,7 +207,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.cssdops = new ArrayList<ComputerStaticStateDataOutboundPort>();
 		this.cdsdops = new ArrayList<ComputerDynamicStateDataOutboundPort>();
 		this.cmops = new ArrayList<ComputerControllerManagementOutboutPort>();
-		this.FreeApplicationVM = new ArrayList<>();
+		this.freeApplicationVM = new ArrayList<>();
 		this.VMforNewApplication = new ArrayList<>();
 		this.processorController = new ProcessorsController("controller", ProcessorControllerManagementInboundPortURI);
 	}
@@ -326,15 +326,17 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	 * Créer un nouveau dispatcher
 	 * @param appURI URI de l'application acceptée
 	 * @param className Constructeur de dispatcher à appeler, soit celui créer dynamiquement par Javassist, soit le statique.
-	 * @return tableau des URI dus dispatcher
-	 * 	dispatcherURI[0] = RequestDispatcherURI
-	 *	dispatcherURI[1] = RequestDispatcherManagementInboundPortURI
-	 *	dispatcherURI[2] = RequestSubmissionInboundPortURI
-	 *	dispatcherURI[3] = RequestNotificationOutboundPortURI
-	 *	dispatcherURI[4] = RequestNotificationInboundPortURI
-	 *	dispatcherURI[5] = RequestStaticDataInboundPortURI
-	 *	dispatcherURI[6] = RequestDynamicDataInboundPortURI
-	 *	dispatcherURI[7] = RequestSubmissionOutboundPortURI
+	 * @return tableau des URIs du dispatcher
+	 * <ul>
+	 * 	<li>dispatcherURI[0] = RequestDispatcherURI</li>
+	 *	<li>dispatcherURI[1] = RequestDispatcherManagementInboundPortURI</li>
+	 *	<li>dispatcherURI[2] = RequestSubmissionInboundPortURI</li>
+	 *	<li>dispatcherURI[3] = RequestNotificationOutboundPortURI</li>
+	 *	<li>dispatcherURI[4] = RequestNotificationInboundPortURI</li>
+	 *	<li>dispatcherURI[5] = RequestStaticDataInboundPortURI</li>
+	 *	<li>dispatcherURI[6] = RequestDynamicDataInboundPortURI</li>
+	 *	<li>dispatcherURI[7] = RequestSubmissionOutboundPortURI</li>
+	 * </ul>
 	 * @throws Exception
 	 */
 	private String[] createDispatcher(String appURI, String className) throws Exception {
@@ -516,7 +518,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 			if(this.VMforNewApplication.size() < MIN_VM) {
 				this.VMforNewApplication.add(vm);
 			}else {
-				this.FreeApplicationVM.add(vm);
+				this.freeApplicationVM.add(vm);
 			}
 		}
 		
@@ -530,11 +532,12 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	public void acceptRingNetworkDynamicData(String requestDispatcherURI, RingNetworkDynamicStateI currentDynamicState)
 			throws Exception {
 		synchronized(o){
-			if(!currentDynamicState.getApplicationVMsInfo().isEmpty()) {
-				while(!currentDynamicState.getApplicationVMsInfo().isEmpty() && this.VMforNewApplication.size() < MIN_VM) {
-					this.VMforNewApplication.add(currentDynamicState.getApplicationVMsInfo().remove(0));
+			if(currentDynamicState.getApplicationVMInfo() != null) {
+				if(this.VMforNewApplication.size() < MIN_VM) {
+					this.VMforNewApplication.add(currentDynamicState.getApplicationVMInfo());
+				}else {
+					freeApplicationVM.add(currentDynamicState.getApplicationVMInfo());
 				}
-				FreeApplicationVM.addAll(currentDynamicState.getApplicationVMsInfo());
 			}
 		}
 
@@ -572,13 +575,13 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	}
 	
 	public RingDynamicState getDynamicState() throws UnknownHostException {
+		ApplicationVMInfo removed = null;
 		synchronized(o){
-			ArrayList<ApplicationVMInfo> copy=new ArrayList<>(FreeApplicationVM);
-			RingDynamicState rds = new RingDynamicState(copy);
-			//Suppression car envoie
-			FreeApplicationVM.clear();
-			return rds;
+			if(!this.freeApplicationVM.isEmpty()) {
+				removed = this.freeApplicationVM.remove(0);
+			}
 		}
+		return new RingDynamicState(removed);
 	}
 
 	/**
@@ -642,5 +645,11 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 			this.pushingFuture.cancel(false) ;
 		}
 }
+
+	@Override
+	public void stopApplication(String rdURI) throws Exception {
+		RequestDispatcherManagementOutboundPort rdmop = this.rdmopMap.get(rdURI);
+		
+	}
 
 }

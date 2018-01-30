@@ -19,12 +19,12 @@ public class RingDynamicState implements RingNetworkDynamicStateI{
 	protected final long timestamp;
 	/** IP of the node that did the timestamping.							*/
 	protected final String timestamperIP ;
-	protected final List<ApplicationVMInfo> vmDataInfo;
+	protected final ApplicationVMInfo vmDataInfo;
 	
 	
-	public RingDynamicState(List<ApplicationVMInfo> vmDataList) throws UnknownHostException{
+	public RingDynamicState(ApplicationVMInfo vmData) throws UnknownHostException{
 		super() ;
-		this.vmDataInfo=vmDataList;
+		this.vmDataInfo=vmData;
 		this.timestamp = System.currentTimeMillis() ;
 		this.timestamperIP = InetAddress.getLocalHost().getHostAddress() ;
 	}
@@ -52,9 +52,7 @@ public class RingDynamicState implements RingNetworkDynamicStateI{
 	 * @see fr.upmc.datacenter.RingNetworkDynamicStateI.interfaces.RingDynamicStateI#getApplicationVMsInfo()
 	 */
 	@Override
-	public List<ApplicationVMInfo> getApplicationVMsInfo() {
+	public ApplicationVMInfo getApplicationVMInfo() {
 		return vmDataInfo;
 	}
-
-	
 }

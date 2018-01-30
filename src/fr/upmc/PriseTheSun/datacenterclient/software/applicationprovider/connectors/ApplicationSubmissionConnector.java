@@ -28,4 +28,9 @@ implements	ApplicationSubmissionI {
 	public String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
 		return ( ( ApplicationSubmissionI ) this.offering ).submitApplication(appURI,nbVM,submissionInterface);
 	}
+
+	@Override
+	public void stopApplication(String rdURI) throws Exception {
+		( ( ApplicationSubmissionI ) this.offering ).stopApplication(rdURI);
+	}
 }

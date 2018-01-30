@@ -88,7 +88,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	//Vm reserved
 	private List<ApplicationVMInfo> vmReserved;
 	//vm to propagate to other controller
-	private List<ApplicationVMInfo> vmFree;
+	private List<ApplicationVMInfo> freeApplicationVM;
 	 
 	private List<ApplicationVMInfo> myVMs;
 	
@@ -179,7 +179,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		
 		this.rdmop.doConnection(requestDispatcherManagementInboundPort, RequestDispatcherManagementConnector.class.getCanonicalName());
 
-		this.vmFree = new ArrayList<ApplicationVMInfo>();
+		this.freeApplicationVM = new ArrayList<ApplicationVMInfo>();
 		this.vmReserved = new ArrayList<ApplicationVMInfo>();
 		this.myVMs =  new ArrayList<ApplicationVMInfo>();
 		this.cmops = new HashMap<String, ComputerControllerManagementOutboutPort>();
@@ -232,7 +232,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 			//On redonne les VMs au prochain controller.
 			while(!vmReserved.isEmpty()) {
 				synchronized (o) {
-					vmFree.add(vmReserved.remove(0));
+					freeApplicationVM.add(vmReserved.remove(0));
 				}
 			}
 		}
@@ -427,13 +427,14 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	@Override
 	public void acceptRingNetworkDynamicData(String requestDispatcherURI, RingNetworkDynamicStateI currentDynamicState)
 			throws Exception {;
-		//this.logMessage(this.controllerURI + " a re�u " + currentDynamicState.getApplicationVMsInfo().size() + "vms");
 		synchronized(o){
-			if(!currentDynamicState.getApplicationVMsInfo().isEmpty()) {
-				//this.logMessage(this.controllerURI + " a re�u " + currentDynamicState.getApplicationVMsInfo().size() + "vms, will now try to reserve " + StaticData.NB_VM_RESERVED + " vms");
-				vmFree.addAll(currentDynamicState.getApplicationVMsInfo());
-				while(vmReserved.size() < + StaticData.NB_VM_RESERVED && !vmFree.isEmpty()) {
-					vmReserved.add(vmFree.remove(0));
+			ApplicationVMInfo vm =  currentDynamicState.getApplicationVMInfo();
+			if(vm != null) {
+				if(vmReserved.size() < StaticData.NB_VM_RESERVED) {
+					vmReserved.add(vm);
+				}
+				else {
+					freeApplicationVM.add(vm);
 				}
 			}
 		}
@@ -526,6 +527,13 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		}
 	}
 
+	@Override
+	public void bindSendingDataUri(String DataInboundPortUri) throws Exception {
+		if(rdsdop.connected())
+			rdsdop.doDisconnection();
+		rdsdop.doConnection(DataInboundPortUri, ControlledDataConnector.class.getCanonicalName());
+	}
+	
 	/**
 	 * @see fr.upmc.datacenter.interfaces.PushModeControllingI#stopPushing()
 	 */
@@ -538,23 +546,18 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		}
 	}
 	
-	public RingDynamicState getDynamicState() throws UnknownHostException {
-		synchronized(o){
-			ArrayList<ApplicationVMInfo> copy= new ArrayList<>(vmFree);
-			RingDynamicState rds = new RingDynamicState(copy);
-			//Suppression car envoie les vms appartiennent aux controller suivant
-			vmFree.clear();
-			return rds;
-		}
-	}
 
-	@Override
-	public void bindSendingDataUri(String DataInboundPortUri) throws Exception {
-		if(rdsdop.connected())
-			rdsdop.doDisconnection();
-		rdsdop.doConnection(DataInboundPortUri, ControlledDataConnector.class.getCanonicalName());
+	public RingDynamicState getDynamicState() throws UnknownHostException {
+		ApplicationVMInfo removed = null;
+		synchronized(o){
+			if(!this.freeApplicationVM.isEmpty()) {
+				removed = this.freeApplicationVM.remove(0);
+			}
+		}
+		return new RingDynamicState(removed);
 	}
 	
+
 	public synchronized void addVm(ApplicationVMInfo vm){
 		
 		// Create a mock up port to manage the AVM component (allocate cores).
@@ -592,7 +595,7 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 	public void noticeMeSempai(String vmURI) throws Exception {
 		for(int i = 0; i < this.myVMs.size(); i++) {
 			if(myVMs.get(i).getApplicationVM().equals(vmURI)) {
-				vmFree.add(myVMs.remove(i));
+				freeApplicationVM.add(myVMs.remove(i));
 				this.cmops.remove(vmURI);
 				return;
 			}
