@@ -324,12 +324,12 @@ implements
 		{
 			if(vm.getAvmiovp().getDynamicState().getNumberOfRequestInQueue()==0)
 			{
-				//TODO : notify controller
 				RequestSubmissionOutboundPort port = vm.getRsobp();
 				
 				if(port!=null && port.connected())
 				{
 					port.doDisconnection();
+					this.vmnobp.receiveVMDisconnectionNotification(vm.getVmURI());
 				}
 			}
 		}
