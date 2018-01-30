@@ -80,8 +80,11 @@ implements
 	/** List of virtual machines' data (URI,submissionOutboundPort,...)*/
 	protected List<VirtualMachineData> virtualMachineDataList;
 	
-	/** map associating the uri of a Request with the VirtualMachineData*/
 	protected HashMap<String,VirtualMachineData> requestVirtalMachineDataMap;
+	/** */
+	protected HashSet<String> virtualMachineWaitingForDisconnection;
+	/** map associating the uri of a Request with the VirtualMachineData*/
+	protected HashMap<String,VirtualMachineData> taskExecutedBy;
 	
 	/** index of the VM in the requestSubmissionOutboundPortList which will receive the next request*/
 	private int currentVM;
@@ -99,10 +102,6 @@ implements
 	
 	/** 					*/
 	//protected ScheduledFuture<?>			resetFuture ;
-	
-	/** */
-	protected HashSet<String> virtualMachineWaitingForDisconnection;
-	protected HashMap<String,VirtualMachineData> taskExecutedBy;
 	
 	protected VMDisconnectionNotificationHandlerOutboundPort vmnobp;
 	
@@ -228,21 +227,6 @@ implements
 		return this.virtualMachineDataList.get(this.currentVM).getVmURI();
 	}
 	
-	private void beginRequestTime(String requestURI)
-	{
-		VirtualMachineData vmData = this.virtualMachineDataList.get(this.currentVM);
-			
-		this.requestVirtalMachineDataMap.put(requestURI,vmData);
-			
-		vmData.addRequest(this.rdURI,requestURI);
-	}
-	
-	private void endRequestTime(String requestURI)
-	{			
-		VirtualMachineData vmData  = this.requestVirtalMachineDataMap.remove(requestURI);
-		vmData.endRequest(requestURI);
-	}
-	
 	private Double averageTime()
 	{		
 		synchronized(this.lock)
@@ -279,7 +263,7 @@ implements
 
 		assert r != null;
 		
-		beginRequestTime(r.getRequestURI());
+		getCurrentVMData().addRequest(this.rdURI,r.getRequestURI());
 		
 		RequestSubmissionOutboundPort port = getCurrentVMPort();
 		port.submitRequest(r);
@@ -294,7 +278,7 @@ implements
 		
 		assert r != null;
 		
-		beginRequestTime(r.getRequestURI());
+		getCurrentVMData().addRequest(this.rdURI,r.getRequestURI());
 		
 		RequestSubmissionOutboundPort port = getCurrentVMPort();
 		
@@ -313,18 +297,17 @@ implements
 
 		assert r != null;
 		
-		this.endRequestTime(r.getRequestURI());
-		
-		if (RequestGenerator.DEBUG_LEVEL >= 1) 
-			this.logMessage(String.format("RequestDispatcher [%s] notifies end of request %s",this.rdURI,r.getRequestURI()));
-		
 		VirtualMachineData vm = this.taskExecutedBy.remove(r.getRequestURI());
+		vm.endRequest(r.getRequestURI());
 		if(!this.virtualMachineWaitingForDisconnection.isEmpty() && this.virtualMachineWaitingForDisconnection.contains(vm.getVmURI()))
 		{
 			this.disconnectVirtualMachine(vm);
 		}
 
 		this.requestNotificationOutboundPort.notifyRequestTermination( r );
+		
+		if (RequestGenerator.DEBUG_LEVEL >= 1) 
+			this.logMessage(String.format("RequestDispatcher [%s] notifies end of request %s",this.rdURI,r.getRequestURI()));
 	}
 	
 	@Override
@@ -363,7 +346,9 @@ implements
 		RequestSubmissionOutboundPort rsobp = new RequestSubmissionOutboundPort( rdURI+"-rsbop-"+this.virtualMachineDataList.size(), this );
 		ApplicationVMIntrospectionOutboundPort avmiovp = new ApplicationVMIntrospectionOutboundPort( vmURI+"-introObp", this );
 		
-		this.virtualMachineDataList.add(new VirtualMachineData(vmURI, rsobp,avmiovp));
+		VirtualMachineData vm = new VirtualMachineData(vmURI, rsobp,avmiovp);
+		this.virtualMachineDataList.add(vm);
+		this.requestVirtalMachineDataMap.put(vmURI, vm);
 		this.addPort( rsobp );
 		rsobp.publishPort();
 		
