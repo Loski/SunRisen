@@ -64,7 +64,6 @@ implements
 
 
 	public static int	DEBUG_LEVEL = 2 ;
-	public static long  REQUEST_LIFESPAN_MS = 500_000L; 
 	
 	/** URI of this request dispatcher */
 	protected String rdURI;
@@ -99,7 +98,7 @@ implements
 	protected ScheduledFuture<?>			pushingFuture ;
 	
 	/** 					*/
-	protected ScheduledFuture<?>			resetFuture ;
+	//protected ScheduledFuture<?>			resetFuture ;
 	
 	/** */
 	protected HashSet<String> virtualMachineWaitingForDisconnection;
@@ -207,8 +206,6 @@ implements
 				
 				this.virtualMachineWaitingForDisconnection = new HashSet<String>();
 				this.taskExecutedBy = new HashMap<String,VirtualMachineData>();
-				
-				this.startRefresher();
 	}
 	
 	private void nextVM()
@@ -241,7 +238,7 @@ implements
 	}
 	
 	private void endRequestTime(String requestURI)
-	{		
+	{			
 		VirtualMachineData vmData  = this.requestVirtalMachineDataMap.remove(requestURI);
 		vmData.endRequest(requestURI);
 	}
@@ -256,7 +253,7 @@ implements
 			for(VirtualMachineData vmData: this.virtualMachineDataList)
 			{
 				vmData.calculateAverageTime();
-				Double average = vmData.getAverageTime();
+				Double average = 1000.0;//vmData.getAverageTime();
 				if(average!=null)
 				{
 					averageTime+=average;
@@ -398,9 +395,13 @@ implements
 
 	@Override
 	public void disconnectVirtualMachine(String vmURI) throws Exception {
-		this.virtualMachineWaitingForDisconnection.add(vmURI);
-		VirtualMachineData vmData = this.requestVirtalMachineDataMap.remove(vmURI);
-		this.virtualMachineDataList.remove(vmData);
+		
+		synchronized(this.lock)
+		{
+			this.virtualMachineWaitingForDisconnection.add(vmURI);
+			VirtualMachineData vmData = this.requestVirtalMachineDataMap.remove(vmURI);
+			this.virtualMachineDataList.remove(vmData);
+		}
 	}
 	
 	public String getConnectorClassName()
@@ -443,7 +444,7 @@ implements
 		
 		for(VirtualMachineData vmData : this.virtualMachineDataList)
 		{
-			virtualMachineExecutionAverageTime.put(vmData.getVmURI(),vmData.getAverageTime());
+			virtualMachineExecutionAverageTime.put(vmData.getVmURI(),vmData.getNewAverage());
 			virtualMachineDynamicStates.put(vmData.getVmURI(), vmData.getAvmiovp().getDynamicState());
 		}
 		
@@ -481,48 +482,6 @@ implements
 							},
 							TimeManagement.acceleratedDelay(interval),
 							TimeUnit.MILLISECONDS) ;
-		}
-	}
-	
-	public void refreshTimeData()
-	{
-		synchronized(lock)
-		{
-			System.err.println("REFRESH DATA");
-			
-			for(VirtualMachineData data : this.virtualMachineDataList)
-			{
-				data.deleteData();
-			}
-		}
-	}
-	
-	public void startRefresher()
-	{
-		final RequestDispatcher rd = this;
-		this.resetFuture =
-			this.scheduleTaskAtFixedRate(
-					new ComponentI.ComponentTask() {
-						@Override
-						public void run() {
-							try {
-								rd.refreshTimeData();
-							} catch (Exception e) {
-								throw new RuntimeException(e) ;
-							}
-						}
-					},
-					TimeManagement.acceleratedDelay(REQUEST_LIFESPAN_MS),
-					TimeManagement.acceleratedDelay(REQUEST_LIFESPAN_MS),
-					TimeUnit.MILLISECONDS) ;
-	}
-	
-	public void stopRefresher()
-	{
-		if (this.resetFuture != null &&
-				!(this.resetFuture.isCancelled() ||
-									this.resetFuture.isDone())) {
-			this.resetFuture.cancel(false) ;
 		}
 	}
 
