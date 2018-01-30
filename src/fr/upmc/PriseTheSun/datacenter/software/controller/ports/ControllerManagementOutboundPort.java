@@ -42,15 +42,18 @@ implements	ControllerRingManagementI{
 	}
 
 	@Override
-	public void informNextManagementInboundPort(String managementInboundPort) throws Exception {
-		((ControllerRingManagementI)this.connector).informNextManagementInboundPort(managementInboundPort);
-
-		
+	public void setNextManagementInboundPort(String managementInboundPort) throws Exception {
+		((ControllerRingManagementI)this.connector).setNextManagementInboundPort(managementInboundPort);		
 	}
 
 	@Override
-	public void informPreviousManagementInboundPOrt(String managementInboundPort) throws Exception {
-		((ControllerRingManagementI)this.connector).informPreviousManagementInboundPOrt(managementInboundPort);
+	public void setPreviousManagementInboundPort(String managementInboundPort) throws Exception {
+		((ControllerRingManagementI)this.connector).setPreviousManagementInboundPort(managementInboundPort);
+	}
+
+	@Override
+	public void stopPushing() throws Exception {
+		((ControllerRingManagementI)this.connector).stopPushing();
 	}
 
 }

@@ -27,7 +27,7 @@ extends		OfferedI,
      */
 	public void disconnectVirtualMachine(String vmURI) throws Exception;
 	/**
-	 * Connect the outbound port of dispatcher to the inboud port of the generator
+	 * Connect the outbound port of dispatcher to the inbound port of the generator
 	 * @param rgURI request generator URI
 	 * @param requestNotificationInboundPortURI URI of the requestNotificationInboundPortURI of rg
 	 * @throws Exception
@@ -42,4 +42,7 @@ extends		OfferedI,
 	public void connectController(String controllerURI, String VMDisconnectionHandlerInboundPortURI) throws Exception;
 	
 	public void disconnectController() throws Exception;
+	
+	
+	
 }

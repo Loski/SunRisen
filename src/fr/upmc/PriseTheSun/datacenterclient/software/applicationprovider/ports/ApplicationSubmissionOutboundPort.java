@@ -36,7 +36,7 @@ public class ApplicationSubmissionOutboundPort extends AbstractOutboundPort impl
     }
 
 	@Override
-	public void stopApplication(String rdURI) throws Exception {
-	      ( ( ApplicationSubmissionI ) this.connector ).stopApplication(rdURI);
+	public void stopApplication(String appUri) throws Exception {
+	      ( ( ApplicationSubmissionI ) this.connector ).stopApplication(appUri);
 	}
 }

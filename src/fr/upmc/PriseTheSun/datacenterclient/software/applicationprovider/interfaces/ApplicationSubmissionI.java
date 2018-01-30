@@ -45,9 +45,9 @@ public interface ApplicationSubmissionI extends	OfferedI, RequiredI {
 	//TODO Passez en port de notification ?
 	/**
 	 * Signale l'arrêt d'une application à l'admission controller.
-	 * @param rdURI
+	 * @param appURI
 	 * @throws Exception
 	 */
 	
-	public void stopApplication(String rdURI) throws Exception;
+	public void stopApplication(String appURI) throws Exception;
 }

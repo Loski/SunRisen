@@ -152,6 +152,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
      */
     public void stopApplication() throws Exception {
         rgmop.stopGeneration();
+        asop.stopApplication(this.apURI);
     }
     
     /**

@@ -27,14 +27,19 @@ implements	ControllerRingManagementI{
 	}
 
 	@Override
-	public void informNextManagementInboundPort(String managementInboundPort) throws Exception {
-		((ControllerRingManagementI)this.offering ).informNextManagementInboundPort(managementInboundPort);
+	public void setNextManagementInboundPort(String managementInboundPort) throws Exception {
+		((ControllerRingManagementI)this.offering ).setNextManagementInboundPort(managementInboundPort);
 
 	}
 
 	@Override
-	public void informPreviousManagementInboundPOrt(String managementInboundPort) throws Exception {
-		((ControllerRingManagementI)this.offering ).informPreviousManagementInboundPOrt(managementInboundPort);
+	public void setPreviousManagementInboundPort(String managementInboundPort) throws Exception {
+		((ControllerRingManagementI)this.offering ).setPreviousManagementInboundPort(managementInboundPort);
 
+	}
+
+	@Override
+	public void stopPushing() throws Exception {
+		((ControllerRingManagementI)this.offering ).stopPushing();
 	}
 }
