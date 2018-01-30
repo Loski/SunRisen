@@ -64,6 +64,7 @@ implements
 
 
 	public static int	DEBUG_LEVEL = 2 ;
+	public static long  REQUEST_LIFESPAN_MS = 500_000L; 
 	
 	/** URI of this request dispatcher */
 	protected String rdURI;
@@ -96,6 +97,9 @@ implements
 	
 	/** future of the task scheduled to push dynamic data.					*/
 	protected ScheduledFuture<?>			pushingFuture ;
+	
+	/** 					*/
+	protected ScheduledFuture<?>			resetFuture ;
 	
 	/** */
 	protected HashSet<String> virtualMachineWaitingForDisconnection;
@@ -203,6 +207,8 @@ implements
 				
 				this.virtualMachineWaitingForDisconnection = new HashSet<String>();
 				this.taskExecutedBy = new HashMap<String,VirtualMachineData>();
+				
+				this.startRefresher();
 	}
 	
 	private void nextVM()
@@ -392,30 +398,9 @@ implements
 
 	@Override
 	public void disconnectVirtualMachine(String vmURI) throws Exception {
-		
 		this.virtualMachineWaitingForDisconnection.add(vmURI);
 		VirtualMachineData vmData = this.requestVirtalMachineDataMap.remove(vmURI);
 		this.virtualMachineDataList.remove(vmData);
-		
-		/*ListIterator<VirtualMachineData> iterator = this.virtualMachineDataList.listIterator();
-		
-		while(iterator.hasNext()){
-			VirtualMachineData data = iterator.next();
-			if(data.getVmURI().equals(vmURI))
-			{
-				RequestSubmissionOutboundPort port = data.getRsobp();
-				
-				if(port!=null && port.connected())
-				{
-					port.doDisconnection();
-				}	
-				iterator.remove();
-			}
-			else
-			{
-				data.resetRequestTimeDataList();
-			}
-		}*/
 	}
 	
 	public String getConnectorClassName()
@@ -496,6 +481,48 @@ implements
 							},
 							TimeManagement.acceleratedDelay(interval),
 							TimeUnit.MILLISECONDS) ;
+		}
+	}
+	
+	public void refreshTimeData()
+	{
+		synchronized(lock)
+		{
+			System.err.println("REFRESH DATA");
+			
+			for(VirtualMachineData data : this.virtualMachineDataList)
+			{
+				data.deleteData();
+			}
+		}
+	}
+	
+	public void startRefresher()
+	{
+		final RequestDispatcher rd = this;
+		this.resetFuture =
+			this.scheduleTaskAtFixedRate(
+					new ComponentI.ComponentTask() {
+						@Override
+						public void run() {
+							try {
+								rd.refreshTimeData();
+							} catch (Exception e) {
+								throw new RuntimeException(e) ;
+							}
+						}
+					},
+					TimeManagement.acceleratedDelay(REQUEST_LIFESPAN_MS),
+					TimeManagement.acceleratedDelay(REQUEST_LIFESPAN_MS),
+					TimeUnit.MILLISECONDS) ;
+	}
+	
+	public void stopRefresher()
+	{
+		if (this.resetFuture != null &&
+				!(this.resetFuture.isCancelled() ||
+									this.resetFuture.isDone())) {
+			this.resetFuture.cancel(false) ;
 		}
 	}
 
