@@ -651,9 +651,11 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 }
 
 	@Override
-	public void stopApplication(String rdURI) throws Exception {
-		RequestDispatcherManagementOutboundPort rdmop = this.rdmopMap.get(rdURI);
+	public void stopApplication(String appUri) throws Exception {
+		RequestDispatcherManagementOutboundPort rdmop = this.rdmopMap.get(appUri);
+		rdmop.disconnectController();
 		rdmop.disconnectRequestGenerator();
+
 	}
 
 }

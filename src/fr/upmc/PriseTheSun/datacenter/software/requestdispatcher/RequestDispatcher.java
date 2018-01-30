@@ -624,6 +624,7 @@ implements
 
 	@Override
 	public void disconnectController() throws Exception {
+		
 		for(int i = 0; i < this.virtualMachineDataList.size(); i++) {
 			this.disconnectVirtualMachine(this.virtualMachineDataList.get(i).getVmURI());;
 		}

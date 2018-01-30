@@ -175,7 +175,7 @@ extends		AbstractCVM
 		}
 		
 		
-		Thread.sleep(20_000);
+		Thread.sleep(8_000);
 		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TRY TO DESTROY MY FRIEND");
 		this.apmop[0].stopApplication();
 	}
