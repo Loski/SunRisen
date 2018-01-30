@@ -23,8 +23,10 @@ import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.Ad
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMInfo;
 import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerManagementI;
+import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.VMDisconnectionNotificationHandlerI;
 import fr.upmc.PriseTheSun.datacenter.software.controller.ports.ControllerManagementInboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.controller.ports.ControllerManagementOutboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.controller.ports.VMDisconnectionNotificationHandlerInboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatcher;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatcher.RequestDispatcherPortTypes;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.VirtualMachineData;
@@ -65,7 +67,13 @@ import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
  * @author Maxime Lavaste
  *
  */
-public class Controller extends AbstractComponent implements RequestDispatcherStateDataConsumerI, RingNetworkStateDataConsumerI,ControllerManagementI, PushModeControllingI{
+public class Controller extends AbstractComponent 
+implements 	RequestDispatcherStateDataConsumerI, 
+			RingNetworkStateDataConsumerI,
+			ControllerManagementI, 
+			PushModeControllingI,
+			VMDisconnectionNotificationHandlerI
+{
 
 	protected String controllerURI;
 	protected String rdUri;
@@ -104,7 +112,23 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 
 	private Map<String, ArrayList<Double>> statistique;
 	
-	public Controller(String appURI, String controllerURI, String controllerManagement, String requestDispatcherDynamicStateDataOutboundPort,String rdURI, String requestDispatcherDynamicStateDataInboundPortURI, String AdmissionControllerManagementInboundPortURI, String ProcessorControllerManagementInboundUri, String RingDynamicStateDataOutboundPortURI, String RingDynamicStateDataInboundPortURI, String nextRingDynamicStateDataInboundPort, ApplicationVMInfo vm) throws Exception
+	private VMDisconnectionNotificationHandlerInboundPort vmnibp;
+	
+	public Controller(
+			String appURI, 
+			String controllerURI, 
+			String controllerManagement, 
+			String requestDispatcherDynamicStateDataOutboundPort,
+			String rdURI, 
+			String requestDispatcherDynamicStateDataInboundPortURI, 
+			String AdmissionControllerManagementInboundPortURI, 
+			String ProcessorControllerManagementInboundUri, 
+			String RingDynamicStateDataOutboundPortURI, 
+			String RingDynamicStateDataInboundPortURI, 
+			String nextRingDynamicStateDataInboundPort, 
+			ApplicationVMInfo vm, 
+			String VMDisconnectionNotificationHandlerInboundPortURI
+	) throws Exception
 	{
 		super(controllerURI,1,1);
 		
@@ -189,6 +213,11 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		
 		/** Moyenne de toute les VMs **/
 		this.statistique.put("All", new ArrayList<Double>());
+		
+		this.addOfferedInterface(VMDisconnectionNotificationHandlerI.class);
+		this.vmnibp = new VMDisconnectionNotificationHandlerInboundPort(VMDisconnectionNotificationHandlerInboundPortURI,this);
+		this.addPort(vmnibp);
+		this.vmnibp.publishPort();
 	}
 	
 	private Double calculAverage(String VMUri) {
@@ -592,7 +621,8 @@ public class Controller extends AbstractComponent implements RequestDispatcherSt
 		}
 	}
 	
-	public void noticeMeSempai(String vmURI) throws Exception {
+	@Override
+	public void receiveVMDisconnectionNotification(String vmURI) throws Exception {
 		for(int i = 0; i < this.myVMs.size(); i++) {
 			if(myVMs.get(i).getApplicationVM().equals(vmURI)) {
 				freeApplicationVM.add(myVMs.remove(i));

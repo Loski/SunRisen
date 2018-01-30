@@ -1,6 +1,5 @@
 package fr.upmc.PriseTheSun.datacenter.software.controller.ports;
 
-import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerManagementI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ports.AbstractOutboundPort;
@@ -41,8 +40,5 @@ implements	ControllerManagementI{
 	public void bindSendingDataUri(String DataInboundPortUri) throws Exception {
 		((ControllerManagementI)this.connector).bindSendingDataUri(DataInboundPortUri);
 	}
-
-
-
 
 }

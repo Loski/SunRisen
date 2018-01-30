@@ -11,6 +11,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.VMDisconnectionNotificationHandlerI;
+import fr.upmc.PriseTheSun.datacenter.software.controller.ports.VMDisconnectionNotificationHandlerOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherIntrospectionI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
@@ -66,7 +68,6 @@ implements
 
 
 	public static int	DEBUG_LEVEL = 2 ;
-	public static int NB_REQUEST_NEEDED_FOR_AVG = 5;
 	
 	/** URI of this request dispatcher */
 	protected String rdURI;
@@ -104,6 +105,7 @@ implements
 	protected HashSet<String> virtualMachineWaitingForDisconnection;
 	protected HashMap<String,VirtualMachineData> taskExecutedBy;
 	
+	protected VMDisconnectionNotificationHandlerOutboundPort vmnobp;
 	
 	private Object lock;
 	
@@ -120,10 +122,10 @@ implements
 			String requestDispatcherURI, 
 			String requestDispatcherManagementInboundPortURI, 
 			String requestSubmissionInboundPortURI, 
-			String requestNotificationOutboundPortURI, 
-			//List<String> requestSubmissionOutboundPortList, 
+			String requestNotificationOutboundPortURI,
 			String requestNotificationInboundPortURI,
-			String requestDispatcherDynamicStateDataInboundPortURI
+			String requestDispatcherDynamicStateDataInboundPortURI,
+			String VMDisconnectionNotificationHandlerOutboundPortURI
 			) throws Exception 
 	{
 		
@@ -197,6 +199,11 @@ implements
 											this) ;
 				this.addPort(this.rdIntrospectionInboundPort) ;
 				this.rdIntrospectionInboundPort.publishPort() ;
+				
+				this.addRequiredInterface(VMDisconnectionNotificationHandlerI.class) ;
+				this.vmnobp = new VMDisconnectionNotificationHandlerOutboundPort(VMDisconnectionNotificationHandlerOutboundPortURI,this);
+				this.addPort(this.vmnobp) ;
+				this.vmnobp.publishPort() ;
 				
 				this.virtualMachineWaitingForDisconnection = new HashSet<String>();
 				this.taskExecutedBy = new HashMap<String,VirtualMachineData>();
@@ -579,6 +586,23 @@ implements
 	public RequestDispatcherStaticStateI getStaticState() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void connectController(String controllerURI, String VMDisconnectionHandlerInboundPortURI) throws Exception {
+		this.doPortConnection(
+				this.vmnobp.getPortURI(),
+				VMDisconnectionHandlerInboundPortURI,
+				VMDisconnectionNotificationHandlerI.class.getCanonicalName()
+				);
+	}
+
+	@Override
+	public void disconnectController() throws Exception {
+		if(this.vmnobp.connected())
+		{
+			this.vmnobp.doDisconnection();
+		}
 	}
 
 }

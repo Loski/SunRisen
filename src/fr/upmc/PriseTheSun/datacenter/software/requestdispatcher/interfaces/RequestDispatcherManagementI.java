@@ -38,4 +38,8 @@ extends		OfferedI,
 	 * @throws Exception
 	 */
 	public void disconnectRequestGenerator() throws Exception;
+	
+	public void connectController(String controllerURI, String VMDisconnectionHandlerInboundPortURI) throws Exception;
+	
+	public void disconnectController() throws Exception;
 }
