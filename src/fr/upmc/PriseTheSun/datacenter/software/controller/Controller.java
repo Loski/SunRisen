@@ -9,9 +9,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
-
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.connector.ComputerControllerConnector;
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.ports.ComputerControllerManagementOutboutPort;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.ProcessorsController.CoreAsk;
@@ -22,14 +19,11 @@ import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.connector.Adm
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMInfo;
-import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerManagementI;
+import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerRingManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.VMDisconnectionNotificationHandlerI;
 import fr.upmc.PriseTheSun.datacenter.software.controller.ports.ControllerManagementInboundPort;
-import fr.upmc.PriseTheSun.datacenter.software.controller.ports.ControllerManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.controller.ports.VMDisconnectionNotificationHandlerInboundPort;
-import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatcher;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatcher.RequestDispatcherPortTypes;
-import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.VirtualMachineData;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.connectors.RequestDispatcherIntrospectionConnector;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI;
@@ -40,27 +34,20 @@ import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDi
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherIntrospectionOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.ring.RingDynamicState;
-import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI;
 import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkDynamicStateI;
+import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI;
 import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingNetworkDynamicStateDataInboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingNetworkDynamicStateDataOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.tools.Writter;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.ComponentI;
-import fr.upmc.datacenter.connectors.ControlledDataConnector;
-import fr.upmc.datacenter.hardware.processors.UnacceptableFrequencyException;
-import fr.upmc.datacenter.hardware.processors.UnavailableFrequencyException;
 import fr.upmc.components.exceptions.ComponentShutdownException;
+import fr.upmc.datacenter.connectors.ControlledDataConnector;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
 import fr.upmc.datacenter.interfaces.PushModeControllingI;
-import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMIntrospectionConnector;
 import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagementConnector;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamicStateI;
-import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMIntrospectionOutboundPort;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
-import fr.upmc.datacenter.software.interfaces.RequestNotificationI;
-import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
-
 
 
 /**
@@ -70,7 +57,7 @@ import fr.upmc.datacenter.software.ports.RequestNotificationOutboundPort;
 public class Controller extends AbstractComponent 
 implements 	RequestDispatcherStateDataConsumerI, 
 			RingNetworkStateDataConsumerI,
-			ControllerManagementI, 
+			ControllerRingManagementI, 
 			PushModeControllingI,
 			VMDisconnectionNotificationHandlerI
 {
@@ -102,8 +89,15 @@ implements 	RequestDispatcherStateDataConsumerI,
 	
 	private Map<String, ComputerControllerManagementOutboutPort> cmops;
 	
+	
+	/** Ring network port **/
 	private RingNetworkDynamicStateDataOutboundPort rdsdop;
 	private RingNetworkDynamicStateDataInboundPort rdsdip;
+	
+	/** Ring Network Management port of previous and next nodes**/
+	private String controllerManagementNextInboundPort;
+	private String controllerManagementPreviousInboundPort;
+
 	
 	
 	private String appURI; 	
@@ -125,7 +119,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 			String ProcessorControllerManagementInboundUri, 
 			String RingDynamicStateDataOutboundPortURI, 
 			String RingDynamicStateDataInboundPortURI, 
-			String nextRingDynamicStateDataInboundPort, 
+			String nextRingDynamicStateDataInboundPort,
+			String controllerManagementPreviousPort,
 			ApplicationVMInfo vm, 
 			String VMDisconnectionNotificationHandlerInboundPortURI
 	) throws Exception
@@ -152,7 +147,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		requestDispatcherNotificationInboundPort = this.rdiobp.getRequestDispatcherPortsURI().get(RequestDispatcherPortTypes.REQUEST_NOTIFICATION);
 		requestDispatcherManagementInboundPort = this.rdiobp.getRequestDispatcherPortsURI().get(RequestDispatcherPortTypes.MANAGEMENT);
 
-		this.addRequiredInterface(ControllerManagementI.class);
+		this.addRequiredInterface(ControllerRingManagementI.class);
 		this.cmip = new ControllerManagementInboundPort(controllerManagement, this);
 		this.cmip.publishPort();
 		this.addPort(cmip);
@@ -218,6 +213,9 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.vmnibp = new VMDisconnectionNotificationHandlerInboundPort(VMDisconnectionNotificationHandlerInboundPortURI,this);
 		this.addPort(vmnibp);
 		this.vmnibp.publishPort();
+		
+		
+		this.controllerManagementPreviousInboundPort = controllerManagementPreviousPort;
 	}
 	
 	private Double calculAverage(String VMUri) {
@@ -454,7 +452,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	 * @see fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI#acceptRingNetworkDynamicData(java.lang.String, fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkDynamicStateI)
 	 */
 	@Override
-	public void acceptRingNetworkDynamicData(String requestDispatcherURI, RingNetworkDynamicStateI currentDynamicState)
+	public void acceptRingNetworkDynamicData(String controllerDataRingOutboundPortURI, RingNetworkDynamicStateI currentDynamicState)
 			throws Exception {;
 		synchronized(o){
 			ApplicationVMInfo vm =  currentDynamicState.getApplicationVMInfo();
@@ -631,6 +629,21 @@ implements 	RequestDispatcherStateDataConsumerI,
 			}
 		}
 		throw new Exception("Vm was not found. Can't delete.");
+	}
+
+	@Override
+	public void disconnectController() throws Exception {
+		
+	}
+
+	@Override
+	public void informNextManagementInboundPort(String managementInboundPort) throws Exception {
+		this.controllerManagementNextInboundPort = managementInboundPort;
+	}
+
+	@Override
+	public void informPreviousManagementInboundPOrt(String managementInboundPort) throws Exception {
+		this.controllerManagementPreviousInboundPort = managementInboundPort;
 	}
 }
 

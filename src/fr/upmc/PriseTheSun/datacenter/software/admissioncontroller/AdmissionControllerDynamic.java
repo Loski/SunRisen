@@ -4,8 +4,6 @@ package fr.upmc.PriseTheSun.datacenter.software.admissioncontroller;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -14,24 +12,19 @@ import java.util.concurrent.TimeUnit;
 
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.ComputerController;
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.connector.ComputerControllerConnector;
-import fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagement;
-import fr.upmc.PriseTheSun.datacenter.hardware.computer.ports.ComputerControllerManagementInboundPort;
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.ports.ComputerControllerManagementOutboutPort;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.ProcessorsController;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementInboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMInfo;
 import fr.upmc.PriseTheSun.datacenter.software.controller.Controller;
-import fr.upmc.PriseTheSun.datacenter.software.controller.connectors.ControllerManagementConnector;
-import fr.upmc.PriseTheSun.datacenter.software.controller.ports.ControllerManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.javassist.RequestDispatcherCreator;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatcher;
-import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.VirtualMachineData;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.ring.RingDynamicState;
-import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI;
 import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkDynamicStateI;
+import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI;
 import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingNetworkDynamicStateDataInboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingNetworkDynamicStateDataOutboundPort;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI;
@@ -43,17 +36,11 @@ import fr.upmc.components.cvm.pre.dcc.connectors.DynamicComponentCreationConnect
 import fr.upmc.components.cvm.pre.dcc.ports.DynamicComponentCreationOutboundPort;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.components.exceptions.ComponentStartException;
-import fr.upmc.components.pre.reflection.connectors.ReflectionConnector;
-import fr.upmc.components.pre.reflection.ports.ReflectionOutboundPort;
 import fr.upmc.datacenter.connectors.ControlledDataConnector;
 import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
-import fr.upmc.datacenter.hardware.computers.connectors.ComputerServicesConnector;
-import fr.upmc.datacenter.hardware.computers.interfaces.ComputerDynamicStateI;
 import fr.upmc.datacenter.hardware.computers.interfaces.ComputerServicesI;
-import fr.upmc.datacenter.hardware.computers.interfaces.ComputerStateDataConsumerI;
 import fr.upmc.datacenter.hardware.computers.interfaces.ComputerStaticStateI;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerDynamicStateDataOutboundPort;
-import fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerStaticStateDataOutboundPort;
 import fr.upmc.datacenter.hardware.processors.Processor;
 import fr.upmc.datacenter.hardware.processors.Processor.ProcessorPortTypes;
@@ -100,6 +87,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	protected static final String ControllerDataRingOutboundPortURI = "cdrop";
 	protected static final String ComputerControllerManagementInboundPortURI = "ccmip";
 	protected static final String ComputerControllerManagementUri = "ccm";
+	protected static final String VMDisconnectionHandlerOutboundPort = "VMDisconnectionHandlerOutboundPort";
 
 
 	
@@ -132,6 +120,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 
 	private static final int MIN_VM = 5;
 
+
 	private DynamicComponentCreationOutboundPort portTControllerJVM;
 	
 	/*Port du la structure en anneau pour relier chaque controller*/ 
@@ -139,9 +128,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	private RingNetworkDynamicStateDataInboundPort rdsdip;
 	private String AdmissionControllerDataRingOutboundUri;
 	private String AdmissionControllerDataRingInboundUri;
-
+	
 	private String nextControllerDataRingUri;
-	private Object previousControllerDataRingUri;
+	private String previousControllerManagement;
 
 	private ArrayList<ApplicationVMInfo> VMforNewApplication;
 	
@@ -149,7 +138,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	/*protected static final String RequestDispatcher_JVM_URI = "controller" ;
 	protected static final String Application_VM_JVM_URI = "controller";*/
 	/**
-	 * Créer un <code>AdmissionControllerDynamic</code> à partir des URIs donnés en paramètre
+	 * Créer un <code>AdmissionControllerDynamic</code> à partir des URIs données en paramètre
 	 * @param admissionControllerURI
 	 * @param applicationSubmissionInboundPortURI
 	 * @param AdmissionControllerManagementInboundPortURI
@@ -178,7 +167,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.addPort(acmip);
 		this.acmip.publishPort();
 		
-		
+		previousControllerManagement = AdmissionControllerManagementInboundPortURI;
 		this.portTControllerJVM = new DynamicComponentCreationOutboundPort(this);
 		this.portTControllerJVM.publishPort();
 		this.addPort(this.portTControllerJVM);
@@ -277,7 +266,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	 */
 	private String[] createController(String appURI, String requestDispatcherDynamicStateDataInboundPortURI, String VMDisconnectionHandlerOutboundPortURI, String rdURI, ApplicationVMInfo vm) throws Exception
 	{
-		String controllerURIs[] = new String[7];
+		String controllerURIs[] = new String[8];
 		controllerURIs[0] = appURI + "-controller";
 		controllerURIs[1] = appURI +"-controllermngt";
 		controllerURIs[2] = controllerURIs[0]+"-rddsdop";
@@ -286,7 +275,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		//next dataring inbound uri
 		controllerURIs[5] = null;
 		controllerURIs[6] = controllerURIs[0]+"-VMDisconnectionHandler";
-		
+		controllerURIs[7] = previousControllerManagement;
+
 		String previous = this.AdmissionControllerDataRingInboundUri;
 		/*Linking Ring*/
 		if(nextControllerDataRingUri==null){
@@ -301,24 +291,29 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		
 		nextControllerDataRingUri = controllerURIs[4];
 
-		this.portTControllerJVM.createComponent(
-				Controller.class.getCanonicalName(),
-				new Object[] {
-						appURI,
-						controllerURIs[0],
-						controllerURIs[1],
-						controllerURIs[2],
-						rdURI,
-						requestDispatcherDynamicStateDataInboundPortURI,
-						this.acmip.getPortURI(),
-						ProcessorControllerManagementInboundPortURI,
-						controllerURIs[3],
-						controllerURIs[4],
-						controllerURIs[5],
-						vm,
-						controllerURIs[6]
-		});
-		
+		try {
+			this.portTControllerJVM.createComponent(
+					Controller.class.getCanonicalName(),
+					new Object[] {
+							appURI,
+							controllerURIs[0],
+							controllerURIs[1],
+							controllerURIs[2],
+							rdURI,
+							requestDispatcherDynamicStateDataInboundPortURI,
+							this.acmip.getPortURI(),
+							ProcessorControllerManagementInboundPortURI,
+							controllerURIs[3],
+							controllerURIs[4],
+							controllerURIs[5],
+							controllerURIs[7],
+							vm,
+							controllerURIs[6]
+			});
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+		System.out.println("Controller created !");
 		rdsdop.doConnection(controllerURIs[4], ControlledDataConnector.class.getCanonicalName());
 		this.startUnlimitedPushing(10);
 		
@@ -353,7 +348,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		dispatcherURI[5] = RequestStaticDataInboundPortURI + "_"+ appURI;
 		dispatcherURI[6] = RequestDynamicDataInboundPortURI + "_"+ appURI;
 		dispatcherURI[7] = RequestSubmissionOutboundPortURI + "_"+ appURI;
-		dispatcherURI[8] = "VMDisconnectionHandlerOutboundPort" + "_"+ appURI;
+		dispatcherURI[8] = VMDisconnectionHandlerOutboundPort + "_"+ appURI;
 		
 		this.portTControllerJVM.createComponent(
 				className,
@@ -657,7 +652,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	@Override
 	public void stopApplication(String rdURI) throws Exception {
 		RequestDispatcherManagementOutboundPort rdmop = this.rdmopMap.get(rdURI);
-		
+		rdmop.disconnectRequestGenerator();
 	}
 
 }

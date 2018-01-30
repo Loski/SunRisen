@@ -9,13 +9,13 @@ import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.Requ
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStaticStateI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ports.AbstractInboundPort;
-import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
-import fr.upmc.datacenter.software.applicationvm.ApplicationVM.ApplicationVMPortTypes;
-import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMStaticStateI;
 
 public class RequestDispatcherIntrospectionInboundPort 
 extends		AbstractInboundPort
 implements	RequestDispatcherIntrospectionI{
+
+
+	private static final long serialVersionUID = 7420802098137514687L;
 
 	public				RequestDispatcherIntrospectionInboundPort(
 			ComponentI owner

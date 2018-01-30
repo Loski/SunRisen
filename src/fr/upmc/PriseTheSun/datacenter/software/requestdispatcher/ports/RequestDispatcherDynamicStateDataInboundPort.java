@@ -1,13 +1,9 @@
 package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports;
 
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatcher;
-import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.interfaces.DataOfferedI;
 import fr.upmc.components.interfaces.DataOfferedI.DataI;
-import fr.upmc.datacenter.hardware.processors.Processor;
-import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
-import fr.upmc.datacenter.interfaces.PushModeControllingI;
 import fr.upmc.datacenter.ports.AbstractControlledDataInboundPort;
 
 public class RequestDispatcherDynamicStateDataInboundPort extends AbstractControlledDataInboundPort{

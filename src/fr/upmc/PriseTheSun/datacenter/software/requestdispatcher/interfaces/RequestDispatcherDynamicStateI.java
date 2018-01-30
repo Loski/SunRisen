@@ -1,10 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
-import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.VirtualMachineData;
 import fr.upmc.components.interfaces.DataOfferedI;
 import fr.upmc.components.interfaces.DataRequiredI;
 import fr.upmc.datacenter.interfaces.TimeStampingI;

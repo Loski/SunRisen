@@ -1,7 +1,5 @@
 package fr.upmc.PriseTheSun.datacenter.software.ring.interfaces;
 
-
-import java.util.List;
 import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMInfo;
 import fr.upmc.components.interfaces.DataOfferedI;
 import fr.upmc.components.interfaces.DataRequiredI;

@@ -1,13 +1,8 @@
 package fr.upmc.PriseTheSun.datacenter.software.javassist;
 
-import java.lang.reflect.Method;
-
-import fr.upmc.components.connectors.AbstractConnector;
 import javassist.ClassPool;
 import javassist.CtClass;
-import javassist.CtField;
 import javassist.CtMethod;
-import javassist.NotFoundException;
 
 public class RequestDispatcherCreator extends ClassCreator{
 
