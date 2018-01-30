@@ -15,8 +15,8 @@ implements	RequestDispatcherManagementI
 	}
 
 	@Override
-	public void disconnectVirtualMachine(String vmURI) throws Exception {
-		( ( RequestDispatcherManagementI ) this.offering ).disconnectVirtualMachine(vmURI);
+	public void askVirtualMachineDisconnection(String vmURI) throws Exception {
+		( ( RequestDispatcherManagementI ) this.offering ).askVirtualMachineDisconnection(vmURI);
 		
 	}
 

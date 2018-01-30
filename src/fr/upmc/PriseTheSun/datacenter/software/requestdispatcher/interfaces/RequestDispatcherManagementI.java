@@ -25,7 +25,7 @@ extends		OfferedI,
      * Close the outbound port.
      * @throws Exception
      */
-	public void disconnectVirtualMachine(String vmURI) throws Exception;
+	public void askVirtualMachineDisconnection(String vmURI) throws Exception;
 	/**
 	 * Connect the outbound port of dispatcher to the inbound port of the generator
 	 * @param rgURI request generator URI
