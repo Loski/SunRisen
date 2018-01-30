@@ -54,28 +54,42 @@ public class ControllerManagementInboundPort extends AbstractInboundPort impleme
 	}
 
 	@Override
-	public void informNextManagementInboundPort(String managementInboundPort) throws Exception {
+	public void setNextManagementInboundPort(String managementInboundPort) throws Exception {
 		final ControllerRingManagementI cm = ( ControllerRingManagementI ) this.owner;
 		
 		 this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
-						cm.informNextManagementInboundPort(managementInboundPort);
+						cm.setNextManagementInboundPort(managementInboundPort);
 						return null;
 					}
 		});
 	}
 
 	@Override
-	public void informPreviousManagementInboundPOrt(String managementInboundPort) throws Exception {
+	public void setPreviousManagementInboundPort(String managementInboundPort) throws Exception {
 		final ControllerRingManagementI cm = ( ControllerRingManagementI ) this.owner;
 		
 		 this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
-						cm.informPreviousManagementInboundPOrt(managementInboundPort);
+						cm.setPreviousManagementInboundPort(managementInboundPort);
+						return null;
+					}
+		});
+	}
+
+	@Override
+	public void stopPushing() throws Exception {
+		final ControllerRingManagementI cm = ( ControllerRingManagementI ) this.owner;
+		
+		 this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Void>() {
+					@Override
+					public Void call() throws Exception {
+						cm.stopPushing();
 						return null;
 					}
 		});

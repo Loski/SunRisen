@@ -393,6 +393,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		
 		this.rdmopMap.get(appURI).connectController(controllerUris[0],controllerUris[6]);
 		
+
 		return dispatcherUri;
 	}
 	

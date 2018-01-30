@@ -19,6 +19,7 @@ public interface ControllerRingManagementI extends OfferedI,RequiredI{
 	 * @throws Exception
 	 */
 	public void bindSendingDataUri(String DataInboundPortUri) throws Exception;
-	public void informNextManagementInboundPort(String managementInboundPort ) throws Exception;
-	public void informPreviousManagementInboundPOrt(String managementInboundPort) throws Exception;
+	public void setNextManagementInboundPort(String managementInboundPort ) throws Exception;
+	public void setPreviousManagementInboundPort(String managementInboundPort) throws Exception;
+	public void stopPushing() throws Exception;
 }

@@ -325,6 +325,7 @@ implements
 				if(port!=null && port.connected())
 				{
 					port.doDisconnection();
+					this.virtualMachineWaitingForDisconnection.remove(vm.getVmURI());
 					this.vmnobp.receiveVMDisconnectionNotification(vm.getVmURI());
 				}
 			}
@@ -596,8 +597,21 @@ implements
 
 	@Override
 	public void disconnectController() throws Exception {
+		for(int i = 0; i < this.virtualMachineDataList.size(); i++) {
+			this.disconnectVirtualMachine(this.virtualMachineDataList.get(i).getVmURI());;
+		}
+		while(!this.virtualMachineWaitingForDisconnection.isEmpty()) {
+			Thread.sleep(500);
+		}
+		
+		// check verification
+		if(!virtualMachineDataList.isEmpty()) {
+			this.disconnectController();
+		}
+
 		if(this.vmnobp.connected())
 		{
+			this.vmnobp.disconnectController();
 			this.vmnobp.doDisconnection();
 		}
 	}

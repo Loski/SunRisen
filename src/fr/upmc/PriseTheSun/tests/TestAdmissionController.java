@@ -173,6 +173,11 @@ extends		AbstractCVM
 					//this.apmop[i].createAndSendApplication(RequestSubmissionI.class);
 				}
 		}
+		
+		
+		Thread.sleep(20_000);
+		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TRY TO DESTROY MY FRIEND");
+		this.apmop[0].stopApplication();
 	}
 
 	/**
