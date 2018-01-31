@@ -447,7 +447,7 @@ implements 	ApplicationSubmissionI,
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
 		ApplicationVMInfo vm;
 		synchronized(o){
-			if(this.VMforNewApplication.size() > 1) {
+			if(!this.VMforNewApplication.isEmpty()) {
 				vm = VMforNewApplication.remove(0);
 			}else {
 				System.out.println("kek");
@@ -476,7 +476,7 @@ implements 	ApplicationSubmissionI,
 		ApplicationVMInfo vm;
 		
 		synchronized(o){
-			if(this.VMforNewApplication.size() > 1) {
+			if(!this.VMforNewApplication.isEmpty()) {
 				vm = VMforNewApplication.remove(0);
 			}else {
 				return null;
@@ -487,9 +487,8 @@ implements 	ApplicationSubmissionI,
 		String dispatcherUri[] = createDispatcher(appURI, dispa.getCanonicalName());
 		
 		String controllerUris[] = this.createController(appURI,dispatcherUri[6],dispatcherUri[8],dispatcherUri[0], vm);
-		
+
 		this.rdmopMap.get(appURI).connectController(controllerUris[0],controllerUris[6]);
-		
 		return dispatcherUri;
 	}
 	
@@ -652,6 +651,9 @@ implements 	ApplicationSubmissionI,
 	public RingDynamicState getDynamicState() throws UnknownHostException {
 		ApplicationVMInfo removed = null;
 		synchronized(o){
+			while(!freeApplicationVM.isEmpty() && this.VMforNewApplication.size() < 5) {
+				VMforNewApplication.add(freeApplicationVM.remove(0));
+			}
 			if(!this.freeApplicationVM.isEmpty()) {
 				removed = this.freeApplicationVM.remove(0);
 			}
