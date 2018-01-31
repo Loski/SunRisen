@@ -346,11 +346,11 @@ implements 	RequestDispatcherStateDataConsumerI,
 			switch(getThreeshold(average)){
 			case HIGHER :
 
-				HighterCase(vms);
+				tooSlowCase(vms);
 				//this.acmop.addCores(null, randomVM.getApplicationVMURI(), 1);
 				break;
 			case LOWER :
-				LowerCase(vms);
+				tooFastCase(vms);
 	
 				break;
 			case GOOD :
@@ -387,7 +387,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	 * @param vms
 	 * @throws Exception 
 	 */
-	private void LowerCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
+	private void tooFastCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		
 		//Add a vm
 		/*if(!vmReserved.isEmpty())
@@ -413,7 +413,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	 * @param vms
 	 * @throws Exception 
 	 */
-	private void HighterCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
+	private void tooSlowCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		
 		boolean canRemoveVM = vms.size() > 1;
 		//boolean canDesalocate = coresAllocates  == StaticData.MIN_ALLOCATION;
