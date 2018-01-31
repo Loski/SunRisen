@@ -239,7 +239,7 @@ implements
 			for(VirtualMachineData vmData: this.virtualMachineDataList)
 			{
 				vmData.calculateAverageTime();
-				Double average = 1000.0;//vmData.getAverageTime();
+				Double average = vmData.getAverageTime();
 				if(average!=null)
 				{
 					averageTime+=average;
@@ -459,7 +459,7 @@ implements
 		
 		for(VirtualMachineData vmData : this.virtualMachineDataList)
 		{
-			virtualMachineExecutionAverageTime.put(vmData.getVmURI(),vmData.getNewAverage());
+			virtualMachineExecutionAverageTime.put(vmData.getVmURI(),vmData.getAverageTime());
 			virtualMachineDynamicStates.put(vmData.getVmURI(), vmData.getAvmiovp().getDynamicState());
 		}
 		

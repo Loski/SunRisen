@@ -267,7 +267,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			}
 		}
 		else {
-		//	this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,"pas assez de données pour calculer la moyenne"));
+			this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,"pas assez de données pour calculer la moyenne"));
 		}
 
 	}

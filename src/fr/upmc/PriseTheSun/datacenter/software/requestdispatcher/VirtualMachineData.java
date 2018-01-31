@@ -14,8 +14,7 @@ public class VirtualMachineData {
 	private String vmURI;
 	private RequestSubmissionOutboundPort rsobp;
 	private ApplicationVMIntrospectionOutboundPort avmiovp;
-	private Double previousAverage;
-	private Double newAverage;
+	private Double averageTime;
 	/**  */
 	private HashMap<String,RequestTimeData> requestInQueue;
 	private List<RequestTimeData> requestTerminated;
@@ -27,8 +26,7 @@ public class VirtualMachineData {
 		this.vmURI=uri;
 		this.rsobp=rsobp;
 		this.avmiovp=avmiovp;
-		this.previousAverage=null;
-		this.newAverage=null;
+		this.averageTime=null;
 		this.requestInQueue = new  HashMap<String,RequestTimeData>();
 		this.requestTerminated = new  ArrayList<RequestTimeData>();
 		this.lock = new Object();
@@ -40,11 +38,8 @@ public class VirtualMachineData {
 	public RequestSubmissionOutboundPort getRsobp() {
 		return rsobp;
 	}
-	public Double getPreviousAverage() {
-		return previousAverage;
-	}
-	public Double getNewAverage() {
-		return newAverage;
+	public Double getAverageTime() {
+		return averageTime;
 	}
 	
 	public HashMap<String,RequestTimeData> getRequestInQueue() {
@@ -89,7 +84,12 @@ public class VirtualMachineData {
 				}
 				
 				res = res/this.requestTerminated.size();
-			}			
+				
+				if(averageTime==null)
+					this.averageTime = res;
+				else
+					this.averageTime=(this.averageTime+res)/2.0;
+			}
 			
 			this.requestTerminated.clear();
 		}
