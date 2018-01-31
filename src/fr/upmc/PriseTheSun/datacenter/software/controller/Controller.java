@@ -11,6 +11,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.connector.ComputerControllerConnector;
+import fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.ports.ComputerControllerManagementOutboutPort;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.ProcessorsController.CoreAsk;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.connector.ProcessorControllerManagementConnector;
@@ -136,6 +137,17 @@ implements 	RequestDispatcherStateDataConsumerI,
 	{
 		super(controllerURI,1,1);
 		
+		
+		this.addOfferedInterface(NodeRingManagementI.class);
+		this.addOfferedInterface(ControlledDataOfferedI.ControlledPullI.class);
+		this.addOfferedInterface(VMDisconnectionNotificationHandlerI.class);
+		
+		this.addRequiredInterface(ControlledDataRequiredI.ControlledPullI.class);
+		this.addRequiredInterface(ProcessorsControllerManagementI.class);
+		this.addRequiredInterface(RequestDispatcherManagementI.class);
+		this.addRequiredInterface(RequestDispatcherIntrospectionI.class);
+		this.addRequiredInterface(ComputerControllerManagementI.class);
+		
 		this.toggleLogging();
 		this.toggleTracing();
 		w = new Writter(controllerURI+ ".csv");
@@ -145,7 +157,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.appURI = appURI;
 		this.rdiobp = new RequestDispatcherIntrospectionOutboundPort( rdURI+"-introObp", this );
 		
-		this.addRequiredInterface(RequestDispatcherIntrospectionI.class);
 		this.addPort( rdiobp );
 		rdiobp.publishPort();
 		
@@ -157,13 +168,11 @@ implements 	RequestDispatcherStateDataConsumerI,
 		requestDispatcherNotificationInboundPort = this.rdiobp.getRequestDispatcherPortsURI().get(RequestDispatcherPortTypes.REQUEST_NOTIFICATION);
 		requestDispatcherManagementInboundPort = this.rdiobp.getRequestDispatcherPortsURI().get(RequestDispatcherPortTypes.MANAGEMENT);
 
-		this.addOfferedInterface(NodeRingManagementI.class);
 		this.cmip = new NodeManagementInboundPort(controllerManagement, this);
 		this.cmip.publishPort();
 		this.addPort(cmip);
 		
-		this.addOfferedInterface(ControlledDataOfferedI.ControlledPullI.class);
-		this.addRequiredInterface(ControlledDataRequiredI.ControlledPullI.class);
+
 		this.rddsdop =
 			new RequestDispatcherDynamicStateDataOutboundPort(requestDispatcherDynamicStateDataOutboundPort,this,rdURI) ;
 		this.addPort(this.rddsdop) ;
@@ -174,7 +183,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
 		
 		
-		this.addRequiredInterface(ProcessorsControllerManagementI.class);
 		this.pcmop = new ProcessorsControllerManagementOutboundPort("pcmop-"+this.controllerURI, this);
 		this.pcmop.publishPort();
 		this.pcmop.doConnection(ProcessorControllerManagementInboundUri, ProcessorControllerManagementConnector.class.getCanonicalName());
@@ -191,7 +199,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.addPort(rdsdip);
 		this.rdsdip.publishPort();
 		
-		this.addRequiredInterface(RequestDispatcherManagementI.class);
 
 		rdmop = new RequestDispatcherManagementOutboundPort(controllerURI + "-rdmop",
 				this);
@@ -212,7 +219,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		/** Moyenne de toute les VMs **/
 		this.statistique.put("All", new ArrayList<Double>());
 		
-		this.addOfferedInterface(VMDisconnectionNotificationHandlerI.class);
 		this.vmnibp = new VMDisconnectionNotificationHandlerInboundPort(VMDisconnectionNotificationHandlerInboundPortURI,this);
 		this.addPort(vmnibp);
 		this.vmnibp.publishPort();
@@ -621,18 +627,16 @@ implements 	RequestDispatcherStateDataConsumerI,
 			avmPort.connectWithRequestSubmissioner(rdUri, requestDispatcherNotificationInboundPort);
 			this.myVMs.add(vm);
 			
-			
-			ComputerControllerManagementOutboutPort ccmop = new ComputerControllerManagementOutboutPort("ComputerControllerManagementOutboutPort" + cmops.size(), this);
-			
-	         this.addPort(ccmop);
-				
+			ComputerControllerManagementOutboutPort ccmop = cmops.get(vm.getApplicationVM());
+			if(ccmop == null) {
+				ccmop = new ComputerControllerManagementOutboutPort(this.controllerURI  + "computerControllerManagementOutboutPort" + cmops.size(), this);
+		        this.addPort(ccmop);
 				ccmop.publishPort();
 				ccmop.doConnection(
-						vm.getComputerManagementInboundPortURI(),
-						ComputerControllerConnector.class.getCanonicalName());
-				
-				
-				this.cmops.put(vm.getApplicationVM(), ccmop);			
+							vm.getComputerManagementInboundPortURI(),
+							ComputerControllerConnector.class.getCanonicalName());
+			}
+			this.cmops.put(vm.getApplicationVM(), ccmop);			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
