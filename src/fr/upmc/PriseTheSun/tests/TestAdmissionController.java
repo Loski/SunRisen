@@ -49,6 +49,7 @@ import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.cvm.AbstractCVM;
 import fr.upmc.datacenter.hardware.computers.Computer;
 import fr.upmc.datacenter.hardware.processors.Processor;
+import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 
 
 public class				TestAdmissionController
@@ -172,7 +173,8 @@ extends		AbstractCVM
 		
 		for(int i = 0; i < this.apmop.length;i++) {
 			Thread.sleep(500);
-			this.apmop[i].createAndSendApplication();
+			//this.apmop[i].createAndSendApplication();
+			this.apmop[i].createAndSendApplication(RequestSubmissionI.class);
 		}
 		
 		

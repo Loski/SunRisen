@@ -486,7 +486,10 @@ implements 	ApplicationSubmissionI,
 		Class<?> dispa = RequestDispatcherCreator.createRequestDispatcher("JAVASSIST-dispa", RequestDispatcher.class, submissionInterface);
 		String dispatcherUri[] = createDispatcher(appURI, dispa.getCanonicalName());
 		
-		this.createController(appURI,dispatcherUri[6],dispatcherUri[8],dispatcherUri[0], vm);
+		String controllerUris[] = this.createController(appURI,dispatcherUri[6],dispatcherUri[8],dispatcherUri[0], vm);
+		
+		this.rdmopMap.get(appURI).connectController(controllerUris[0],controllerUris[6]);
+		
 		return dispatcherUri;
 	}
 	
