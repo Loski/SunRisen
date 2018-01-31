@@ -330,7 +330,6 @@ implements	RequestNotificationHandlerI
 		// generate a random number of instructions for the request.
 		long noi =
 			(long) this.rng.nextExponential(this.meanNumberOfInstructions) ;
-		System.err.println(noi);
 		Request r = new Request(this.rgURI + "-" + this.counter++, noi) ;
 		final RequestGenerator cg = this ;
 		// generate a random delay until the next request generation.
