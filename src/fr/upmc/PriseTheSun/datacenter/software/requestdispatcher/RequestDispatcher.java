@@ -348,7 +348,7 @@ implements
 		/*if(this.requestSubmissionOutboundPortList.get(indexVM)!=null && this.requestSubmissionOutboundPortList.get(indexVM).getPortURI().equals(RequestSubmissionOutboundPortURI))
 			throw new Exception("VM déjà connecté sur ce port");*/
 		if(stopAddVm)
-			return;
+			throw new Exception("cant add vm");
 		RequestSubmissionOutboundPort rsobp = new RequestSubmissionOutboundPort( rdURI+"-rsbop-"+this.virtualMachineDataList.size(), this );
 		ApplicationVMIntrospectionOutboundPort avmiovp = new ApplicationVMIntrospectionOutboundPort( vmURI+"-introObp", this );
 		

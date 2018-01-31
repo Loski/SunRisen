@@ -634,6 +634,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	
 	@Override
 	public void receiveVMDisconnectionNotification(String vmURI) throws Exception {
+		System.err.println("Receive a vm disconnected" + this.myVMs.size());
 		for(int i = 0; i < this.myVMs.size(); i++) {
 			if(myVMs.get(i).getApplicationVM().equals(vmURI)) {
 				freeApplicationVM.add(myVMs.remove(i));
