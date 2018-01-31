@@ -106,6 +106,7 @@ implements
 	protected VMDisconnectionNotificationHandlerOutboundPort vmnobp;
 	
 	private Object lock;
+	private boolean stopAddVm = false;
 	
 	/**
 	 * Construct a <code>RequestDispatcher</code>.
@@ -346,7 +347,8 @@ implements
 		
 		/*if(this.requestSubmissionOutboundPortList.get(indexVM)!=null && this.requestSubmissionOutboundPortList.get(indexVM).getPortURI().equals(RequestSubmissionOutboundPortURI))
 			throw new Exception("VM déjà connecté sur ce port");*/
-		
+		if(stopAddVm)
+			return;
 		RequestSubmissionOutboundPort rsobp = new RequestSubmissionOutboundPort( rdURI+"-rsbop-"+this.virtualMachineDataList.size(), this );
 		ApplicationVMIntrospectionOutboundPort avmiovp = new ApplicationVMIntrospectionOutboundPort( vmURI+"-introObp", this );
 		
@@ -579,7 +581,7 @@ implements
 
 	@Override
 	public void disconnectController() throws Exception {
-		
+		stopAddVm = true;
 		for(int i = 0; i < this.virtualMachineDataList.size(); i++) {
 			this.askVirtualMachineDisconnection(this.virtualMachineDataList.get(i).getVmURI());;
 		}

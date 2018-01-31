@@ -63,7 +63,7 @@ extends		AbstractCVM
 	}
 
 	public static final int NB_COMPUTER = 10;
-	private static final int NB_APPLICATION = 8;
+	private static final int NB_APPLICATION = 1;
 
 	protected AdmissionControllerDynamic ac;
 	protected AdmissionControllerManagementOutboundPort acmop;
