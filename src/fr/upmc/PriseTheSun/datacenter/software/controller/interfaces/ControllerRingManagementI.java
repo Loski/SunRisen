@@ -22,4 +22,6 @@ public interface ControllerRingManagementI extends OfferedI,RequiredI{
 	public void setNextManagementInboundPort(String managementInboundPort ) throws Exception;
 	public void setPreviousManagementInboundPort(String managementInboundPort) throws Exception;
 	public void stopPushing() throws Exception;
+	public void startPushing() throws Exception;
+
 }

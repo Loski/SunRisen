@@ -56,4 +56,9 @@ implements	ControllerRingManagementI{
 		((ControllerRingManagementI)this.connector).stopPushing();
 	}
 
+	@Override
+	public void startPushing() throws Exception {
+		((ControllerRingManagementI)this.connector).startPushing();
+	}
+
 }

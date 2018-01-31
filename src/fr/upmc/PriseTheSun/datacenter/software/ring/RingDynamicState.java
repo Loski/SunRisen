@@ -20,6 +20,7 @@ public class RingDynamicState implements RingNetworkDynamicStateI{
 	protected final String timestamperIP ;
 	protected final ApplicationVMInfo vmDataInfo;
 	
+	public static int RING_INTERVAL_TIME = 100;
 	
 	public RingDynamicState(ApplicationVMInfo vmData) throws UnknownHostException{
 		super() ;
