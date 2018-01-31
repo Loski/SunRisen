@@ -226,8 +226,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		this.controllerManagementPreviousInboundPort = controllerManagementPreviousPort;
 		this.controllerManagementNextInboundPort = controllerManagementNextPort;
-		this.startPushing();
-		System.out.println("FIN CONTROLLER");
 
 	}
 	
@@ -612,6 +610,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	
 	//TODO  WHY SYNCHRO DESU
 	public synchronized void addVm(ApplicationVMInfo vm){
+		assert vm != null;
 		
 		// Create a mock up port to manage the AVM component (allocate cores).
 		ApplicationVMManagementOutboundPort avmPort;
@@ -645,6 +644,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 	
 	@Override
 	public void receiveVMDisconnectionNotification(String vmURI) throws Exception {
+		assert vmURI != null;
+		
 		System.err.println("Receive a vm disconnected" + this.myVMs.size());
 		for(int i = 0; i < this.myVMs.size(); i++) {
 			if(myVMs.get(i).getApplicationVM().equals(vmURI)) {

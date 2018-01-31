@@ -181,22 +181,30 @@ implements 	ApplicationSubmissionI,
 		
 		super(admissionControllerURI,2, 2);
 		
+		this.addRequiredInterface(ComputerServicesI.class);
+		this.addRequiredInterface(ControlledDataRequiredI.ControlledPullI.class);
+		this.addRequiredInterface(ComputerControllerManagementI.class);
+		
+		this.addOfferedInterface(ControlledDataOfferedI.ControlledPullI.class);
+		this.addOfferedInterface(ApplicationSubmissionI.class);
+		this.addOfferedInterface(AdmissionControllerManagementI.class);
+		this.addOfferedInterface(DynamicComponentCreationI.class);
+		this.addOfferedInterface(NodeRingManagementI.class);
+
+		
 		this.toggleLogging();
 		this.toggleTracing();
 		this.admissionControllerURI = admissionControllerURI;	
-		
-		this.addOfferedInterface(ApplicationSubmissionI.class);
+
 		this.asip = new ApplicationSubmissionInboundPort(applicationSubmissionInboundPortURI, this);
 		this.addPort(asip);
 		this.asip.publishPort();
 
-		this.addOfferedInterface(AdmissionControllerManagementI.class);
 		this.acmip = new AdmissionControllerManagementInboundPort(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementI.class, this);
 		this.addPort(acmip);
 		this.acmip.publishPort();
 		
 		
-		this.addOfferedInterface(DynamicComponentCreationI.class);
 
 		this.portTControllerJVM = new DynamicComponentCreationOutboundPort(this);
 		this.portTControllerJVM.publishPort();
@@ -205,13 +213,11 @@ implements 	ApplicationSubmissionI,
 		this.portTControllerJVM.doConnection(					
 				Controller_JVM_URI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
 				DynamicComponentCreationConnector.class.getCanonicalName());
-		this.addRequiredInterface(ComputerServicesI.class);
 		
 		this.AdmissionControllerDataRingInboundUri = this.admissionControllerURI +"-"+ControllerDataRingInboundPortURI;
 		this.AdmissionControllerDataRingOutboundUri = this.admissionControllerURI +"-"+ControllerDataRingOutboundPortURI;
 		
-		this.addOfferedInterface(ControlledDataOfferedI.ControlledPullI.class);
-		this.addRequiredInterface(ControlledDataRequiredI.ControlledPullI.class);
+
 		
 		rdsdop = new RingNetworkDynamicStateDataOutboundPort(this,  this.AdmissionControllerDataRingOutboundUri);
 		this.addPort(rdsdop);
@@ -222,7 +228,6 @@ implements 	ApplicationSubmissionI,
 		this.rdsdip.publishPort();
 		
 		
-		this.addOfferedInterface(NodeRingManagementI.class);
 		ADMNodeControllerManagementInboundPort = admissionControllerURI + NODE_MANAGEMENT;
 		nmip = new NodeManagementInboundPort(ADMNodeControllerManagementInboundPort, this);
 		this.addPort(nmip);
@@ -237,7 +242,6 @@ implements 	ApplicationSubmissionI,
 		this.VMforNewApplication = new ArrayList<>();
 		this.processorController = new ProcessorsController("controller", ProcessorControllerManagementInboundPortURI);
 		
-		  this.addRequiredInterface(ComputerControllerManagementI.class);
 	}
 
 	/**
@@ -364,14 +368,17 @@ implements 	ApplicationSubmissionI,
 		rdsdop.doConnection(controllerURIs[4], ControlledDataConnector.class.getCanonicalName()); 
 		this.bindSendingDataUri(controllerURIs[4]);
 		this.startPushing();
-		System.out.println("I WANT TO LIVE");
-		NodeManagementOutboundPort cmopPrevious = new NodeManagementOutboundPort("cmop-previous-"+this.admissionControllerURI + appURI, this);
+		/*
+		 * NodeManagementOutboundPort cmopPrevious = new NodeManagementOutboundPort("cmop-previous-"+this.admissionControllerURI + appURI, this);
 		this.addPort(cmopPrevious);
+
 		cmopPrevious.publishPort();
+
 		cmopPrevious.doConnection(nextControllerManagement, NodeManagementConnector.class.getCanonicalName());
+
 		cmopPrevious.setPreviousManagementInboundPort(controllerURIs[1]);
-		cmopPrevious.doDisconnection();
-		System.out.println("I WANT TO LIVE 2");
+
+		cmopPrevious.doDisconnection();*/
 
 		//sauvegarde pour le prochain noeud
 		nextControllerDataRingUri = controllerURIs[4];
@@ -508,7 +515,7 @@ implements 	ApplicationSubmissionI,
 		int nbProc = staticState.getNumberOfProcessors();
 		this.cssdops.add(cssdop);
 
-        ArrayList<String> processorsURIs = new ArrayList<String>();
+      /*  ArrayList<String> processorsURIs = new ArrayList<String>();
         ArrayList<String> pmipURIs = new ArrayList<String>();
         ArrayList<String> pssdURIs = new ArrayList<String>();
         ArrayList<String> pdsdURIs = new ArrayList<String>();
@@ -523,7 +530,7 @@ implements 	ApplicationSubmissionI,
             pssdURIs.add(pPortsList.get(Processor.ProcessorPortTypes.STATIC_STATE));
             pdsdURIs.add(pPortsList.get(Processor.ProcessorPortTypes.DYNAMIC_STATE));
         }
-        
+        */
         String computerController[] = new String[4];
         computerController[0] = ComputerControllerManagementUri + cmops.size();						
 		computerController[1] = ComputerServicesInboundPortURI;
@@ -542,13 +549,13 @@ implements 	ApplicationSubmissionI,
 				ComputerControllerConnector.class.getCanonicalName());
 		this.cmops.add(ccmop);
 			
-			for(int i = 0; i < processorsURIs.size(); i++) {
-				this.processorController.bindProcessor(processorsURIs.get(i), "ACHANGER", pmipURIs.get(i), pssdURIs.get(i), pdsdURIs.get(i));
-				createVM(this.processorController, computerController[2], ccmop.allocateCores(nbCores/2));
+			for(int i = 0; i < nbProc; i++) {
+				//this.processorController.bindProcessor(processorsURIs.get(i), "ACHANGER", pmipURIs.get(i), pssdURIs.get(i), pdsdURIs.get(i));
+				createVM(computerController[2], ccmop.allocateCores(nbCores/2));
 			}
 	}
 	
-	private String createVM(ProcessorsController controller, String computerManagementInboundPortURI, AllocatedCore[] allocatedCore) throws Exception {
+	private String createVM(String computerManagementInboundPortURI, AllocatedCore[] allocatedCore) throws Exception {
 		
 		String applicationVM[] = new String[5];
 		int nbVM = avmOutPort.size(); //Add VM non occupé
