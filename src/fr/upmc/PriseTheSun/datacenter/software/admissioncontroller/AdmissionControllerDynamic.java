@@ -712,7 +712,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 
 	@Override
 	public void startPushing() throws Exception {
-		System.err.println("coucou");
 		this.startUnlimitedPushing(RingDynamicState.RING_INTERVAL_TIME);
 	}
 

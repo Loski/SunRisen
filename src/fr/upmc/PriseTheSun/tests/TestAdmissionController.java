@@ -62,7 +62,7 @@ extends		AbstractCVM
 		super();
 	}
 
-	public static final int NB_COMPUTER = 10;
+	public static final int NB_COMPUTER = 35;
 	private static final int NB_APPLICATION = 5;
 
 	protected AdmissionControllerDynamic ac;

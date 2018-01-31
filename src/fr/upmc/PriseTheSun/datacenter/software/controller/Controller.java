@@ -243,12 +243,12 @@ implements 	RequestDispatcherStateDataConsumerI,
 	@Override
 	public void acceptRequestDispatcherDynamicData(String dispatcherURI,
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
-		
+		//this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
+
 		waitDecision++;
 		if(currentDynamicState.getAvgExecutionTime() == null) {
 			return;
 		}
-		this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
 
 	    for (Entry<String, Double> entry : currentDynamicState.getVirtualMachineExecutionAverageTime().entrySet()) {
 	    	if(entry.getValue() == null) {
@@ -276,10 +276,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 				}
 			}
 		}
-		else {
-			this.logMessage("" + waitDecision);
-		}
-
 	}
 	
 	/**
@@ -341,12 +337,14 @@ implements 	RequestDispatcherStateDataConsumerI,
 		double factor=0;
 		int number=0;
 		double average = calculAverage();
-		
+		this.logMessage("" +average);
+		this.logMessage("" + waitDecision);
+
 		try {
 			switch(getThreeshold(average)){
 			case HIGHER :
 
-				LowerCase(vms);
+				HighterCase(vms);
 				//this.acmop.addCores(null, randomVM.getApplicationVMURI(), 1);
 				break;
 			case LOWER :
@@ -411,17 +409,12 @@ implements 	RequestDispatcherStateDataConsumerI,
 	 * @param vms
 	 * @throws Exception 
 	 */
-	private void HighterCase(Map<String, ApplicationVMDynamicStateI > vms, int coresAllocates) throws Exception {
+	private void HighterCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		
-		boolean canRemoveVM = vms.size() == 1;
-		boolean canDesalocate = coresAllocates  == StaticData.MIN_ALLOCATION;
+		boolean canRemoveVM = vms.size() > 1;
+		//boolean canDesalocate = coresAllocates  == StaticData.MIN_ALLOCATION;
 		
-		
-		if(!canRemoveVM && !canDesalocate) {
-			this.logMessage("Can't lower anymore...");
-			return;
-		}
-		
+
 		if(canRemoveVM) {
 			ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
 			this.rdmop.askVirtualMachineDisconnection(randomVM.getApplicationVMURI());
