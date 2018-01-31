@@ -99,6 +99,7 @@ public class TestDCVM extends AbstractDistributedCVM{
 			this.apmop2 = new ApplicationProviderManagementOutboundPort("apmop2", new AbstractComponent(0, 0) {});
 			this.apmop2.publishPort();
 			this.apmop2.doConnection(applicationManagementInboundPort+"-2", ApplicationProviderManagementConnector.class.getCanonicalName());
+			
 		}
 		super.instantiateAndPublish();
 	}
@@ -165,7 +166,7 @@ public class TestDCVM extends AbstractDistributedCVM{
 	protected void testScenario() throws Exception {
 		if (thisJVMURI.equals(AdmissionController)) {}
 		else if(thisJVMURI.equals(Application1)) {
-			this.apmop.createAndSendApplication();
+			this.apmop.createAndSendApplication(RequestSubmissionI.class);
 		}else if(thisJVMURI.equals(Application2)) {
 			this.apmop2.createAndSendApplication(RequestSubmissionI.class);
 		}

@@ -42,7 +42,7 @@ public class RequestDispatcherCreator extends ClassCreator{
 		
 		//test.addField(new CtField(inport, "newInBoundPort_"+className, test));
 		test.setName(className);
-		test.setSuperclass(pool.get(dispatcher.getCanonicalName()));
+		//test.setSuperclass(pool.get(dispatcher.getCanonicalName()));
 		
 		Class<?> clazz = pool.toClass(test);
 		

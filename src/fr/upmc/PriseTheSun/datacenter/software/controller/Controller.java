@@ -180,7 +180,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 
 		this.rddsdop.doConnection(requestDispatcherDynamicStateDataInboundPortURI, ControlledDataConnector.class.getCanonicalName());
-		this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
+		//this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
 		
 		
 		this.pcmop = new ProcessorsControllerManagementOutboundPort("pcmop-"+this.controllerURI, this);
