@@ -101,6 +101,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 	private String controllerManagementNextInboundPort;
 	private String controllerManagementPreviousInboundPort;
 
+	public final static int PUSH_INTERVAL = 1000;
+	public final static int REQUEST_MIN = PUSH_INTERVAL/100;
 	
 	
 	private String appURI; 	
@@ -165,7 +167,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 
 		this.rddsdop.doConnection(requestDispatcherDynamicStateDataInboundPortURI, ControlledDataConnector.class.getCanonicalName());
-		this.rddsdop.startUnlimitedPushing(1000);
+		this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
 		
 		
 		this.addRequiredInterface(ProcessorsControllerManagementI.class);
@@ -243,8 +245,15 @@ implements 	RequestDispatcherStateDataConsumerI,
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
 		
 		waitDecision++;
-		
+		if(currentDynamicState.getAvgExecutionTime() == null) {
+			return;
+		}
+		this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
+
 	    for (Entry<String, Double> entry : currentDynamicState.getVirtualMachineExecutionAverageTime().entrySet()) {
+	    	if(entry.getValue() == null) {
+	    		continue;
+	    	}
 	    	if(this.statistique.get(entry.getKey()) == null) {
 	    		ArrayList<Double> tmp = new ArrayList<Double>();
 	    		tmp.add(entry.getValue());
@@ -256,9 +265,10 @@ implements 	RequestDispatcherStateDataConsumerI,
 	    
 	    this.statistique.get("All").add(currentDynamicState.getAvgExecutionTime());
 	    
-		if(currentDynamicState.getAvgExecutionTime()!=null) {
-			this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
-			processControl(currentDynamicState.getAvgExecutionTime(), currentDynamicState.getVirtualMachineDynamicStates());
+		if((waitDecision % REQUEST_MIN) == 0) {
+			processControl(currentDynamicState.getVirtualMachineDynamicStates());
+			
+			
 			//On redonne les VMs au prochain controller.
 			while(!vmReserved.isEmpty()) {
 				synchronized (o) {
@@ -267,7 +277,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			}
 		}
 		else {
-			this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %s",dispatcherURI,"pas assez de données pour calculer la moyenne"));
+			this.logMessage("" + waitDecision);
 		}
 
 	}
@@ -310,43 +320,37 @@ implements 	RequestDispatcherStateDataConsumerI,
     }
     
 	public Threeshold getThreeshold(Double time){
-		return Threeshold.HIGHER;
+		if(isHigher(time))
+			return Threeshold.HIGHER;
+		else if(isLower(time)) {
+			return Threeshold.LOWER;
+		}else {
+			return Threeshold.GOOD;
+		}
 	}
 
 	private boolean isHigher(Double time){
-		return Double.compare(time, (StaticData.AVERAGE_TARGET*StaticData.HIGHER_PERCENT + StaticData.AVERAGE_TARGET)) == 1 ? true : false;
+		return Double.compare(time, (StaticData.TARGET_HIGHT)) == 1 ? true : false;
 	}
 
 	private boolean isLower(Double time){
-		return Double.compare(time, (StaticData.AVERAGE_TARGET*StaticData.LOWER_PERCENT - StaticData.AVERAGE_TARGET)) == -1 ? true : false;
+		return Double.compare(time, (StaticData.TARGET_LOWER)) == -1 ? true : false;
 	}
 	
-	private synchronized void processControl(Double time, Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
+	private synchronized void processControl(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		double factor=0;
 		int number=0;
-		System.out.println(time);
-		Integer coresAllocates = getNumberOfCoresAllocatedFrom(vms);
-		
+		double average = calculAverage();
 		
 		try {
-			switch(getThreeshold(time)){
+			switch(getThreeshold(average)){
 			case HIGHER :
-				factor = (time/StaticData.AVERAGE_TARGET);
-				number = Math.max(1, (int)(coresAllocates*factor));
-				number = Math.min(StaticData.MAX_ALLOCATION, number);
-				
-	
-				HighterCase(vms, coresAllocates);
+
+				LowerCase(vms);
 				//this.acmop.addCores(null, randomVM.getApplicationVMURI(), 1);
 				break;
 			case LOWER :
-				factor = (StaticData.AVERAGE_TARGET/time);
-				number =Math.max(1, (int)(coresAllocates-(coresAllocates/factor)));
-				number =Math.min(StaticData.MIN_ALLOCATION, number);
-	
-			//	processDeallocate(factor,number,vms,double1,nbreq,cores);
-				
-				// add Reset request stat?
+				LowerCase(vms);
 	
 				break;
 			case GOOD :
@@ -357,7 +361,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
-		w.write(Arrays.asList(coresAllocates.toString(), ((Integer)vms.size()).toString()));
+		w.write(Arrays.asList(""+average, ((Integer)vms.size()).toString()));
 
 	}
 
@@ -376,13 +380,13 @@ implements 	RequestDispatcherStateDataConsumerI,
 	}
 
 	/**
-	 * Cas où les machines virtuelles ne vont pas assez vite.
+	 * Cas où les machines virtuelles sont trop lente.
 	 * Nous devons donc augmenter la puissance du système responsable de la résolution de requêtes.
 	 * 
 	 * @param vms
 	 * @throws Exception 
 	 */
-	private void LowerCase(Map<String, ApplicationVMDynamicStateI > vms, int coresAllocates) throws Exception {
+	private void LowerCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		
 		//Add a vm
 		/*if(!vmReserved.isEmpty())
@@ -390,7 +394,9 @@ implements 	RequestDispatcherStateDataConsumerI,
 		*/
 		ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
 		
-		
+		if(!vmReserved.isEmpty()) {
+			this.addVm(vmReserved.remove(0));
+		}
 		//Try to up frequency
 		int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.HIGHER, randomVM);
 		
@@ -399,29 +405,27 @@ implements 	RequestDispatcherStateDataConsumerI,
 	}
 
 	/**
-	 * Cas où les machines virtuelles ne vont pas assez vite.
-	 * Nous devons donc augmenter la puissance du système responsable de la résolution de requêtes.
+	 * Cas où les machines virtuelles vont trop vite.
+	 * Nous devons donc baisser la puissance du système responsable de la résolution de requêtes.
 	 * 
 	 * @param vms
 	 * @throws Exception 
 	 */
 	private void HighterCase(Map<String, ApplicationVMDynamicStateI > vms, int coresAllocates) throws Exception {
 		
-		boolean canRemoveVM = vms.size()== 1;
+		boolean canRemoveVM = vms.size() == 1;
 		boolean canDesalocate = coresAllocates  == StaticData.MIN_ALLOCATION;
 		
 		
-		/*if(!canRemoveVM && !canDesalocate) {
+		if(!canRemoveVM && !canDesalocate) {
 			this.logMessage("Can't lower anymore...");
 			return;
-		}*/
+		}
 		
-		
-	/*	//Add a VM
-		if(!vmReserved.isEmpty())
-		this.addVm(vmReserved.remove(0));
-*/
-		ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
+		if(canRemoveVM) {
+			ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
+			this.rdmop.askVirtualMachineDisconnection(randomVM.getApplicationVMURI());
+		}
 		
 		
 		//System.err.println("!!!!!!!!! " +this.cmops.get(randomVM.getApplicationVMURI()).reserveCore(randomVM.getApplicationVMURI()));
@@ -449,9 +453,18 @@ implements 	RequestDispatcherStateDataConsumerI,
 	}
 	
 	static class StaticData {
-		public static long AVERAGE_TARGET=2500;
-		public static double LOWER_PERCENT=0.5;
-		public static double HIGHER_PERCENT=0.3;
+		public static double AVERAGE_TARGET=1E9D;
+		
+		public static double VERRY_MUCH_LOWER_PERCENT= 0.5;
+		public static double LOWER_PERCENT= 0.25;
+		public static double HIGHER_PERCENT= 0.25;
+		public static double VERY_MUCH_HIGHER_PERCENT=0.5;
+
+		public static double TARGET_VERY_HIGHT = AVERAGE_TARGET * VERY_MUCH_HIGHER_PERCENT + AVERAGE_TARGET;
+		public static double TARGET_HIGHT = AVERAGE_TARGET * HIGHER_PERCENT + AVERAGE_TARGET;
+		public static double TARGET_LOWER = AVERAGE_TARGET * LOWER_PERCENT - AVERAGE_TARGET;
+		public static double TARGET_VERY_LOWER = AVERAGE_TARGET * LOWER_PERCENT - AVERAGE_TARGET;
+
 		public static int DISPATCHER_PUSH_INTERVAL=5000;
 		public static int NB_VM_RESERVED = 5;
 		//Max core

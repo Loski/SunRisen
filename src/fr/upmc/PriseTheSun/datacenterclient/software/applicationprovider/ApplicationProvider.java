@@ -128,7 +128,6 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
             rg.toggleTracing();
             rg.toggleLogging();
             
-            rg.DEBUG_LEVEL=2;
 
             rgmop = new RequestGeneratorManagementOutboundPort( rgmopUri , this );
             rgmop.publishPort();

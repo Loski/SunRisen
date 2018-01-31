@@ -571,7 +571,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 			throws Exception {
 		synchronized(o){
 			if(currentDynamicState.getApplicationVMInfo() != null) {
-				System.out.println("!!receive a vm..");
+				//System.out.println("!!receive a vm..");
 				if(this.VMforNewApplication.size() < MIN_VM) {
 					this.VMforNewApplication.add(currentDynamicState.getApplicationVMInfo());
 				}else {
