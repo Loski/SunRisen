@@ -82,6 +82,8 @@ extends		AbstractCVM
 	private void createAdmissionController() throws Exception {
 
 		this.ac = new AdmissionControllerDynamic("AdmController", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, "");
+        this.ac.start();
+        this.addDeployedComponent(this.ac); 
 		this.acmop = new AdmissionControllerManagementOutboundPort("acmop", new AbstractComponent(0, 0) {});
 		this.acmop.publishPort();
 		this.acmop.doConnection(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementConnector.class.getCanonicalName());
@@ -107,6 +109,7 @@ extends		AbstractCVM
             Computer c = new Computer(computer[i], admissibleFrequencies, processingPower, 1500, 1500,
                     numberOfProcessors, numberOfCores, csip[i], cssdip[i], cdsdip[i]);
             this.addDeployedComponent(c); 
+            c.start();
             this.acmop.linkComputer(computer[i], csip[i], cssdip[i], cdsdip[i]);
         }
 	}

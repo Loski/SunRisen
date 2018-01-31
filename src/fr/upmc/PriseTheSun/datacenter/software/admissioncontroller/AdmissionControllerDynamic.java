@@ -43,7 +43,9 @@ import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.components.exceptions.ComponentStartException;
 import fr.upmc.datacenter.connectors.ControlledDataConnector;
 import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
+import fr.upmc.datacenter.hardware.computers.interfaces.ComputerDynamicStateI;
 import fr.upmc.datacenter.hardware.computers.interfaces.ComputerServicesI;
+import fr.upmc.datacenter.hardware.computers.interfaces.ComputerStateDataConsumerI;
 import fr.upmc.datacenter.hardware.computers.interfaces.ComputerStaticStateI;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerDynamicStateDataOutboundPort;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerStaticStateDataOutboundPort;
@@ -73,7 +75,14 @@ import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOu
  * 
  * @author	Maxime LAVASTE Loïc LAFONTAINE
  */
-public class AdmissionControllerDynamic extends AbstractComponent implements ApplicationSubmissionI, AdmissionControllerManagementI, RingNetworkStateDataConsumerI, PushModeControllingI, NodeRingManagementI{
+public class AdmissionControllerDynamic extends AbstractComponent 
+implements 	ApplicationSubmissionI, 
+			AdmissionControllerManagementI, 
+			RingNetworkStateDataConsumerI, 
+			PushModeControllingI, 
+			NodeRingManagementI,
+			ComputerStateDataConsumerI
+{
 
 	public static int DEBUG_LEVEL = 1 ;
 	
@@ -724,6 +733,19 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	@Override
 	public void startPushing() throws Exception {
 		this.startUnlimitedPushing(RingDynamicState.RING_INTERVAL_TIME);
+	}
+
+	@Override
+	public void acceptComputerStaticData(String computerURI, ComputerStaticStateI staticState) throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void acceptComputerDynamicData(String computerURI, ComputerDynamicStateI currentDynamicState)
+			throws Exception {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

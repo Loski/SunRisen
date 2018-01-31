@@ -4,7 +4,7 @@ import fr.upmc.components.interfaces.OfferedI;
 import fr.upmc.components.interfaces.RequiredI;
 import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
 
-public interface ComputerControllerManagement extends OfferedI, RequiredI {
+public interface ComputerControllerManagementI extends OfferedI, RequiredI {
 	public int reserveCore(String controllerURI) throws Exception;
 	public void releaseCore(String controllerURI) throws Exception;
 	public AllocatedCore[] addCores(String controllerURI) throws Exception;

@@ -1,25 +1,35 @@
 package fr.upmc.PriseTheSun.datacenter.hardware.computer.ports;
 
-import fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagement;
+import fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagementI;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ports.AbstractInboundPort;
 import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
 
-public class ComputerControllerManagementInboundPort extends AbstractInboundPort implements ComputerControllerManagement {
+public class ComputerControllerManagementInboundPort extends AbstractInboundPort implements ComputerControllerManagementI {
 
-	public ComputerControllerManagementInboundPort(String uri, Class<?> implementedInterface, ComponentI owner)
-			throws Exception {
-		super(uri, implementedInterface, owner);
-	}
-	
-	public ComputerControllerManagementInboundPort(Class<?> implementedInterface, ComponentI owner) throws Exception {
-		super(ComputerControllerManagement.class, owner);
-		assert	owner != null && owner instanceof ComputerControllerManagement ;
-	}
+	public				ComputerControllerManagementInboundPort(
+			ComponentI owner
+			) throws Exception
+		{
+			super(ComputerControllerManagementI.class, owner) ;
+
+			assert	owner instanceof ComputerControllerManagementI ;
+		}
+
+		public				ComputerControllerManagementInboundPort(
+			String uri,
+			ComponentI owner
+			) throws Exception
+		{
+			super(uri, ComputerControllerManagementI.class, owner);
+
+			assert	uri != null && owner instanceof ComputerControllerManagementI ;
+		}
 
 	@Override
 	public int reserveCore(String controllerURI) throws Exception {
-		final ComputerControllerManagement ccm = ( ComputerControllerManagement ) this.owner;
+		final ComputerControllerManagementI ccm = ( ComputerControllerManagementI ) this.owner;
 
 		 return this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Integer>() {
@@ -33,7 +43,7 @@ public class ComputerControllerManagementInboundPort extends AbstractInboundPort
 
 	@Override
 	public void releaseCore(String controllerURI) throws Exception {
-		final ComputerControllerManagement ccm = ( ComputerControllerManagement ) this.owner;
+		final ComputerControllerManagementI ccm = ( ComputerControllerManagementI ) this.owner;
 		 this.owner.handleRequestSync(
 					new ComponentI.ComponentService<Void>() {
 						@Override
@@ -47,7 +57,7 @@ public class ComputerControllerManagementInboundPort extends AbstractInboundPort
 
 	@Override
 	public AllocatedCore[] addCores(String controllerURI) throws Exception {
-		final ComputerControllerManagement ccm = ( ComputerControllerManagement ) this.owner;
+		final ComputerControllerManagementI ccm = ( ComputerControllerManagementI ) this.owner;
 
 		 return this.owner.handleRequestSync(
 				new ComponentI.ComponentService<AllocatedCore[]>() {
@@ -62,7 +72,7 @@ public class ComputerControllerManagementInboundPort extends AbstractInboundPort
 
 	@Override
 	public boolean supCores(int nbCores, String vmUri) throws Exception {
-		final ComputerControllerManagement ccm = ( ComputerControllerManagement ) this.owner;
+		final ComputerControllerManagementI ccm = ( ComputerControllerManagementI ) this.owner;
 		 return this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Boolean>() {
 					@Override
@@ -76,7 +86,7 @@ public class ComputerControllerManagementInboundPort extends AbstractInboundPort
 
 	@Override
 	public AllocatedCore[] allocateCores(int i) throws Exception {
-		final ComputerControllerManagement ccm = ( ComputerControllerManagement ) this.owner;
+		final ComputerControllerManagementI ccm = ( ComputerControllerManagementI ) this.owner;
 
 		 return this.owner.handleRequestSync(
 				new ComponentI.ComponentService<AllocatedCore[]>() {

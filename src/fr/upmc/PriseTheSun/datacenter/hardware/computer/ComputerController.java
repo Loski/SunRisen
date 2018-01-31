@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagement;
+import fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.ports.ComputerControllerManagementInboundPort;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.exceptions.ComponentShutdownException;
@@ -15,7 +15,7 @@ import fr.upmc.datacenter.hardware.computers.connectors.ComputerServicesConnecto
 import fr.upmc.datacenter.hardware.computers.interfaces.ComputerServicesI;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort;
 
-public class ComputerController extends AbstractComponent implements ComputerControllerManagement {
+public class ComputerController extends AbstractComponent implements ComputerControllerManagementI {
 	
 	
 	private ComputerServicesOutboundPort csop;
@@ -34,8 +34,8 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 				ComputerServicesInboundPortURI,
 				ComputerServicesConnector.class.getCanonicalName());
 		
-		this.addOfferedInterface(ComputerControllerManagement.class);
-		ccmip = new ComputerControllerManagementInboundPort(ComputerControllerManagementInboundPort, ComputerControllerManagement.class, this);
+		this.addOfferedInterface(ComputerControllerManagementI.class);
+		ccmip = new ComputerControllerManagementInboundPort(ComputerControllerManagementInboundPort,this);
 		this.addPort(ccmip);
 		this.ccmip.publishPort();
 	}
