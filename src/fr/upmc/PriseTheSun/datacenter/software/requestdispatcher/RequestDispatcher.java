@@ -54,7 +54,8 @@ implements
 			RequestSubmissionHandlerI,
 			RequestNotificationHandlerI,
 			RequestDispatcherManagementI,
-			PushModeControllingI
+			PushModeControllingI,
+			RequestDispatcherIntrospectionI
 {
 	
 	public static enum RequestDispatcherPortTypes {
@@ -562,7 +563,7 @@ implements
 		}
 	}
 	
-	public Map<RequestDispatcherPortTypes, String>	getDispatcherPortsURI()
+	public Map<RequestDispatcherPortTypes, String>	getRequestDispatcherPortsURI()
 	throws Exception
 	{
 		HashMap<RequestDispatcherPortTypes, String> ret =

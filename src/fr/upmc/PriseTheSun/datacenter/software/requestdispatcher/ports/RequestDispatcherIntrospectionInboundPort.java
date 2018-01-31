@@ -38,7 +38,7 @@ implements	RequestDispatcherIntrospectionI{
 
 		@Override
 		public Map<RequestDispatcherPortTypes, String> getRequestDispatcherPortsURI() throws Exception {
-			final RequestDispatcher rd = (RequestDispatcher) this.owner ;
+			final RequestDispatcherIntrospectionI rd = (RequestDispatcherIntrospectionI) this.owner ;
 			return this.owner.handleRequestSync(
 								new ComponentI.ComponentService<
 													Map<RequestDispatcherPortTypes,
@@ -48,7 +48,7 @@ implements	RequestDispatcherIntrospectionI{
 																			call()
 									throws Exception
 									{
-										return rd.getDispatcherPortsURI() ;
+										return rd.getRequestDispatcherPortsURI() ;
 									}
 								}) ;
 		}
