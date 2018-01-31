@@ -330,6 +330,9 @@ implements 	ApplicationSubmissionI,
 			stopPushing();
 			controllerURIs[5] = nextControllerDataRingUri;
 			controllerURIs[8] = nextControllerManagement;
+			if(this.rdsdop.connected()) {
+				this.rdsdop.doDisconnection();
+			}
 		}
 		
  
