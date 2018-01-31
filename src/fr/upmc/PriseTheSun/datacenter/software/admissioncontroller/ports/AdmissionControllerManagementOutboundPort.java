@@ -15,7 +15,7 @@ implements	fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interface
 	public AdmissionControllerManagementOutboundPort(String uri, Class<?> implementedInterface, ComponentI owner)
 			throws Exception {
 		super(uri, AdmissionControllerManagementI.class, owner);
-		assert	owner != null && owner instanceof AdmissionControllerManagementI;
+		assert	owner != null;
 	}
 
 

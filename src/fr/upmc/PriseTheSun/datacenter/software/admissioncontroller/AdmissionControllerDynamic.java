@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.ComputerController;
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.connector.ComputerControllerConnector;
+import fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.ports.ComputerControllerManagementOutboutPort;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.ProcessorsController;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
@@ -529,7 +530,8 @@ implements 	ApplicationSubmissionI,
         ComputerController tmp = new ComputerController(computerController[0], computerController[1], computerController[2]);
         ComputerControllerManagementOutboutPort ccmop = new ComputerControllerManagementOutboutPort("ComputerControllerManagementOutboutPort" + cmops.size(), this);
 		
-        this.addPort(ccmop);	
+        this.addRequiredInterface(ComputerControllerManagementI.class);
+        this.addPort(ccmop);
 		ccmop.publishPort();
 		ccmop.doConnection(
 				computerController[2],

@@ -9,16 +9,20 @@ import java.util.Set;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.interfaces.ProcessorsControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.ports.ProcessorsControllerManagmentInboundPort;
 import fr.upmc.components.AbstractComponent;
+import fr.upmc.components.connectors.DataConnector;
+import fr.upmc.components.interfaces.DataRequiredI;
 import fr.upmc.datacenter.connectors.ControlledDataConnector;
 import fr.upmc.datacenter.hardware.processors.UnacceptableFrequencyException;
 import fr.upmc.datacenter.hardware.processors.UnavailableFrequencyException;
 import fr.upmc.datacenter.hardware.processors.connectors.ProcessorManagementConnector;
 import fr.upmc.datacenter.hardware.processors.interfaces.ProcessorDynamicStateI;
 import fr.upmc.datacenter.hardware.processors.interfaces.ProcessorStateDataConsumerI;
+import fr.upmc.datacenter.hardware.processors.interfaces.ProcessorStaticStateDataI;
 import fr.upmc.datacenter.hardware.processors.interfaces.ProcessorStaticStateI;
 import fr.upmc.datacenter.hardware.processors.ports.ProcessorDynamicStateDataOutboundPort;
 import fr.upmc.datacenter.hardware.processors.ports.ProcessorManagementOutboundPort;
 import fr.upmc.datacenter.hardware.processors.ports.ProcessorStaticStateDataOutboundPort;
+import fr.upmc.datacenter.interfaces.ControlledDataRequiredI;
 
 public class ProcessorsController extends AbstractComponent implements ProcessorStateDataConsumerI, ProcessorsControllerManagementI {
 
@@ -43,6 +47,10 @@ public class ProcessorsController extends AbstractComponent implements Processor
 		pcmip = new ProcessorsControllerManagmentInboundPort(ProcessorControllerManagementInboundPortURI, this);
 		this.addPort(pcmip);
 		this.pcmip.publishPort();
+		
+		this.addRequiredInterface(DataRequiredI.PullI.class) ;
+		this.addRequiredInterface(ControlledDataRequiredI.ControlledPullI.class) ;
+		this.addOfferedInterface(DataRequiredI.PushI.class) ;
 	}
 	
 	@Override
@@ -62,13 +70,13 @@ public class ProcessorsController extends AbstractComponent implements Processor
 		String processorStaticStateDataOutboundPortUri = ProcessorStaticStateDataOutboundPortURI + "_" +  number;
 		String processorDynamicStateDataUriOutboundPort = ProcessorDynamicStateDataOutboundPortURI + "_" +  number;
 		
-		ProcessorStaticStateDataOutboundPort pssdop = new ProcessorStaticStateDataOutboundPort(this, processorStaticStateDataOutboundPortUri);
+		ProcessorStaticStateDataOutboundPort pssdop = new ProcessorStaticStateDataOutboundPort(processorStaticStateDataOutboundPortUri,this,processorURI);
 		this.addPort(pssdop);
 		pssdop.publishPort();
 		
 		pssdop.doConnection(
 				ProcessorStaticStateDataInboundPortURI,
-				ControlledDataConnector.class.getCanonicalName());
+				DataConnector.class.getCanonicalName());
 
 		ProcessorStaticStateI staticState= (ProcessorStaticStateI) pssdop.request();
 		processorsStaticState.put(processorURI, staticState);
