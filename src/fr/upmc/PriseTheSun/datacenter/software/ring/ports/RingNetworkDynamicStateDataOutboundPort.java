@@ -26,7 +26,7 @@ public class RingNetworkDynamicStateDataOutboundPort extends AbstractControlledD
 		super(owner) ;
 		this.ringURI = ringURI ;
 
-		assert	owner instanceof ComputerStateDataConsumerI ;
+		assert	owner instanceof RingNetworkStateDataConsumerI ;
 	}
 
 	public				RingNetworkDynamicStateDataOutboundPort(
@@ -38,7 +38,7 @@ public class RingNetworkDynamicStateDataOutboundPort extends AbstractControlledD
 		super(uri, owner);
 		this.ringURI = ringURI ;
 
-		assert	owner instanceof ComputerStateDataConsumerI ;
+		assert	owner instanceof RingNetworkStateDataConsumerI ;
 	}
 
 	/**

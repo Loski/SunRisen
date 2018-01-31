@@ -37,6 +37,7 @@ import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.cvm.AbstractCVM;
 import fr.upmc.components.cvm.pre.dcc.connectors.DynamicComponentCreationConnector;
+import fr.upmc.components.cvm.pre.dcc.interfaces.DynamicComponentCreationI;
 import fr.upmc.components.cvm.pre.dcc.ports.DynamicComponentCreationOutboundPort;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.components.exceptions.ComponentStartException;
@@ -182,6 +183,9 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.addPort(acmip);
 		this.acmip.publishPort();
 		
+		
+		this.addOfferedInterface(DynamicComponentCreationI.class);
+
 		this.portTControllerJVM = new DynamicComponentCreationOutboundPort(this);
 		this.portTControllerJVM.publishPort();
 		this.addPort(this.portTControllerJVM);
@@ -289,7 +293,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 	 * </ul>
 	 * @throws Exception
 	 */
-	private String[] createController(String appURI, String requestDispatcherDynamicStateDataInboundPortURI, String VMDisconnectionHandlerOutboundPortURI, String rdURI, ApplicationVMInfo vm) throws Exception
+	private synchronized String[] createController(String appURI, String requestDispatcherDynamicStateDataInboundPortURI, String VMDisconnectionHandlerOutboundPortURI, String rdURI, ApplicationVMInfo vm) throws Exception
 	{
 		String controllerURIs[] = new String[9];
 		controllerURIs[0] = appURI + "-controller";
@@ -315,7 +319,7 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 			controllerURIs[8] = nextControllerManagement;
 		}
 		
-
+ 
 		try {
 			this.portTControllerJVM.createComponent(
 					Controller.class.getCanonicalName(),
@@ -339,15 +343,20 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		
 		rdsdop.doConnection(controllerURIs[4], ControlledDataConnector.class.getCanonicalName()); 
 		this.bindSendingDataUri(controllerURIs[4]);
 		this.startPushing();
-		
-		NodeManagementOutboundPort cmopPrevious = new NodeManagementOutboundPort("cmop-previous-"+this.admissionControllerURI, this);
+		System.out.println("I WANT TO LIVE");
+		NodeManagementOutboundPort cmopPrevious = new NodeManagementOutboundPort("cmop-previous-"+this.admissionControllerURI + appURI, this);
+		this.addPort(cmopPrevious);
 		cmopPrevious.publishPort();
 		cmopPrevious.doConnection(nextControllerManagement, NodeManagementConnector.class.getCanonicalName());
 		cmopPrevious.setPreviousManagementInboundPort(controllerURIs[1]);
 		cmopPrevious.doDisconnection();
+		System.out.println("I WANT TO LIVE 2");
+
 		//sauvegarde pour le prochain noeud
 		nextControllerDataRingUri = controllerURIs[4];
 		nextControllerManagement = controllerURIs[1];

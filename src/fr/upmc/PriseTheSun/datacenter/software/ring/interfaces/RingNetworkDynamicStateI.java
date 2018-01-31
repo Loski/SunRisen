@@ -3,6 +3,8 @@ package fr.upmc.PriseTheSun.datacenter.software.ring.interfaces;
 import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMInfo;
 import fr.upmc.components.interfaces.DataOfferedI;
 import fr.upmc.components.interfaces.DataRequiredI;
+import fr.upmc.components.interfaces.OfferedI;
+import fr.upmc.components.interfaces.RequiredI;
 import fr.upmc.datacenter.interfaces.TimeStampingI;
 
 /**
@@ -12,6 +14,6 @@ import fr.upmc.datacenter.interfaces.TimeStampingI;
  * @author Maxime Lavaste
  *
  */
-public interface RingNetworkDynamicStateI extends DataOfferedI.DataI, DataRequiredI.DataI, TimeStampingI{
+public interface RingNetworkDynamicStateI extends RequiredI, OfferedI, DataOfferedI.DataI, DataRequiredI.DataI, TimeStampingI{
 	ApplicationVMInfo getApplicationVMInfo();
 }

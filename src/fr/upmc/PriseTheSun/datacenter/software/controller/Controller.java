@@ -220,6 +220,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.controllerManagementPreviousInboundPort = controllerManagementPreviousPort;
 		this.controllerManagementNextInboundPort = controllerManagementNextPort;
 		this.startPushing();
+		System.out.println("FIN CONTROLLER");
 
 	}
 	
@@ -351,7 +352,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 				break;
 			case LOWER :
 				tooFastCase(vms);
-	
 				break;
 			case GOOD :
 				System.err.println("WAS GOOD MY FRIEND");
@@ -399,7 +399,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			this.addVm(vmReserved.remove(0));
 		}
 		//Try to up frequency
-		int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.HIGHER, randomVM);
+		//int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.HIGHER, randomVM);
 		System.err.println("je passe par lower mdr");
 
 		
@@ -451,7 +451,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	}
 	
 	static class StaticData {
-		public static final double AVERAGE_TARGET=1E9D;
+		public static final double AVERAGE_TARGET=5E9D;
 		
 		public static final double VERRY_MUCH_LOWER_PERCENT= 0.5;
 		public static final double LOWER_PERCENT= 0.25;
