@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.connector.ComputerControllerConnector;
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.ports.ComputerControllerManagementOutboutPort;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.ProcessorsController.CoreAsk;
@@ -19,11 +20,11 @@ import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.connector.Adm
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.applicationvm.ApplicationVMInfo;
-import fr.upmc.PriseTheSun.datacenter.software.controller.connectors.ControllerManagementConnector;
-import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerRingManagementI;
+import fr.upmc.PriseTheSun.datacenter.software.controller.connectors.NodeManagementConnector;
+import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.NodeRingManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.VMDisconnectionNotificationHandlerI;
-import fr.upmc.PriseTheSun.datacenter.software.controller.ports.ControllerManagementInboundPort;
-import fr.upmc.PriseTheSun.datacenter.software.controller.ports.ControllerManagementOutboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.controller.ports.NodeManagementInboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.controller.ports.NodeManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.controller.ports.VMDisconnectionNotificationHandlerInboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatcher.RequestDispatcherPortTypes;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.connectors.RequestDispatcherIntrospectionConnector;
@@ -59,7 +60,7 @@ import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOu
 public class Controller extends AbstractComponent 
 implements 	RequestDispatcherStateDataConsumerI, 
 			RingNetworkStateDataConsumerI,
-			ControllerRingManagementI, 
+			NodeRingManagementI, 
 			PushModeControllingI,
 			VMDisconnectionNotificationHandlerI
 {
@@ -72,7 +73,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	protected ProcessorsControllerManagementOutboundPort pcmop;
 
 	private ScheduledFuture<?> pushingFuture;
-	private ControllerManagementInboundPort cmip;
+	private NodeManagementInboundPort cmip;
 	
 	private RequestDispatcherIntrospectionOutboundPort rdiobp;
 
@@ -118,12 +119,13 @@ implements 	RequestDispatcherStateDataConsumerI,
 			String requestDispatcherDynamicStateDataOutboundPort,
 			String rdURI, 
 			String requestDispatcherDynamicStateDataInboundPortURI, 
-			String AdmissionControllerManagementInboundPortURI, 
+			String ADMManagementInboundPort,
 			String ProcessorControllerManagementInboundUri, 
 			String RingDynamicStateDataOutboundPortURI, 
 			String RingDynamicStateDataInboundPortURI, 
 			String nextRingDynamicStateDataInboundPort,
 			String controllerManagementPreviousPort,
+			String controllerManagementNextPort,
 			ApplicationVMInfo vm, 
 			String VMDisconnectionNotificationHandlerInboundPortURI
 	) throws Exception
@@ -150,8 +152,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 		requestDispatcherNotificationInboundPort = this.rdiobp.getRequestDispatcherPortsURI().get(RequestDispatcherPortTypes.REQUEST_NOTIFICATION);
 		requestDispatcherManagementInboundPort = this.rdiobp.getRequestDispatcherPortsURI().get(RequestDispatcherPortTypes.MANAGEMENT);
 
-		this.addOfferedInterface(ControllerRingManagementI.class);
-		this.cmip = new ControllerManagementInboundPort(controllerManagement, this);
+		this.addOfferedInterface(NodeRingManagementI.class);
+		this.cmip = new NodeManagementInboundPort(controllerManagement, this);
 		this.cmip.publishPort();
 		this.addPort(cmip);
 		
@@ -161,11 +163,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.addPort(this.rddsdop) ;
 		this.rddsdop.publishPort() ;
 		
-		this.addRequiredInterface(AdmissionControllerManagementI.class);
-		this.acmop = new AdmissionControllerManagementOutboundPort("acmop-"+this.controllerURI, this);
-		this.acmop.publishPort();
-		this.acmop.doConnection(AdmissionControllerManagementInboundPortURI, AdmissionControllerManagementConnector.class.getCanonicalName());
-		
+
 		this.rddsdop.doConnection(requestDispatcherDynamicStateDataInboundPortURI, ControlledDataConnector.class.getCanonicalName());
 		this.rddsdop.startUnlimitedPushing(1000);
 		
@@ -184,7 +182,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.addPort(rdsdop);
 		this.rdsdop.publishPort();
 		this.rdsdop.doConnection(nextRingDynamicStateDataInboundPort, ControlledDataConnector.class.getCanonicalName());
-		this.startUnlimitedPushing(100);
 		
 		this.nextRingDynamicStateDataInboundPort = nextRingDynamicStateDataInboundPort;
 		rdsdip=new RingNetworkDynamicStateDataInboundPort(RingDynamicStateDataInboundPortURI, this);
@@ -219,6 +216,9 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		
 		this.controllerManagementPreviousInboundPort = controllerManagementPreviousPort;
+		this.controllerManagementNextInboundPort = controllerManagementNextPort;
+		this.startPushing();
+
 	}
 	
 	private Double calculAverage(String VMUri) {
@@ -417,10 +417,10 @@ implements 	RequestDispatcherStateDataConsumerI,
 		}*/
 		
 		
-		//Add a VM
+	/*	//Add a VM
 		if(!vmReserved.isEmpty())
 		this.addVm(vmReserved.remove(0));
-
+*/
 		ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
 		
 		
@@ -567,12 +567,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		}
 	}
 
-	@Override
-	public void bindSendingDataUri(String DataInboundPortUri) throws Exception {
-		if(rdsdop.connected())
-			rdsdop.doDisconnection();
-		rdsdop.doConnection(DataInboundPortUri, ControlledDataConnector.class.getCanonicalName());
-	}
+
 	
 	/**
 	 * @see fr.upmc.datacenter.interfaces.PushModeControllingI#stopPushing()
@@ -650,9 +645,10 @@ implements 	RequestDispatcherStateDataConsumerI,
 	 */
 	@Override
 	public void disconnectController() throws Exception {
-		ControllerManagementOutboundPort cmopPrevious = new ControllerManagementOutboundPort("cmop-previous-"+this.controllerURI, this);
+		System.err.println("tentative de déconnexion..");
+		NodeManagementOutboundPort cmopPrevious = new NodeManagementOutboundPort("cmop-previous-"+this.controllerURI, this);
 		cmopPrevious.publishPort();
-		cmopPrevious.doConnection(controllerManagementPreviousInboundPort, ControllerManagementConnector.class.getCanonicalName());
+		cmopPrevious.doConnection(controllerManagementPreviousInboundPort, NodeManagementConnector.class.getCanonicalName());
 		
 		// On arrête le push 
 		cmopPrevious.stopPushing();
@@ -660,20 +656,31 @@ implements 	RequestDispatcherStateDataConsumerI,
 		// On raccorde les ports de managements
 		cmopPrevious.setNextManagementInboundPort(controllerManagementNextInboundPort);
 		cmopPrevious.bindSendingDataUri(this.nextRingDynamicStateDataInboundPort);
-
+		cmopPrevious.startPushing();
 		
 		
-		ControllerManagementOutboundPort cmopNext = new ControllerManagementOutboundPort("cmop-next-"+this.controllerURI, this);
+		NodeManagementOutboundPort cmopNext = new NodeManagementOutboundPort("cmop-next-"+this.controllerURI, this);
 		cmopNext.publishPort();
-		cmopNext.doConnection(controllerManagementNextInboundPort, ControllerManagementConnector.class.getCanonicalName());
+		cmopNext.doConnection(controllerManagementNextInboundPort, NodeManagementConnector.class.getCanonicalName());
 		cmopNext.setPreviousManagementInboundPort(controllerManagementPreviousInboundPort);
 		
 		cmopPrevious.doDisconnection();
-		cmopPrevious.destroyPort();
 		cmopNext.doDisconnection();
-		cmopNext.destroyPort();
+		this.stopPushing();
+		if(this.rdsdop.connected()) {
+			this.logMessage("Disconnect " + this.controllerURI + " of the ring" );
+			System.err.println("je te kill");
+			this.rdsdop.doDisconnection();
+		}
 	}
-
+	
+	@Override
+	public void bindSendingDataUri(String DataInboundPortUri) throws Exception {
+		if(rdsdop.connected())
+			rdsdop.doDisconnection();
+		rdsdop.doConnection(DataInboundPortUri, ControlledDataConnector.class.getCanonicalName());
+		System.out.println("reconnecting?");
+	}
 	@Override
 	public void setNextManagementInboundPort(String managementInboundPort) throws Exception {
 		this.controllerManagementNextInboundPort = managementInboundPort;
@@ -682,6 +689,11 @@ implements 	RequestDispatcherStateDataConsumerI,
 	@Override
 	public void setPreviousManagementInboundPort(String managementInboundPort) throws Exception {
 		this.controllerManagementPreviousInboundPort = managementInboundPort;
+	}
+
+	@Override
+	public void startPushing() throws Exception {
+		this.startUnlimitedPushing(RingDynamicState.RING_INTERVAL_TIME);
 	}
 }
 

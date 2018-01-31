@@ -11,7 +11,7 @@ import fr.upmc.components.interfaces.RequiredI;
  * 
  * @author	Maxime LAVASTE Lo�c Lafontaine
  */
-public interface ControllerRingManagementI extends OfferedI,RequiredI{
+public interface NodeRingManagementI extends OfferedI,RequiredI{
 	
 	/**
 	 * Modifie l'uri du port de reception

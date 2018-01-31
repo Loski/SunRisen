@@ -1,6 +1,6 @@
 package fr.upmc.PriseTheSun.datacenter.software.controller.connectors;
 
-import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerRingManagementI;
+import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.NodeRingManagementI;
 import fr.upmc.components.connectors.AbstractConnector;
 
 /**
@@ -18,34 +18,34 @@ import fr.upmc.components.connectors.AbstractConnector;
  * @author	Maxime Lavaste Loïc Lafontaine
  *
  */
-public class ControllerManagementConnector extends		AbstractConnector
-implements	ControllerRingManagementI{
+public class NodeManagementConnector extends		AbstractConnector
+implements	NodeRingManagementI{
 
 	@Override
 	public void bindSendingDataUri(String DataInboundPortUri) throws Exception {
-		((ControllerRingManagementI)this.offering ).bindSendingDataUri(DataInboundPortUri);
+		((NodeRingManagementI)this.offering ).bindSendingDataUri(DataInboundPortUri);
 	}
 
 	@Override
 	public void setNextManagementInboundPort(String managementInboundPort) throws Exception {
-		((ControllerRingManagementI)this.offering ).setNextManagementInboundPort(managementInboundPort);
+		((NodeRingManagementI)this.offering ).setNextManagementInboundPort(managementInboundPort);
 
 	}
 
 	@Override
 	public void setPreviousManagementInboundPort(String managementInboundPort) throws Exception {
-		((ControllerRingManagementI)this.offering ).setPreviousManagementInboundPort(managementInboundPort);
+		((NodeRingManagementI)this.offering ).setPreviousManagementInboundPort(managementInboundPort);
 
 	}
 
 	@Override
 	public void stopPushing() throws Exception {
-		((ControllerRingManagementI)this.offering ).stopPushing();
+		((NodeRingManagementI)this.offering ).stopPushing();
 	}
 
 	@Override
 	public void startPushing() throws Exception {
-		((ControllerRingManagementI)this.offering ).startPushing();
+		((NodeRingManagementI)this.offering ).startPushing();
 
 	}
 }

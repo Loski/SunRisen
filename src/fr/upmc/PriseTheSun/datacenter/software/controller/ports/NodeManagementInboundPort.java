@@ -1,7 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.controller.ports;
 
 import fr.upmc.PriseTheSun.datacenter.software.controller.Controller;
-import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerRingManagementI;
+import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.NodeRingManagementI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ports.AbstractInboundPort;
 
@@ -13,7 +13,7 @@ import fr.upmc.components.ports.AbstractInboundPort;
 * 
 * @author Maxime LAVASTE Loïc Lafontaine
 */
-public class ControllerManagementInboundPort extends AbstractInboundPort implements ControllerRingManagementI{
+public class NodeManagementInboundPort extends AbstractInboundPort implements NodeRingManagementI{
 	private static final long serialVersionUID = 1L;
 
 	/***
@@ -21,9 +21,9 @@ public class ControllerManagementInboundPort extends AbstractInboundPort impleme
 	 * @param owner     owner component
 	 * @throws Exception e
 	 */
-	public	ControllerManagementInboundPort(ComponentI owner) throws Exception
+	public	NodeManagementInboundPort(ComponentI owner) throws Exception
 	{
-		super(ControllerRingManagementI.class, owner) ;
+		super(NodeRingManagementI.class, owner) ;
 		assert	owner != null && owner instanceof Controller ;
 	}
 	
@@ -32,16 +32,16 @@ public class ControllerManagementInboundPort extends AbstractInboundPort impleme
 	 * @param owner     owner component
 	 * @throws Exception e
 	 */
-	public	ControllerManagementInboundPort(String uri, ComponentI owner) throws Exception
+	public	NodeManagementInboundPort(String uri, ComponentI owner) throws Exception
 	{
-		super(uri, ControllerRingManagementI.class, owner);
+		super(uri, NodeRingManagementI.class, owner);
 
 		assert	owner != null && owner instanceof Controller ;
 	}
 
 	@Override
 	public void bindSendingDataUri(String DataInboundPortUri) throws Exception {
-		final ControllerRingManagementI cm = ( ControllerRingManagementI ) this.owner;
+		final NodeRingManagementI cm = ( NodeRingManagementI ) this.owner;
 		
 		 this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Void>() {
@@ -55,7 +55,7 @@ public class ControllerManagementInboundPort extends AbstractInboundPort impleme
 
 	@Override
 	public void setNextManagementInboundPort(String managementInboundPort) throws Exception {
-		final ControllerRingManagementI cm = ( ControllerRingManagementI ) this.owner;
+		final NodeRingManagementI cm = ( NodeRingManagementI ) this.owner;
 		
 		 this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Void>() {
@@ -69,7 +69,7 @@ public class ControllerManagementInboundPort extends AbstractInboundPort impleme
 
 	@Override
 	public void setPreviousManagementInboundPort(String managementInboundPort) throws Exception {
-		final ControllerRingManagementI cm = ( ControllerRingManagementI ) this.owner;
+		final NodeRingManagementI cm = ( NodeRingManagementI ) this.owner;
 		
 		 this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Void>() {
@@ -83,7 +83,7 @@ public class ControllerManagementInboundPort extends AbstractInboundPort impleme
 
 	@Override
 	public void stopPushing() throws Exception {
-		final ControllerRingManagementI cm = ( ControllerRingManagementI ) this.owner;
+		final NodeRingManagementI cm = ( NodeRingManagementI ) this.owner;
 		
 		 this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Void>() {
@@ -97,7 +97,7 @@ public class ControllerManagementInboundPort extends AbstractInboundPort impleme
 
 	@Override
 	public void startPushing() throws Exception {
-		final ControllerRingManagementI cm = ( ControllerRingManagementI ) this.owner;
+		final NodeRingManagementI cm = ( NodeRingManagementI ) this.owner;
 		
 		 this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Void>() {

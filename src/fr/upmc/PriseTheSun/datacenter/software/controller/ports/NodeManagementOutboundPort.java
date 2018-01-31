@@ -1,6 +1,6 @@
 package fr.upmc.PriseTheSun.datacenter.software.controller.ports;
 
-import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.ControllerRingManagementI;
+import fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.NodeRingManagementI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ports.AbstractOutboundPort;
 /**
@@ -10,17 +10,17 @@ import fr.upmc.components.ports.AbstractOutboundPort;
 * 
 * @author	Maxime LAVASTE Lo�c Lafontaine
 */
-public class ControllerManagementOutboundPort extends AbstractOutboundPort
-implements	ControllerRingManagementI{
+public class NodeManagementOutboundPort extends AbstractOutboundPort
+implements	NodeRingManagementI{
 
     /***
      * 
      * @param owner       owner component
      * @throws Exception e
      */
-	public	ControllerManagementOutboundPort(ComponentI owner) throws Exception
+	public	NodeManagementOutboundPort(ComponentI owner) throws Exception
 	{
-		super(ControllerRingManagementI.class, owner) ;
+		super(NodeRingManagementI.class, owner) ;
 		assert	owner != null ;
 	}
 
@@ -30,35 +30,35 @@ implements	ControllerRingManagementI{
 	 * @param owner           owner component
 	 * @throws Exception e
 	 */
-	public	ControllerManagementOutboundPort(String uri, ComponentI owner) throws Exception
+	public	NodeManagementOutboundPort(String uri, ComponentI owner) throws Exception
 	{
-		super(uri, ControllerRingManagementI.class, owner);
+		super(uri, NodeRingManagementI.class, owner);
 		assert	owner != null;
 	}
 
 	@Override
 	public void bindSendingDataUri(String DataInboundPortUri) throws Exception {
-		((ControllerRingManagementI)this.connector).bindSendingDataUri(DataInboundPortUri);
+		((NodeRingManagementI)this.connector).bindSendingDataUri(DataInboundPortUri);
 	}
 
 	@Override
 	public void setNextManagementInboundPort(String managementInboundPort) throws Exception {
-		((ControllerRingManagementI)this.connector).setNextManagementInboundPort(managementInboundPort);		
+		((NodeRingManagementI)this.connector).setNextManagementInboundPort(managementInboundPort);		
 	}
 
 	@Override
 	public void setPreviousManagementInboundPort(String managementInboundPort) throws Exception {
-		((ControllerRingManagementI)this.connector).setPreviousManagementInboundPort(managementInboundPort);
+		((NodeRingManagementI)this.connector).setPreviousManagementInboundPort(managementInboundPort);
 	}
 
 	@Override
 	public void stopPushing() throws Exception {
-		((ControllerRingManagementI)this.connector).stopPushing();
+		((NodeRingManagementI)this.connector).stopPushing();
 	}
 
 	@Override
 	public void startPushing() throws Exception {
-		((ControllerRingManagementI)this.connector).startPushing();
+		((NodeRingManagementI)this.connector).startPushing();
 	}
 
 }
