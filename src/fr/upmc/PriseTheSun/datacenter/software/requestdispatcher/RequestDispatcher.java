@@ -106,7 +106,8 @@ implements
 	protected VMDisconnectionNotificationHandlerOutboundPort vmnobp;
 	
 	private Object lock;
-	private boolean stopAddVm = false;
+	private boolean inDisconnectionState = false;
+
 	
 	/**
 	 * Construct a <code>RequestDispatcher</code>.
@@ -347,8 +348,9 @@ implements
 		
 		/*if(this.requestSubmissionOutboundPortList.get(indexVM)!=null && this.requestSubmissionOutboundPortList.get(indexVM).getPortURI().equals(RequestSubmissionOutboundPortURI))
 			throw new Exception("VM déjà connecté sur ce port");*/
-		if(stopAddVm)
+		if(inDisconnectionState)
 			throw new Exception("cant add vm");
+
 		RequestSubmissionOutboundPort rsobp = new RequestSubmissionOutboundPort( rdURI+"-rsbop-"+this.virtualMachineDataList.size(), this );
 		ApplicationVMIntrospectionOutboundPort avmiovp = new ApplicationVMIntrospectionOutboundPort( vmURI+"-introObp", this );
 		
@@ -382,6 +384,15 @@ implements
 		{
 			port.doDisconnection();
 			this.vmnobp.receiveVMDisconnectionNotification(vmData.getVmURI());
+		}
+		
+		if(inDisconnectionState && this.virtualMachineDataList.isEmpty() && this.virtualMachineWaitingForDisconnection.isEmpty())
+		{
+			if(this.vmnobp.connected())
+			{
+				this.vmnobp.disconnectController();
+				this.vmnobp.doDisconnection();
+			}
 		}
 	}	
 	
@@ -581,23 +592,9 @@ implements
 
 	@Override
 	public void disconnectController() throws Exception {
-		stopAddVm = true;
+		inDisconnectionState = true;
 		for(int i = 0; i < this.virtualMachineDataList.size(); i++) {
 			this.askVirtualMachineDisconnection(this.virtualMachineDataList.get(i).getVmURI());;
-		}
-		while(!this.virtualMachineWaitingForDisconnection.isEmpty()) {
-			Thread.sleep(500);
-		}
-		
-		// check verification
-		if(!virtualMachineDataList.isEmpty()) {
-			this.disconnectController();
-		}
-
-		if(this.vmnobp.connected())
-		{
-			this.vmnobp.disconnectController();
-			this.vmnobp.doDisconnection();
 		}
 	}
 
