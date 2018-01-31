@@ -377,6 +377,8 @@ implements
 
 	private void disconnectVirtualMachine(VirtualMachineData vmData) throws Exception
 	{
+		System.err.println(vmData.getVmURI());
+		
 		RequestSubmissionOutboundPort port = vmData.getRsobp();
 		if(port!=null && port.connected())
 		{
@@ -385,9 +387,11 @@ implements
 		}
 		
 		if(inDisconnectionState && this.virtualMachineDataList.isEmpty() && this.virtualMachineWaitingForDisconnection.isEmpty())
-		{
+		{			
 			if(this.vmnobp.connected())
 			{
+				System.err.println("RIP LE CONTOLLER");
+				
 				this.vmnobp.disconnectController();
 				this.vmnobp.doDisconnection();
 			}
@@ -397,8 +401,9 @@ implements
 	@Override
 	public void askVirtualMachineDisconnection(String vmURI) throws Exception {
 		
+		System.err.println("ASK :"+vmURI);	
 		synchronized(this.lock)
-		{
+		{			
 			VirtualMachineData vmData = this.requestVirtalMachineDataMap.remove(vmURI);
 			this.virtualMachineDataList.remove(vmData);
 			if(vmData.getAvmiovp().getDynamicState().getNumberOfRequestInQueue()==0)
@@ -589,10 +594,13 @@ implements
 	}
 
 	@Override
-	public void disconnectController() throws Exception {
-		inDisconnectionState = true;
-		for(int i = 0; i < this.virtualMachineDataList.size(); i++) {
-			this.askVirtualMachineDisconnection(this.virtualMachineDataList.get(i).getVmURI());;
+	public void disconnectController() throws Exception 
+	{
+		synchronized(this.lock){
+			inDisconnectionState = true;
+			while(!this.virtualMachineDataList.isEmpty()) {
+				this.askVirtualMachineDisconnection(this.virtualMachineDataList.get(0).getVmURI());
+			}
 		}
 	}
 
