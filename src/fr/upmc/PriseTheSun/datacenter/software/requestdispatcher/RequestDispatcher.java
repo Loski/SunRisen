@@ -301,7 +301,11 @@ implements
 		vm.endRequest(r.getRequestURI());
 		if(!this.virtualMachineWaitingForDisconnection.isEmpty() && this.virtualMachineWaitingForDisconnection.contains(vm.getVmURI()))
 		{
-			this.disconnectVirtualMachine(vm);
+			if(vm.getAvmiovp().getDynamicState().getNumberOfRequestInQueue()==0)
+			{
+				this.virtualMachineWaitingForDisconnection.remove(vm.getVmURI());
+				this.disconnectVirtualMachine(vm);
+			}
 		}
 
 		this.requestNotificationOutboundPort.notifyRequestTermination( r );
@@ -371,16 +375,11 @@ implements
 
 	private void disconnectVirtualMachine(VirtualMachineData vmData) throws Exception
 	{
-		if(vmData.getAvmiovp().getDynamicState().getNumberOfRequestInQueue()==0)
+		RequestSubmissionOutboundPort port = vmData.getRsobp();
+		if(port!=null && port.connected())
 		{
-			RequestSubmissionOutboundPort port = vmData.getRsobp();
-			
-			if(port!=null && port.connected())
-			{
-				port.doDisconnection();
-				this.virtualMachineWaitingForDisconnection.remove(vmData.getVmURI());
-				this.vmnobp.receiveVMDisconnectionNotification(vmData.getVmURI());
-			}
+			port.doDisconnection();
+			this.vmnobp.receiveVMDisconnectionNotification(vmData.getVmURI());
 		}
 	}	
 	
@@ -389,7 +388,8 @@ implements
 		
 		synchronized(this.lock)
 		{
-			VirtualMachineData vmData = this.requestVirtalMachineDataMap.get(vmURI);			
+			VirtualMachineData vmData = this.requestVirtalMachineDataMap.remove(vmURI);
+			this.virtualMachineDataList.remove(vmData);
 			if(vmData.getAvmiovp().getDynamicState().getNumberOfRequestInQueue()==0)
 			{
 				this.disconnectVirtualMachine(vmData);
@@ -397,8 +397,6 @@ implements
 			else
 			{
 				this.virtualMachineWaitingForDisconnection.add(vmURI);
-				this.requestVirtalMachineDataMap.remove(vmURI);
-				this.virtualMachineDataList.remove(vmData);
 			}	
 		}
 	}
