@@ -49,6 +49,8 @@ import fr.upmc.datacenter.hardware.computers.ports.ComputerDynamicStateDataOutbo
 import fr.upmc.datacenter.hardware.computers.ports.ComputerStaticStateDataOutboundPort;
 import fr.upmc.datacenter.hardware.processors.Processor;
 import fr.upmc.datacenter.hardware.processors.Processor.ProcessorPortTypes;
+import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
+import fr.upmc.datacenter.interfaces.ControlledDataRequiredI;
 import fr.upmc.datacenter.interfaces.PushModeControllingI;
 import fr.upmc.datacenter.software.applicationvm.ApplicationVM;
 import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagementConnector;
@@ -199,8 +201,8 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.AdmissionControllerDataRingInboundUri = this.admissionControllerURI +"-"+ControllerDataRingInboundPortURI;
 		this.AdmissionControllerDataRingOutboundUri = this.admissionControllerURI +"-"+ControllerDataRingOutboundPortURI;
 		
-		this.addRequiredInterface(RingNetworkDynamicStateI.class);
-		this.addOfferedInterface(RingNetworkDynamicStateI.class);
+		this.addOfferedInterface(ControlledDataOfferedI.ControlledPullI.class);
+		this.addRequiredInterface(ControlledDataRequiredI.ControlledPullI.class);
 		
 		rdsdop = new RingNetworkDynamicStateDataOutboundPort(this,  this.AdmissionControllerDataRingOutboundUri);
 		this.addPort(rdsdop);

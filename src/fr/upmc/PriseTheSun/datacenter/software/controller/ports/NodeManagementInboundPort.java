@@ -24,7 +24,7 @@ public class NodeManagementInboundPort extends AbstractInboundPort implements No
 	public	NodeManagementInboundPort(ComponentI owner) throws Exception
 	{
 		super(NodeRingManagementI.class, owner) ;
-		assert	owner != null && owner instanceof Controller ;
+		assert	owner != null && owner instanceof NodeRingManagementI ;
 	}
 	
 	/***
@@ -36,7 +36,7 @@ public class NodeManagementInboundPort extends AbstractInboundPort implements No
 	{
 		super(uri, NodeRingManagementI.class, owner);
 
-		assert	owner != null && owner instanceof Controller ;
+		assert	owner != null && owner instanceof NodeRingManagementI ;
 	}
 
 	@Override
