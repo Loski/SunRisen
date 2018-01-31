@@ -415,9 +415,10 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
 		ApplicationVMInfo vm;
 		synchronized(o){
-			if(this.VMforNewApplication.size() > 2) {
+			if(this.VMforNewApplication.size() > 1) {
 				vm = VMforNewApplication.remove(0);
 			}else {
+				System.out.println("kek");
 				return null;
 			}
 		}
@@ -571,7 +572,6 @@ public class AdmissionControllerDynamic extends AbstractComponent implements App
 			throws Exception {
 		synchronized(o){
 			if(currentDynamicState.getApplicationVMInfo() != null) {
-				//System.out.println("!!receive a vm..");
 				if(this.VMforNewApplication.size() < MIN_VM) {
 					this.VMforNewApplication.add(currentDynamicState.getApplicationVMInfo());
 				}else {

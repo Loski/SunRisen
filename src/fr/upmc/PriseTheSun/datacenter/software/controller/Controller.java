@@ -224,12 +224,14 @@ implements 	RequestDispatcherStateDataConsumerI,
 	}
 	
 	private Double calculAverage(String VMUri) {
-		ArrayList<Double> tmp = this.statistique.get(VMUri);
+		ArrayList<Double> tmp = (ArrayList<Double>) this.statistique.get(VMUri).clone();
 		Double average = 0.0;
 		for(int i = 0; i < tmp.size(); i++) {
 			average += tmp.get(i);
 		}
-		return average / tmp.size();
+		Double value =  average / tmp.size();
+		tmp.clear();
+		return value;
 	}
 	
 	private Double calculAverage() {
@@ -352,6 +354,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	
 				break;
 			case GOOD :
+				System.err.println("WAS GOOD MY FRIEND");
 				break;
 			default:
 				break;
@@ -397,7 +400,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 		}
 		//Try to up frequency
 		int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.HIGHER, randomVM);
-		
+		System.err.println("je passe par lower mdr");
+
 		
 		//System.err.println("!!!!!!!!! " +this.cmops.get(randomVM.getApplicationVMURI()).reserveCore(randomVM.getApplicationVMURI()));
 	}
@@ -418,6 +422,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		if(canRemoveVM) {
 			ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
 			this.rdmop.askVirtualMachineDisconnection(randomVM.getApplicationVMURI());
+			System.err.println("remove a vm");
 		}
 		
 		
@@ -446,20 +451,20 @@ implements 	RequestDispatcherStateDataConsumerI,
 	}
 	
 	static class StaticData {
-		public static double AVERAGE_TARGET=1E9D;
+		public static final double AVERAGE_TARGET=1E9D;
 		
-		public static double VERRY_MUCH_LOWER_PERCENT= 0.5;
-		public static double LOWER_PERCENT= 0.25;
-		public static double HIGHER_PERCENT= 0.25;
-		public static double VERY_MUCH_HIGHER_PERCENT=0.5;
+		public static final double VERRY_MUCH_LOWER_PERCENT= 0.5;
+		public static final double LOWER_PERCENT= 0.25;
+		public static final double HIGHER_PERCENT= 0.25;
+		public static final double VERY_MUCH_HIGHER_PERCENT=0.5;
 
-		public static double TARGET_VERY_HIGHT = AVERAGE_TARGET * VERY_MUCH_HIGHER_PERCENT + AVERAGE_TARGET;
-		public static double TARGET_HIGHT = AVERAGE_TARGET * HIGHER_PERCENT + AVERAGE_TARGET;
-		public static double TARGET_LOWER = AVERAGE_TARGET * LOWER_PERCENT - AVERAGE_TARGET;
-		public static double TARGET_VERY_LOWER = AVERAGE_TARGET * LOWER_PERCENT - AVERAGE_TARGET;
+		public static final double TARGET_VERY_HIGHT = AVERAGE_TARGET * VERY_MUCH_HIGHER_PERCENT + AVERAGE_TARGET;
+		public static final double TARGET_HIGHT = AVERAGE_TARGET * HIGHER_PERCENT + AVERAGE_TARGET;
+		public static final double TARGET_LOWER = AVERAGE_TARGET * LOWER_PERCENT;
+		public static final double TARGET_VERY_LOWER = AVERAGE_TARGET * LOWER_PERCENT;
 
 		public static int DISPATCHER_PUSH_INTERVAL=5000;
-		public static int NB_VM_RESERVED = 5;
+		public static int NB_VM_RESERVED = 1;
 		//Max core
 		public static int MAX_ALLOCATION=25;
 		

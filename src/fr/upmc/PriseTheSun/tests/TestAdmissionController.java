@@ -165,8 +165,8 @@ extends		AbstractCVM
 	public void			testScenario() throws Exception
 	{
 		for(int i = 0; i < this.apmop.length;i++) {
-				Thread.sleep(500);
-				this.apmop[i].createAndSendApplication();
+			Thread.sleep(500);
+			this.apmop[i].createAndSendApplication();
 		}
 		
 		
