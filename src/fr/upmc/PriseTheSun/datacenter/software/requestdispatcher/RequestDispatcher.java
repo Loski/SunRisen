@@ -88,7 +88,7 @@ implements
 	protected HashMap<String,VirtualMachineData> taskExecutedBy;
 	
 	/** index of the VM in the requestSubmissionOutboundPortList which will receive the next request*/
-	private int currentVM;
+	protected int currentVM;
 	
 	/** Inbound port offering the management interface.						*/
 	protected RequestDispatcherManagementInboundPort requestDispatcherManagementInboundPort ;
@@ -106,8 +106,8 @@ implements
 	
 	protected VMDisconnectionNotificationHandlerOutboundPort vmnobp;
 	
-	private Object lock;
-	private boolean inDisconnectionState = false;
+	protected Object lock;
+	protected boolean inDisconnectionState = false;
 
 	
 	/**
@@ -210,27 +210,27 @@ implements
 				this.taskExecutedBy = new HashMap<String,VirtualMachineData>();
 	}
 	
-	private void nextVM()
+	protected void nextVM()
 	{
 		this.currentVM = (this.currentVM+1)%this.virtualMachineDataList.size();
 	}
 	
-	private VirtualMachineData getCurrentVMData()
+	protected VirtualMachineData getCurrentVMData()
 	{
 		return this.virtualMachineDataList.get(this.currentVM);
 	}
 
-	private RequestSubmissionOutboundPort getCurrentVMPort()
+	protected RequestSubmissionOutboundPort getCurrentVMPort()
 	{
 		return this.virtualMachineDataList.get(this.currentVM).getRsobp();
 	}
 	
-	private String getCurrentVMURI()
+	protected String getCurrentVMURI()
 	{
 		return this.virtualMachineDataList.get(this.currentVM).getVmURI();
 	}
 	
-	private Double averageTime()
+	protected Double averageTime()
 	{		
 		synchronized(this.lock)
 		{
@@ -378,7 +378,7 @@ implements
 			this.logMessage(String.format("[%s] Connecting %s with %s using %s -> %s",getConnectorSimpleName(),this.rdURI,vmURI,rsobp.getPortURI(),requestSubmissionInboundPortURI));
 	}
 
-	private void disconnectVirtualMachine(VirtualMachineData vmData) throws Exception
+	protected void disconnectVirtualMachine(VirtualMachineData vmData) throws Exception
 	{
 		System.err.println(vmData.getVmURI());
 		
