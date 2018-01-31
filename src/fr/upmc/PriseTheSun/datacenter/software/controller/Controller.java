@@ -30,6 +30,7 @@ import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatch
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.connectors.RequestDispatcherIntrospectionConnector;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherIntrospectionI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStateDataConsumerI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStaticStateI;
@@ -47,6 +48,7 @@ import fr.upmc.components.ComponentI;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.connectors.ControlledDataConnector;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
+import fr.upmc.datacenter.interfaces.ControlledDataRequiredI;
 import fr.upmc.datacenter.interfaces.PushModeControllingI;
 import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMManagementConnector;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamicStateI;
@@ -143,6 +145,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.appURI = appURI;
 		this.rdiobp = new RequestDispatcherIntrospectionOutboundPort( rdURI+"-introObp", this );
 		
+		this.addRequiredInterface(RequestDispatcherIntrospectionI.class);
 		this.addPort( rdiobp );
 		rdiobp.publishPort();
 		
@@ -159,7 +162,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.cmip.publishPort();
 		this.addPort(cmip);
 		
-		this.addRequiredInterface(ControlledDataOfferedI.ControlledPullI.class) ;
+		this.addOfferedInterface(ControlledDataOfferedI.ControlledPullI.class);
+		this.addRequiredInterface(ControlledDataRequiredI.ControlledPullI.class);
 		this.rddsdop =
 			new RequestDispatcherDynamicStateDataOutboundPort(requestDispatcherDynamicStateDataOutboundPort,this,rdURI) ;
 		this.addPort(this.rddsdop) ;
@@ -174,15 +178,12 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.pcmop = new ProcessorsControllerManagementOutboundPort("pcmop-"+this.controllerURI, this);
 		this.pcmop.publishPort();
 		this.pcmop.doConnection(ProcessorControllerManagementInboundUri, ProcessorControllerManagementConnector.class.getCanonicalName());
-		
-		
-		this.addRequiredInterface(RingNetworkDynamicStateI.class);
-		this.addOfferedInterface(RingNetworkDynamicStateI.class);
-		
+				
 		
 		rdsdop = new RingNetworkDynamicStateDataOutboundPort(this, RingDynamicStateDataOutboundPortURI);
 		this.addPort(rdsdop);
 		this.rdsdop.publishPort();
+		System.err.println(nextRingDynamicStateDataInboundPort);
 		this.rdsdop.doConnection(nextRingDynamicStateDataInboundPort, ControlledDataConnector.class.getCanonicalName());
 		
 		this.nextRingDynamicStateDataInboundPort = nextRingDynamicStateDataInboundPort;
