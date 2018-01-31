@@ -207,7 +207,6 @@ implements 	ApplicationSubmissionI,
 				DynamicComponentCreationConnector.class.getCanonicalName());
 		this.addRequiredInterface(ComputerServicesI.class);
 		
-		
 		this.AdmissionControllerDataRingInboundUri = this.admissionControllerURI +"-"+ControllerDataRingInboundPortURI;
 		this.AdmissionControllerDataRingOutboundUri = this.admissionControllerURI +"-"+ControllerDataRingOutboundPortURI;
 		
@@ -237,6 +236,8 @@ implements 	ApplicationSubmissionI,
 		this.freeApplicationVM = new ArrayList<>();
 		this.VMforNewApplication = new ArrayList<>();
 		this.processorController = new ProcessorsController("controller", ProcessorControllerManagementInboundPortURI);
+		
+		  this.addRequiredInterface(ComputerControllerManagementI.class);
 	}
 
 	/**
@@ -531,7 +532,6 @@ implements 	ApplicationSubmissionI,
         tmp.start();
         ComputerControllerManagementOutboutPort ccmop = new ComputerControllerManagementOutboutPort("ComputerControllerManagementOutboutPort" + cmops.size(), this);
 		
-        this.addRequiredInterface(ComputerControllerManagementI.class);
         this.addPort(ccmop);
 		ccmop.publishPort();
 		ccmop.doConnection(

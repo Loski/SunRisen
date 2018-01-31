@@ -97,7 +97,7 @@ extends		AbstractCVM
         Map<Integer, Integer> processingPower = new HashMap<Integer, Integer>();
         processingPower.put(1500, 1500000); // 1,5 GHz executes 1,5 Mips
         processingPower.put(3000, 3000000); // 3 GHz executes 3 Mips
-
+        
         String csop[] = new String[NB_COMPUTER], csip[] = new String[NB_COMPUTER], cssdip[] = new String[NB_COMPUTER], computer[] = new String[NB_COMPUTER], cdsdip[] = new String[NB_COMPUTER];
         for (int i = 0; i < NB_COMPUTER; ++i) {
         	csop[i] = "csop"+i;
@@ -120,6 +120,8 @@ extends		AbstractCVM
 		this.apmop = new ApplicationProviderManagementOutboundPort[nbApplication];
 		for(int i =0; i < nbApplication; i++) {
 			this.ap[i] = new ApplicationProvider("App"+"-"+i, applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI+"-"+i, applicationManagementInboundPort+"-"+i);
+			this.addDeployedComponent(this.ap[i]);
+			this.ap[i].start();
 			this.apmop[i] = new ApplicationProviderManagementOutboundPort("apmop"+"-"+i, new AbstractComponent(0, 0) {});
 			this.apmop[i].publishPort();
 			this.apmop[i].doConnection(applicationManagementInboundPort+"-"+i, ApplicationProviderManagementConnector.class.getCanonicalName());
@@ -132,8 +134,6 @@ extends		AbstractCVM
 		AbstractComponent.configureLogging("", "", 0, '|') ;
 		Processor.DEBUG = true ;
 
-		createAdmissionController();
-		createApplication(NB_APPLICATION);
 		super.deploy();
 	}
 
@@ -167,6 +167,9 @@ extends		AbstractCVM
 	 */
 	public void			testScenario() throws Exception
 	{
+		createAdmissionController();
+		createApplication(NB_APPLICATION);
+		
 		for(int i = 0; i < this.apmop.length;i++) {
 			Thread.sleep(500);
 			this.apmop[i].createAndSendApplication();
