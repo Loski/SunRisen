@@ -66,7 +66,7 @@ public class ProcessorsController extends AbstractComponent implements Processor
 	
 	public void bindProcessor(String processorURI, String processorControllerInboundPortURI, String processorManagementURI, String ProcessorStaticStateDataInboundPortURI, String ProcessorDynamicStateDataInoundPortURI) throws Exception {
 		
-		int number = this.processorsStaticState.size();
+		/*int number = this.processorsStaticState.size();
 		String processorStaticStateDataOutboundPortUri = ProcessorStaticStateDataOutboundPortURI + "_" +  number;
 		String processorDynamicStateDataUriOutboundPort = ProcessorDynamicStateDataOutboundPortURI + "_" +  number;
 		
@@ -97,7 +97,7 @@ public class ProcessorsController extends AbstractComponent implements Processor
 				ProcessorManagementConnector.class.getCanonicalName());
 		this.processorsManagement.put(processorURI, pmop);
 		
-		this.processorsDynaToUri.put(processorDynamicStateDataUriOutboundPort, processorURI);
+		this.processorsDynaToUri.put(processorDynamicStateDataUriOutboundPort, processorURI);*/
 	}
 	
 	public  boolean setCoreFrequency(CoreAsk ask, String processorURI, int coreNo) throws UnavailableFrequencyException, UnacceptableFrequencyException, Exception {

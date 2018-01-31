@@ -528,6 +528,7 @@ implements 	ApplicationSubmissionI,
 		
 		
         ComputerController tmp = new ComputerController(computerController[0], computerController[1], computerController[2]);
+        tmp.start();
         ComputerControllerManagementOutboutPort ccmop = new ComputerControllerManagementOutboutPort("ComputerControllerManagementOutboutPort" + cmops.size(), this);
 		
         this.addRequiredInterface(ComputerControllerManagementI.class);
@@ -536,7 +537,7 @@ implements 	ApplicationSubmissionI,
 		ccmop.doConnection(
 				computerController[2],
 				ComputerControllerConnector.class.getCanonicalName());
-		this.cmops.add(ccmop);			
+		this.cmops.add(ccmop);
 			
 			for(int i = 0; i < processorsURIs.size(); i++) {
 				this.processorController.bindProcessor(processorsURIs.get(i), "ACHANGER", pmipURIs.get(i), pssdURIs.get(i), pdsdURIs.get(i));
