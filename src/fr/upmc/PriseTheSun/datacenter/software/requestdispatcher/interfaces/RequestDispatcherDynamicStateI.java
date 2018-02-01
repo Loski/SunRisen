@@ -16,4 +16,6 @@ extends 		DataOfferedI.DataI,
 	public Double getAvgExecutionTime();
 	public Map<String,Double> getVirtualMachineExecutionAverageTime();
 	public Map<String,ApplicationVMDynamicStateI> getVirtualMachineDynamicStates();
+	public int getNbRequestReceived();
+	public int getNbRequestTerminated();
 }

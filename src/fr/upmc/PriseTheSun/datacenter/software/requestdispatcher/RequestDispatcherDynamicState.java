@@ -23,12 +23,18 @@ public class RequestDispatcherDynamicState implements RequestDispatcherDynamicSt
     
     protected final Map<String,Double> virtualMachineExecutionAverageTime;
     protected final Map<String,ApplicationVMDynamicStateI> virtualMachineDynamicStates;
+    
+    protected final int nbRequestReceived;
+    protected final int nbRequestTerminated;
+    
 	
 	public				RequestDispatcherDynamicState(
 			String rdURI,
 			Double averageTime,
 			Map<String,Double> virtualMachineExecutionAverageTime,
-			Map<String,ApplicationVMDynamicStateI> virtualMachineDynamicStates
+			Map<String,ApplicationVMDynamicStateI> virtualMachineDynamicStates,
+			int nbRequestReceived,
+			int nbRequestTerminated
 			) throws Exception
 	{
 		super() ;
@@ -38,6 +44,8 @@ public class RequestDispatcherDynamicState implements RequestDispatcherDynamicSt
 		this.executionTimeAvg=averageTime;
 		this.virtualMachineExecutionAverageTime=virtualMachineExecutionAverageTime;
 		this.virtualMachineDynamicStates=virtualMachineDynamicStates;
+		this.nbRequestReceived=nbRequestReceived;
+		this.nbRequestTerminated=nbRequestTerminated;
 	}
     
 	@Override
@@ -68,6 +76,16 @@ public class RequestDispatcherDynamicState implements RequestDispatcherDynamicSt
 	@Override
 	public Map<String, ApplicationVMDynamicStateI> getVirtualMachineDynamicStates() {
 		return this.virtualMachineDynamicStates;
+	}
+
+	@Override
+	public int getNbRequestReceived() {
+		return this.nbRequestReceived;
+	}
+
+	@Override
+	public int getNbRequestTerminated() {
+		return this.nbRequestTerminated;
 	}
 
 }

@@ -108,6 +108,9 @@ implements
 	
 	protected Object lock;
 	protected boolean inDisconnectionState = false;
+	
+	protected int nbRequestTerminated = 0;
+	protected int nbRequestReceived = 0;
 
 	
 	/**
@@ -273,6 +276,8 @@ implements
 
 		this.taskExecutedBy.put(r.getRequestURI(),getCurrentVMData());
 		
+		this.nbRequestReceived++;
+		
 		this.nextVM();
 	}
 
@@ -291,6 +296,8 @@ implements
 		port.submitRequestAndNotify(r);
 		
 		this.taskExecutedBy.put(r.getRequestURI(),getCurrentVMData());
+		
+		this.nbRequestReceived++;
 		
 		this.nextVM();
 	}
@@ -312,6 +319,8 @@ implements
 		}
 
 		this.requestNotificationOutboundPort.notifyRequestTermination( r );
+		
+		this.nbRequestTerminated++;
 		
 		if (RequestGenerator.DEBUG_LEVEL >= 1) 
 			this.logMessage(String.format("RequestDispatcher [%s] notifies end of request %s",this.rdURI,r.getRequestURI()));
@@ -464,7 +473,7 @@ implements
 			virtualMachineDynamicStates.put(vmData.getVmURI(), vmData.getAvmiovp().getDynamicState());
 		}
 		
-		return new RequestDispatcherDynamicState(this.rdURI,average,virtualMachineExecutionAverageTime,virtualMachineDynamicStates) ;
+		return new RequestDispatcherDynamicState(this.rdURI,average,virtualMachineExecutionAverageTime,virtualMachineDynamicStates,this.nbRequestReceived,this.nbRequestTerminated) ;
 	}
 	
 	public void			sendDynamicState() throws Exception
