@@ -40,7 +40,7 @@ public class NodeManagementInboundPort extends AbstractInboundPort implements No
 	}
 
 	@Override
-	public void bindSendingDataUri(String DataInboundPortUri) throws Exception {
+	public void bindSendingDataUri(final String DataInboundPortUri) throws Exception {
 		final NodeRingManagementI cm = ( NodeRingManagementI ) this.owner;
 		
 		 this.owner.handleRequestSync(
@@ -54,7 +54,7 @@ public class NodeManagementInboundPort extends AbstractInboundPort implements No
 	}
 
 	@Override
-	public void setNextManagementInboundPort(String managementInboundPort) throws Exception {
+	public void setNextManagementInboundPort(final String managementInboundPort) throws Exception {
 		final NodeRingManagementI cm = ( NodeRingManagementI ) this.owner;
 		
 		 this.owner.handleRequestSync(
@@ -68,7 +68,7 @@ public class NodeManagementInboundPort extends AbstractInboundPort implements No
 	}
 
 	@Override
-	public void setPreviousManagementInboundPort(String managementInboundPort) throws Exception {
+	public void setPreviousManagementInboundPort(final String managementInboundPort) throws Exception {
 		final NodeRingManagementI cm = ( NodeRingManagementI ) this.owner;
 		
 		 this.owner.handleRequestSync(

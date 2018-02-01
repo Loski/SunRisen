@@ -28,7 +28,7 @@ public class ComputerControllerManagementInboundPort extends AbstractInboundPort
 		}
 
 	@Override
-	public int reserveCore(String controllerURI) throws Exception {
+	public int reserveCore(final String controllerURI) throws Exception {
 		final ComputerControllerManagementI ccm = ( ComputerControllerManagementI ) this.owner;
 
 		 return this.owner.handleRequestSync(
@@ -42,7 +42,7 @@ public class ComputerControllerManagementInboundPort extends AbstractInboundPort
 	}
 
 	@Override
-	public void releaseCore(String controllerURI) throws Exception {
+	public void releaseCore(final String controllerURI) throws Exception {
 		final ComputerControllerManagementI ccm = ( ComputerControllerManagementI ) this.owner;
 		 this.owner.handleRequestSync(
 					new ComponentI.ComponentService<Void>() {
@@ -56,7 +56,7 @@ public class ComputerControllerManagementInboundPort extends AbstractInboundPort
 	}
 
 	@Override
-	public AllocatedCore[] addCores(String controllerURI) throws Exception {
+	public AllocatedCore[] addCores(final String controllerURI) throws Exception {
 		final ComputerControllerManagementI ccm = ( ComputerControllerManagementI ) this.owner;
 
 		 return this.owner.handleRequestSync(
@@ -71,7 +71,7 @@ public class ComputerControllerManagementInboundPort extends AbstractInboundPort
 	}
 
 	@Override
-	public boolean supCores(int nbCores, String vmUri) throws Exception {
+	public boolean supCores(final int nbCores, final String vmUri) throws Exception {
 		final ComputerControllerManagementI ccm = ( ComputerControllerManagementI ) this.owner;
 		 return this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Boolean>() {
@@ -85,7 +85,7 @@ public class ComputerControllerManagementInboundPort extends AbstractInboundPort
 	}
 
 	@Override
-	public AllocatedCore[] allocateCores(int i) throws Exception {
+	public AllocatedCore[] allocateCores(final int i) throws Exception {
 		final ComputerControllerManagementI ccm = ( ComputerControllerManagementI ) this.owner;
 
 		 return this.owner.handleRequestSync(

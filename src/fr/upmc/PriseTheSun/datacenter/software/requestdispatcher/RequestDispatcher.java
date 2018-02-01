@@ -526,7 +526,7 @@ implements
 	}
 
 	@Override
-	public void startLimitedPushing(int interval, int n) throws Exception {
+	public void startLimitedPushing(final int interval, final int n) throws Exception {
 		
 		assert	n > 0 ;
 

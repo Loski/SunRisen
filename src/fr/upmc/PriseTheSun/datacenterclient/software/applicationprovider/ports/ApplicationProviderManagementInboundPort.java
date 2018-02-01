@@ -51,7 +51,7 @@ public class ApplicationProviderManagementInboundPort extends AbstractInboundPor
 }
 
 	@Override
-	public void createAndSendApplication(Class<RequestSubmissionI> class1) throws Exception {
+	public void createAndSendApplication(final Class<RequestSubmissionI> class1) throws Exception {
 		final ApplicationProviderManagementI apm = ( ApplicationProviderManagementI ) this.owner;
         this.owner.handleRequestAsync( new ComponentI.ComponentService<Void>() {
 

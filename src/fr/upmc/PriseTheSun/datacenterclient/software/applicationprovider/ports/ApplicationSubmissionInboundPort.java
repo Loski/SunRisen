@@ -12,7 +12,7 @@ public class ApplicationSubmissionInboundPort extends AbstractInboundPort implem
      * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int)
      */
     @Override
-    public String[] submitApplication(String appURI,  final int nbVM ) throws Exception {
+    public String[] submitApplication(final String appURI,  final int nbVM ) throws Exception {
         final ApplicationSubmissionI aps = ( ApplicationSubmissionI ) this.owner;
         return this.owner.handleRequestSync( new ComponentI.ComponentService<String[]>() {
             @Override
@@ -35,7 +35,7 @@ public class ApplicationSubmissionInboundPort extends AbstractInboundPort implem
 	 * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitGenerator(java.lang.String, java.lang.String, java.lang.String)
 	 */
 	@Override
-	public void submitGenerator(String requestNotificationInboundPort, String appURI, String rgURI) throws Exception {
+	public void submitGenerator(final String requestNotificationInboundPort, final String appURI, final String rgURI) throws Exception {
 		final ApplicationSubmissionI aps = ( ApplicationSubmissionI ) this.owner;
 		
 		this.owner.handleRequestSync(
@@ -52,7 +52,7 @@ public class ApplicationSubmissionInboundPort extends AbstractInboundPort implem
 	 * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int, java.lang.Class)
 	 */
 	@Override
-	public String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
+	public String[] submitApplication(final String appURI, final int nbVM, final Class submissionInterface) throws Exception {
         final ApplicationSubmissionI aps = ( ApplicationSubmissionI ) this.owner;
         return this.owner.handleRequestSync( new ComponentI.ComponentService<String[]>() {
             @Override
@@ -63,7 +63,7 @@ public class ApplicationSubmissionInboundPort extends AbstractInboundPort implem
 	}
 
 	@Override
-	public void stopApplication(String appUri) throws Exception {
+	public void stopApplication(final String appUri) throws Exception {
 		final ApplicationSubmissionI aps = ( ApplicationSubmissionI ) this.owner;
         this.owner.handleRequestSync( new ComponentI.ComponentService<Void>() {
             @Override

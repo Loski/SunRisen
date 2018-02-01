@@ -133,7 +133,7 @@ implements	ApplicationVMManagementI
 	}
 
 	@Override
-	public void			connectWithRequestSubmissioner(String rgURI, String RequestNotificationInboundPortURI) throws Exception {
+	public void			connectWithRequestSubmissioner(final String rgURI, final String RequestNotificationInboundPortURI) throws Exception {
 		// TODO Auto-generated method stub
 		final ApplicationVMManagementI avm =
 				(ApplicationVMManagementI) this.owner ;
@@ -148,7 +148,7 @@ implements	ApplicationVMManagementI
 	}
 
 	@Override
-	public void desallocateCores(int nbCore) throws Exception {
+	public void desallocateCores(final int nbCore) throws Exception {
 		final ApplicationVMManagementI avm = (ApplicationVMManagementI) this.owner ;
 		this.owner.handleRequestSync(
 			new ComponentI.ComponentService<Void>() {
