@@ -364,7 +364,7 @@ implements
 		vm.endRequest(r.getRequestURI());
 		if(!this.virtualMachineWaitingForDisconnection.isEmpty() && this.virtualMachineWaitingForDisconnection.contains(vm.getVmURI()))
 		{
-			if(vm.getAvmiovp().getDynamicState().getNumberOfRequestInQueue()==0)
+			if(vm.getRequestInQueue().isEmpty())
 			{
 				this.virtualMachineWaitingForDisconnection.remove(vm.getVmURI());
 				this.disconnectVirtualMachine(vm);
@@ -387,7 +387,7 @@ implements
 			if (RequestGenerator.DEBUG_LEVEL >= 1) 
 				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),vm.getVmURI(),port.getPortURI()));
 			
-			this.taskExecutedBy.put(req.getRequestURI(),getCurrentVMData());
+			this.taskExecutedBy.put(req.getRequestURI(),vm);
 		}
 		
 		if (RequestGenerator.DEBUG_LEVEL >= 1) 
@@ -466,7 +466,7 @@ implements
 			if (RequestGenerator.DEBUG_LEVEL >= 1) 
 				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),vm.getVmURI(),port.getPortURI()));
 			
-			this.taskExecutedBy.put(req.getRequestURI(),getCurrentVMData());
+			this.taskExecutedBy.put(req.getRequestURI(),vm);
 		}
 	}
 
@@ -501,7 +501,7 @@ implements
 		{			
 			VirtualMachineData vmData = this.requestVirtalMachineDataMap.remove(vmURI);
 			this.virtualMachineDataList.remove(vmData);
-			if(vmData.getAvmiovp().getDynamicState().getNumberOfRequestInQueue()==0)
+			if(vmData.getRequestInQueue().isEmpty())
 			{
 				this.disconnectVirtualMachine(vmData);
 			}
