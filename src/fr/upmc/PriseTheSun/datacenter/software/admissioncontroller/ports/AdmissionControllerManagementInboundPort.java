@@ -25,8 +25,8 @@ public class AdmissionControllerManagementInboundPort extends AbstractInboundPor
 	 * @see fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI#linkComputer(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
 	 */
 	@Override
-	public void linkComputer(String computerURI, String ComputerServicesInboundPortURI,
-			String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI)
+	public void linkComputer(final String computerURI, final String ComputerServicesInboundPortURI,
+			final String ComputerStaticStateDataInboundPortURI, final String ComputerDynamicStateDataInboundPortURI)
 			throws Exception {
 		final AdmissionControllerManagementI acm = ( AdmissionControllerManagementI ) this.owner;
 

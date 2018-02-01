@@ -32,8 +32,8 @@ public class ProcessorsControllerManagmentInboundPort extends AbstractInboundPor
 		}
 
 	@Override
-	public void bindProcessor(String processorURI, String processorControllerInboundPortURI,
-		String processorManagementURI, String ProcessorStaticStateDataInboundPortURI, String ProcessorDynamicStateDataInoundPortURI) throws Exception {
+	public void bindProcessor(final String processorURI, final String processorControllerInboundPortURI,
+			final String processorManagementURI, final String ProcessorStaticStateDataInboundPortURI, final String ProcessorDynamicStateDataInoundPortURI) throws Exception {
 		final ProcessorsControllerManagementI pcm = ( ProcessorsControllerManagementI ) this.owner;
 		
 		this.owner.handleRequestSync(
@@ -47,7 +47,7 @@ public class ProcessorsControllerManagmentInboundPort extends AbstractInboundPor
 		}
 
 	@Override
-	public boolean setCoreFrequency(CoreAsk ask, String processorURI, int coreNo)
+	public boolean setCoreFrequency(final CoreAsk ask, final String processorURI, final  int coreNo)
 			throws UnavailableFrequencyException, UnacceptableFrequencyException, Exception {
 		final ProcessorsControllerManagementI pcm = ( ProcessorsControllerManagementI ) this.owner;
 		return this.owner.handleRequestSync(

@@ -129,7 +129,7 @@ implements	ComputerServicesI
 
 
 	@Override
-	public ArrayList<Point> reserveCores(int nbCore) throws Exception {
+	public ArrayList<Point> reserveCores(final int nbCore) throws Exception {
 		final Computer c = (Computer) this.owner ;
 		return c.handleRequestSync(
 			new ComponentI.ComponentService<ArrayList<Point>>() {
@@ -142,7 +142,7 @@ implements	ComputerServicesI
 
 
 	@Override
-	public void releaseCore(ArrayList<Point> pts) throws Exception {
+	public void releaseCore(final ArrayList<Point> pts) throws Exception {
 		final Computer c = (Computer) this.owner ;
 		c.handleRequestSync(
 			new ComponentI.ComponentService<Void>() {
@@ -155,7 +155,7 @@ implements	ComputerServicesI
 	}
 
 	@Override
-	public AllocatedCore[] allocateCores(ArrayList<Point> cores) throws Exception {
+	public AllocatedCore[] allocateCores(final ArrayList<Point> cores) throws Exception {
 		final Computer c = (Computer) this.owner ;
 		return c.handleRequestSync(
 					new ComponentI.ComponentService<AllocatedCore[]>() {

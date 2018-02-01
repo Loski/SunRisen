@@ -36,7 +36,7 @@ implements	RequestDispatcherManagementI
 	}
 
 	@Override
-	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception {
+	public void connectVirtualMachine(final String vmURI, final String requestSubmissionInboundPortURI) throws Exception {
 		
 		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
 		
@@ -51,7 +51,7 @@ implements	RequestDispatcherManagementI
 	}
 
 	@Override
-	public void askVirtualMachineDisconnection(String vmURI) throws Exception {
+	public void askVirtualMachineDisconnection(final String vmURI) throws Exception {
 		
 		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
 		
@@ -66,7 +66,7 @@ implements	RequestDispatcherManagementI
 	}
 
 	@Override
-	public void connectWithRequestGenerator(String rgURI, String requestNotificationInboundPortURI) throws Exception {
+	public void connectWithRequestGenerator(final String rgURI, final String requestNotificationInboundPortURI) throws Exception {
 
 		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
 		
@@ -96,7 +96,7 @@ implements	RequestDispatcherManagementI
 	}
 
 	@Override
-	public void connectController(String controllerURI, String VMDisconnectionHandlerInboundPortURI) throws Exception {
+	public void connectController(final String controllerURI, final String VMDisconnectionHandlerInboundPortURI) throws Exception {
 		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
 		
 		this.owner.handleRequestSync(

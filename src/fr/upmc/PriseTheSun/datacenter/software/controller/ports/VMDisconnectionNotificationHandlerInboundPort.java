@@ -25,7 +25,7 @@ public class VMDisconnectionNotificationHandlerInboundPort extends AbstractInbou
 	}
 
 	@Override
-	public void receiveVMDisconnectionNotification(String vmURI) throws Exception {
+	public void receiveVMDisconnectionNotification(final String vmURI) throws Exception {
 		final VMDisconnectionNotificationHandlerI handler = ( VMDisconnectionNotificationHandlerI ) this.owner;
 		
 		 this.owner.handleRequestSync(
