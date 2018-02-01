@@ -3,8 +3,10 @@ package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -62,7 +64,8 @@ implements
 		REQUEST_SUBMISSION, REQUEST_NOTIFICATION, MANAGEMENT, INTROSPECTION, STATIC_STATE,
 		DYNAMIC_STATE
 	}
-
+	
+	//public static int NB_REQUEST_MAX_IN_QUEUE = 10;
 
 	public static int	DEBUG_LEVEL = 2 ;
 	
@@ -111,6 +114,8 @@ implements
 	
 	protected int nbRequestTerminated = 0;
 	protected int nbRequestReceived = 0;
+	
+	protected Queue<RequestI> queue;
 
 	
 	/**
@@ -211,6 +216,37 @@ implements
 				
 				this.virtualMachineWaitingForDisconnection = new HashSet<String>();
 				this.taskExecutedBy = new HashMap<String,VirtualMachineData>();
+				this.queue = new LinkedList<RequestI>();
+	}
+	
+	protected VirtualMachineData findAvaibleVM() throws Exception
+	{		
+		if(this.virtualMachineDataList.size()==1)
+		{
+			return this.virtualMachineDataList.get(0);
+		}
+		else if(this.getCurrentVMData().getRequestInQueue().isEmpty())
+			return this.getCurrentVMData();
+		else
+		{
+			synchronized(this.lock)
+			{
+				int previousIndex = this.currentVM;
+				this.nextVM();
+				while(this.currentVM!=previousIndex)
+				{
+					if(this.getCurrentVMData().getRequestInQueue().isEmpty())
+					{
+						VirtualMachineData avaible = this.getCurrentVMData();
+						this.nextVM();
+						return avaible;
+					}		
+					this.nextVM();
+				}
+				
+				return null;
+			}
+		}
 	}
 	
 	protected void nextVM()
@@ -221,16 +257,6 @@ implements
 	protected VirtualMachineData getCurrentVMData()
 	{
 		return this.virtualMachineDataList.get(this.currentVM);
-	}
-
-	protected RequestSubmissionOutboundPort getCurrentVMPort()
-	{
-		return this.virtualMachineDataList.get(this.currentVM).getRsobp();
-	}
-	
-	protected String getCurrentVMURI()
-	{
-		return this.virtualMachineDataList.get(this.currentVM).getVmURI();
 	}
 	
 	protected Double averageTime()
@@ -269,16 +295,30 @@ implements
 
 		assert r != null;
 		
-		getCurrentVMData().addRequest(this.rdURI,r.getRequestURI());
-		
-		RequestSubmissionOutboundPort port = getCurrentVMPort();
-		port.submitRequest(r);
+		if(this.queue.isEmpty())
+		{	
+			VirtualMachineData vm = findAvaibleVM();
+			
+			if(vm==null)
+			{
+				this.queue.add(r);
+			}
+			else
+			{
+				vm.addRequest(this.rdURI,r.getRequestURI());
+				
+				RequestSubmissionOutboundPort port = vm.getRsobp();
+				port.submitRequest(r);
 
-		this.taskExecutedBy.put(r.getRequestURI(),getCurrentVMData());
-		
-		this.nbRequestReceived++;
-		
-		this.nextVM();
+				this.taskExecutedBy.put(r.getRequestURI(),getCurrentVMData());
+				
+				this.nbRequestReceived++;
+			}
+		}
+		else
+		{
+			this.queue.add(r);
+		}
 	}
 
 	@Override
@@ -286,20 +326,33 @@ implements
 		
 		assert r != null;
 		
-		getCurrentVMData().addRequest(this.rdURI,r.getRequestURI());
-		
-		RequestSubmissionOutboundPort port = getCurrentVMPort();
-		
-		if (RequestGenerator.DEBUG_LEVEL >= 1) 
-			this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,r.getRequestURI(),getCurrentVMURI(),port.getPortURI()));
-		
-		port.submitRequestAndNotify(r);
-		
-		this.taskExecutedBy.put(r.getRequestURI(),getCurrentVMData());
-		
-		this.nbRequestReceived++;
-		
-		this.nextVM();
+		if(this.queue.isEmpty())
+		{	
+			VirtualMachineData vm = findAvaibleVM();
+			
+			if(vm==null)
+			{
+				this.queue.add(r);
+			}
+			else
+			{
+				vm.addRequest(this.rdURI,r.getRequestURI());
+				
+				RequestSubmissionOutboundPort port = vm.getRsobp();
+				port.submitRequest(r);
+				
+				if (RequestGenerator.DEBUG_LEVEL >= 1) 
+					this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,r.getRequestURI(),vm.getVmURI(),port.getPortURI()));
+				
+				this.taskExecutedBy.put(r.getRequestURI(),getCurrentVMData());
+				
+				this.nbRequestReceived++;
+			}
+		}
+		else
+		{
+			this.queue.add(r);
+		}
 	}
 
 	@Override
@@ -321,6 +374,21 @@ implements
 		this.requestNotificationOutboundPort.notifyRequestTermination( r );
 		
 		this.nbRequestTerminated++;
+		
+		if(!this.queue.isEmpty())
+		{
+			RequestI req = this.queue.remove();
+			
+			vm.addRequest(this.rdURI,req.getRequestURI());
+			
+			RequestSubmissionOutboundPort port = vm.getRsobp();
+			port.submitRequest(req);
+			
+			if (RequestGenerator.DEBUG_LEVEL >= 1) 
+				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),vm.getVmURI(),port.getPortURI()));
+			
+			this.taskExecutedBy.put(req.getRequestURI(),getCurrentVMData());
+		}
 		
 		if (RequestGenerator.DEBUG_LEVEL >= 1) 
 			this.logMessage(String.format("RequestDispatcher [%s] notifies end of request %s",this.rdURI,r.getRequestURI()));
@@ -385,6 +453,21 @@ implements
 		
 		if (RequestGenerator.DEBUG_LEVEL >= 2)
 			this.logMessage(String.format("[%s] Connecting %s with %s using %s -> %s",getConnectorSimpleName(),this.rdURI,vmURI,rsobp.getPortURI(),requestSubmissionInboundPortURI));
+	
+		if(!this.queue.isEmpty())
+		{
+			RequestI req = this.queue.remove();
+			
+			vm.addRequest(this.rdURI,req.getRequestURI());
+			
+			RequestSubmissionOutboundPort port = vm.getRsobp();
+			port.submitRequest(req);
+			
+			if (RequestGenerator.DEBUG_LEVEL >= 1) 
+				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),vm.getVmURI(),port.getPortURI()));
+			
+			this.taskExecutedBy.put(req.getRequestURI(),getCurrentVMData());
+		}
 	}
 
 	protected void disconnectVirtualMachine(VirtualMachineData vmData) throws Exception

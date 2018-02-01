@@ -642,7 +642,7 @@ implements	ProcessorServicesNotificationConsumerI,
 			if(!this.allocatedCoresIdleStatus.get(ac))
 			{
 				idle=false;
-			}		
+			}
 			coreNumber[i]=ac.coreNo;
 			processorURI=ac.processorURI;
 			i++;
