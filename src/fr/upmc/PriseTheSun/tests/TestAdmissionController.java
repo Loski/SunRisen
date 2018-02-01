@@ -174,7 +174,7 @@ extends		AbstractCVM
 		for(int i = 0; i < this.apmop.length;i++) {
 			Thread.sleep(500);
 			//this.apmop[i].createAndSendApplication();
-			this.apmop[i].createAndSendApplication(RequestSubmissionI.class);
+			this.apmop[i].createAndSendApplication();
 		}
 		
 		

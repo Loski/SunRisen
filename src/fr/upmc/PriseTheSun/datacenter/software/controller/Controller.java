@@ -180,7 +180,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 
 		this.rddsdop.doConnection(requestDispatcherDynamicStateDataInboundPortURI, ControlledDataConnector.class.getCanonicalName());
-		//this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
+		this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
 		
 		
 		this.pcmop = new ProcessorsControllerManagementOutboundPort("pcmop-"+this.controllerURI, this);
@@ -202,7 +202,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 		rdmop = new RequestDispatcherManagementOutboundPort(controllerURI + "-rdmop",
 				this);
-
 		this.addPort(rdmop);
 		this.rdmop.publishPort();
 		
@@ -226,6 +225,9 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		this.controllerManagementPreviousInboundPort = controllerManagementPreviousPort;
 		this.controllerManagementNextInboundPort = controllerManagementNextPort;
+		
+		
+		this.startPushing();
 
 	}
 	
