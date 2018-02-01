@@ -219,7 +219,7 @@ implements
 				this.queue = new LinkedList<RequestI>();
 	}
 	
-	protected VirtualMachineData findAvaibleVM() throws Exception
+	protected VirtualMachineData findAvaibleVM()
 	{		
 		if(this.virtualMachineDataList.size()==1)
 		{
