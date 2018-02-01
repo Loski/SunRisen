@@ -162,6 +162,8 @@ implements 	ApplicationSubmissionI,
 	private String ADMNodeControllerManagementInboundPort;
 
 	private String nextControllerManagement;
+	
+	private HashMap<String,Class<?>> submissionInterfaces;
 
 	/*protected static final String RequestDispatcher_JVM_URI = "controller" ;
 	protected static final String Application_VM_JVM_URI = "controller";*/
@@ -241,6 +243,8 @@ implements 	ApplicationSubmissionI,
 		this.freeApplicationVM = new ArrayList<>();
 		this.VMforNewApplication = new ArrayList<>();
 		this.processorController = new ProcessorsController("controller", ProcessorControllerManagementInboundPortURI);
+		
+		this.submissionInterfaces = new HashMap<>();
 		
 	}
 
@@ -483,13 +487,22 @@ implements 	ApplicationSubmissionI,
 			}
 		}
 		
-		Class<?> dispa = RequestDispatcherCreator.createRequestDispatcher("JAVASSIST-dispa", RequestDispatcher.class, submissionInterface);
+		Class<?> dispa = this.submissionInterfaces.get(submissionInterface.getName());
+		
+		if(dispa==null)
+		{
+			dispa = RequestDispatcherCreator.createRequestDispatcher("JAVASSIST-dispa", RequestDispatcher.class, submissionInterface);
+			this.submissionInterfaces.put(submissionInterface.getName(), dispa);
+		}
+		
 		String dispatcherUri[] = createDispatcher(appURI, dispa.getCanonicalName());
 		
 		String controllerUris[] = this.createController(appURI,dispatcherUri[6],dispatcherUri[8],dispatcherUri[0], vm);
 
 		this.rdmopMap.get(appURI).connectController(controllerUris[0],controllerUris[6]);
+		
 		return dispatcherUri;
+		
 	}
 	
 	private ApplicationVMManagementOutboundPort findVM(String vmUri) throws Exception {

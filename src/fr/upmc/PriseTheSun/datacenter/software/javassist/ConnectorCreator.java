@@ -14,6 +14,7 @@ public class ConnectorCreator extends ClassCreator{
 	{
 		System.out.println("CREATING NEW JAVASSIST CONNECTOR FOR :"+submissionInterface.getSimpleName());
 		
+		try {
 		ClassPool pool = ClassPool.getDefault();
 		
 		CtClass test = createClass(className, submissionInterface,AbstractConnector.class);
@@ -41,6 +42,12 @@ public class ConnectorCreator extends ClassCreator{
 		Class<?> clazz = pool.toClass(test);
 		
 		return clazz;
+		
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+			return null;
+		}
 
 	}
 	
