@@ -24,25 +24,20 @@ public class ComputerControllerManagementOutboutPort extends AbstractOutboundPor
 		}
 
 	@Override
-	public int reserveCore(String controllerURI) throws Exception {
-		return ((ComputerControllerManagementI)this.connector).reserveCore(controllerURI);
+	public int tryReserveCore(String vmUri, int nbToReserve) throws Exception {
+		return ((ComputerControllerManagementI)this.connector).tryReserveCore(vmUri, nbToReserve);
 	}
 
 	@Override
-	public void releaseCore(String controllerURI) throws Exception {
-		((ComputerControllerManagementI)this.connector).releaseCore(controllerURI);
+	public void releaseCore(String vmUri) throws Exception {
+		((ComputerControllerManagementI)this.connector).releaseCore(vmUri);
 	}
 
 	@Override
-	public AllocatedCore[] addCores(String controllerURI) throws Exception {
-		return ((ComputerControllerManagementI)this.connector).addCores(controllerURI);
+	public AllocatedCore[] addCores(String vmUri) throws Exception {
+		return ((ComputerControllerManagementI)this.connector).addCores(vmUri);
 	}
 
-	@Override
-	public boolean supCores(int nbCores, String vmUri) throws Exception {
-		return ((ComputerControllerManagementI)this.connector).supCores(nbCores, vmUri);
-
-	}
 
 	public AllocatedCore[] allocateCores(int i) throws Exception {
 		return ((ComputerControllerManagementI)this.connector).allocateCores(i);

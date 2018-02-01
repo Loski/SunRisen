@@ -101,9 +101,28 @@ extends		OfferedI,
 	public AllocatedCore[]	allocateCores(final int numberRequested)
 	throws Exception ;
 
-
-	public ArrayList<Point> reserveCores(int nbCore) throws Exception;
-	public void releaseCore(ArrayList<Point> pts) throws Exception;
+	/**
+	 * Réserve <code>numberRequested</code> cores de cet ordinateur
+	 * @param numberRequested
+	 * @return Un tableau de point stockant l'adresse du core (processors/cores)
+	 * @throws Exception
+	 */
+	public ArrayList<Point> reserveCores(final int numberRequested) throws Exception;
+	
+	/**
+	 * Libère les coeurs réservés fournis par <code>cores</code>
+	 * @param pts Adresse des coeurs
+	 * @throws Exception
+	 */
+	public void releaseCore(ArrayList<Point> cores) throws Exception;
+	
+	/**
+	 * Alloue les coeurs réservés
+	 * @param cores Adresse des cores réservés
+	 * @return an array of instances of <code>AllocatedCore</code> with the data about the allocated cores.
+	 * @throws Exception
+	 */
 	public AllocatedCore[] allocateCores(ArrayList<Point> cores) throws Exception;
 	
+
 }

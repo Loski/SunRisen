@@ -129,13 +129,13 @@ implements	ComputerServicesI
 
 
 	@Override
-	public ArrayList<Point> reserveCores(final int nbCore) throws Exception {
+	public ArrayList<Point> reserveCores(final int numberRequested) throws Exception {
 		final Computer c = (Computer) this.owner ;
 		return c.handleRequestSync(
 			new ComponentI.ComponentService<ArrayList<Point>>() {
 				@Override
 				public ArrayList<Point> call() throws Exception {
-					 return c.reserveCores(nbCore);
+					 return c.reserveCores(numberRequested);
 				}
 		});
 	}

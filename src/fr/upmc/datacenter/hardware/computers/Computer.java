@@ -1141,10 +1141,10 @@ implements	ProcessorStateDataConsumerI,
 			Point pt =  tmp.remove(0);
 			cores[i] = new AllocatedCore(
 					(int) pt.getX(),
-					this.processorsURI.get(pt.getX()), 
+					this.processorsURI.get((int)pt.getY()), 
 					pt.y,
 					this.processorsInboundPortURI.get(
-										this.processorsURI.get(pt.getX()))) ;
+										this.processorsURI.get((int)pt.getX()))) ;
 			i++;
 		}
 		return cores;

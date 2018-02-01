@@ -86,8 +86,8 @@ implements	ComputerServicesI
 	}
 
 	@Override
-	public ArrayList<Point> reserveCores(int nbCore) throws Exception {
-		return ((ComputerServicesI)this.offering).reserveCores(nbCore);
+	public ArrayList<Point> reserveCores(int numberRequested) throws Exception {
+		return ((ComputerServicesI)this.offering).reserveCores(numberRequested);
 	}
 
 	@Override

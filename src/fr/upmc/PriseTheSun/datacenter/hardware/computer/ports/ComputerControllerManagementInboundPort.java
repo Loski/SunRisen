@@ -28,27 +28,27 @@ public class ComputerControllerManagementInboundPort extends AbstractInboundPort
 		}
 
 	@Override
-	public int reserveCore(final String controllerURI) throws Exception {
+	public int tryReserveCore(final String vmUri, final int nbToReserve) throws Exception {
 		final ComputerControllerManagementI ccm = ( ComputerControllerManagementI ) this.owner;
 
 		 return this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Integer>() {
 					@Override
 					public Integer call() throws Exception {
-						return ccm.reserveCore(controllerURI);
+						return ccm.tryReserveCore(vmUri, nbToReserve);
 					}
 				}
 		);
 	}
 
 	@Override
-	public void releaseCore(final String controllerURI) throws Exception {
+	public void releaseCore(final String vmUri) throws Exception {
 		final ComputerControllerManagementI ccm = ( ComputerControllerManagementI ) this.owner;
 		 this.owner.handleRequestSync(
 					new ComponentI.ComponentService<Void>() {
 						@Override
 						public Void call() throws Exception {
-							ccm.releaseCore(controllerURI);
+							ccm.releaseCore(vmUri);
 							return null;
 						}
 					}
@@ -56,33 +56,20 @@ public class ComputerControllerManagementInboundPort extends AbstractInboundPort
 	}
 
 	@Override
-	public AllocatedCore[] addCores(final String controllerURI) throws Exception {
+	public AllocatedCore[] addCores(final String vmUri) throws Exception {
 		final ComputerControllerManagementI ccm = ( ComputerControllerManagementI ) this.owner;
 
 		 return this.owner.handleRequestSync(
 				new ComponentI.ComponentService<AllocatedCore[]>() {
 					@Override
 					public AllocatedCore[] call() throws Exception {
-						return ccm.addCores(controllerURI);
+						return ccm.addCores(vmUri);
 						
 					}
 				}
 		);
 	}
 
-	@Override
-	public boolean supCores(final int nbCores, final String vmUri) throws Exception {
-		final ComputerControllerManagementI ccm = ( ComputerControllerManagementI ) this.owner;
-		 return this.owner.handleRequestSync(
-				new ComponentI.ComponentService<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return ccm.supCores(nbCores, vmUri);
-						
-					}
-				}
-		);
-	}
 
 	@Override
 	public AllocatedCore[] allocateCores(final int i) throws Exception {

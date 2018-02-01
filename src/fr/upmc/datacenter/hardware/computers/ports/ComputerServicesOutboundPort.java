@@ -108,13 +108,13 @@ implements	ComputerServicesI
 
 
 	@Override
-	public ArrayList<Point> reserveCores(int nbCore) throws Exception {
-		return ((ComputerServicesI)this.connector).reserveCores(nbCore);
+	public ArrayList<Point> reserveCores(int numberRequested) throws Exception {
+		return ((ComputerServicesI)this.connector).reserveCores(numberRequested);
 	}
 
 	@Override
-	public void releaseCore(ArrayList<Point> pts) throws Exception {
-		((ComputerServicesI)this.connector).releaseCore(pts);
+	public void releaseCore(ArrayList<Point> cores) throws Exception {
+		((ComputerServicesI)this.connector).releaseCore(cores);
 	}
 
 	@Override

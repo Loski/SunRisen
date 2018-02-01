@@ -5,9 +5,31 @@ import fr.upmc.components.interfaces.RequiredI;
 import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
 
 public interface ComputerControllerManagementI extends OfferedI, RequiredI {
-	public int reserveCore(String controllerURI) throws Exception;
-	public void releaseCore(String controllerURI) throws Exception;
-	public AllocatedCore[] addCores(String controllerURI) throws Exception;
-	public boolean supCores(int nbCores, String vmUri ) throws Exception;
+	/**
+	 * Réserve nbToReserve coeurs dans le computer pour l'uri de la vm passé en paramètre.
+	 * @param vmURI
+	 * @param nbToReserve Nombre de coeurs à réserver
+	 * @return Le nombre de coeurs réservés
+	 * @throws Exception
+	 */
+	public int tryReserveCore(String vmURI, int nbToReserve) throws Exception;
+	
+	/**
+	 * Libère tous les coeurs réservés de la VM
+	 * @param vmURI
+	 * @throws Exception
+	 */
+	public void releaseCore(String vmURI) throws Exception;
+	
+	//TODO Définir mieux ?
+	/**
+	 * Demande l'allocation des coeurs.
+	 * @param vmURI
+	 * @return
+	 * @throws Exception
+	 */
+	public AllocatedCore[] addCores(String vmURI) throws Exception;
+	
+	
 	public AllocatedCore[] allocateCores(int i) throws Exception;
 }

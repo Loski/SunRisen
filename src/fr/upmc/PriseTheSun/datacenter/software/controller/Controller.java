@@ -48,6 +48,7 @@ import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.connectors.ControlledDataConnector;
+import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
 import fr.upmc.datacenter.interfaces.ControlledDataRequiredI;
 import fr.upmc.datacenter.interfaces.PushModeControllingI;
@@ -93,7 +94,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 	 
 	private List<ApplicationVMInfo> myVMs;
 	
-	private Map<String, ComputerControllerManagementOutboutPort> cmops;
 	
 	
 	/** Ring network port **/
@@ -107,7 +107,12 @@ implements 	RequestDispatcherStateDataConsumerI,
 	public final static int PUSH_INTERVAL = 1000;
 	public final static int REQUEST_MIN = PUSH_INTERVAL/100;
 	
+	/** Vm vers le controller de son computer */
+	private Map<String, ComputerControllerManagementOutboutPort> cmops;
 	
+	/** VM vers son port Out de management */
+	private Map<String, ApplicationVMManagementOutboundPort> avms;
+
 	private String appURI; 	
 	private Writter w;
 	private Object o = new Object();
@@ -116,6 +121,30 @@ implements 	RequestDispatcherStateDataConsumerI,
 	
 	private VMDisconnectionNotificationHandlerInboundPort vmnibp;
 	private String nextRingDynamicStateDataInboundPort;
+	
+	
+	static class StaticData {
+		public static final double AVERAGE_TARGET=5E9D;
+		
+		public static final double VERRY_MUCH_LOWER_PERCENT= 0.5;
+		public static final double LOWER_PERCENT= 0.95;
+		public static final double HIGHER_PERCENT= 0.05;
+		public static final double VERY_MUCH_HIGHER_PERCENT=0.5;
+
+		public static final double TARGET_VERY_HIGHT = AVERAGE_TARGET * VERY_MUCH_HIGHER_PERCENT + AVERAGE_TARGET;
+		public static final double TARGET_HIGHT = AVERAGE_TARGET * HIGHER_PERCENT + AVERAGE_TARGET;
+		public static final double TARGET_LOWER = AVERAGE_TARGET * LOWER_PERCENT;
+		public static final double TARGET_VERY_LOWER = AVERAGE_TARGET * LOWER_PERCENT;
+
+		public static int DISPATCHER_PUSH_INTERVAL=5000;
+		public static int NB_VM_RESERVED = 1;
+		//Max core
+		public static int MAX_ALLOCATION=25;
+		
+		public static int MIN_ALLOCATED_CORE = 2;
+
+	}
+	
 	
 	public Controller(
 			String appURI, 
@@ -191,7 +220,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		rdsdop = new RingNetworkDynamicStateDataOutboundPort(this, RingDynamicStateDataOutboundPortURI);
 		this.addPort(rdsdop);
 		this.rdsdop.publishPort();
-		System.err.println(nextRingDynamicStateDataInboundPort);
 		this.rdsdop.doConnection(nextRingDynamicStateDataInboundPort, ControlledDataConnector.class.getCanonicalName());
 		
 		this.nextRingDynamicStateDataInboundPort = nextRingDynamicStateDataInboundPort;
@@ -211,7 +239,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.vmReserved = new ArrayList<ApplicationVMInfo>();
 		this.myVMs =  new ArrayList<ApplicationVMInfo>();
 		this.cmops = new HashMap<String, ComputerControllerManagementOutboutPort>();
-		this.addVm(vm);
+		this.avms = new HashMap<String, ApplicationVMManagementOutboundPort>();
+		
 		
 		this.statistique = new HashMap<String, ArrayList<Double>>();
 		
@@ -226,7 +255,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.controllerManagementPreviousInboundPort = controllerManagementPreviousPort;
 		this.controllerManagementNextInboundPort = controllerManagementNextPort;
 		
-		
+		this.addVm(vm);
+
 		this.startPushing();
 
 	}
@@ -234,12 +264,14 @@ implements 	RequestDispatcherStateDataConsumerI,
 	private Double calculAverage(String VMUri) {
 		ArrayList<Double> tmp = (ArrayList<Double>) this.statistique.get(VMUri).clone();
 		Double average = 0.0;
-		for(int i = 0; i < tmp.size(); i++) {
-			average += tmp.get(i);
+		double alpha = 0.8;
+		int taille = tmp.size();
+		Double[] result = new Double[taille];
+		result[0] =  tmp.get(0);
+		for(int i = 1; i < taille; i++) {
+			result[i] = alpha * tmp.get(i) + (1 - alpha) * result[i-1];
 		}
-		Double value =  average / tmp.size();
-		tmp.clear();
-		return value;
+		return result[taille-1];
 	}
 	
 	private Double calculAverage() {
@@ -255,6 +287,10 @@ implements 	RequestDispatcherStateDataConsumerI,
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
 		//this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
 
+		if((waitDecision % REQUEST_MIN) == 0) {
+			//TODO Demander à loic si les vms peuvent être null
+			reserveCore(currentDynamicState.getVirtualMachineDynamicStates(), 1);
+		}
 		waitDecision++;
 		if(currentDynamicState.getAvgExecutionTime() == null) {
 			return;
@@ -277,8 +313,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 	    
 		if((waitDecision % REQUEST_MIN) == 0) {
 			processControl(currentDynamicState.getVirtualMachineDynamicStates());
-			
-			
 			//On redonne les VMs au prochain controller.
 			while(!vmReserved.isEmpty()) {
 				synchronized (o) {
@@ -288,13 +322,14 @@ implements 	RequestDispatcherStateDataConsumerI,
 		}
 	}
 	
+
+
 	/**
 	 * @see fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStateDataConsumerI#acceptRequestDispatcherStaticData(java.lang.String, fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStaticStateI)
 	 */
 	@Override
 	public void acceptRequestDispatcherStaticData(String dispatcherURI, RequestDispatcherStaticStateI staticState)
 			throws Exception {
-		// TODO Auto-generated method stub
 		System.out.println("Dispatcher Static Data : ");
 	}
 	
@@ -326,32 +361,26 @@ implements 	RequestDispatcherStateDataConsumerI,
     }
     
 	public Threeshold getThreeshold(Double time){
-		if(isHigher(time))
+		if(false) {
+			return Threeshold.GOOD;
+		}
+		else if(Double.compare(time, (StaticData.TARGET_HIGHT)) == 1)
 			return Threeshold.HIGHER;
-		else if(isLower(time)) {
+		else if(Double.compare(time, (StaticData.TARGET_LOWER)) == -1) {
 			return Threeshold.LOWER;
 		}else {
 			return Threeshold.GOOD;
 		}
 	}
 
-	private boolean isHigher(Double time){
-		return Double.compare(time, (StaticData.TARGET_HIGHT)) == 1 ? true : false;
-	}
-
-	private boolean isLower(Double time){
-		return Double.compare(time, (StaticData.TARGET_LOWER)) == -1 ? true : false;
-	}
 	
-	private synchronized void processControl(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
-		double factor=0;
-		int number=0;
+	private void processControl(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		double average = calculAverage();
 		this.logMessage("" +average);
 		this.logMessage("" + waitDecision);
-
+		Threeshold th = getThreeshold(average);
 		try {
-			switch(getThreeshold(average)){
+			switch(th){
 			case HIGHER :
 
 				tooSlowCase(vms);
@@ -369,8 +398,11 @@ implements 	RequestDispatcherStateDataConsumerI,
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
-		w.write(Arrays.asList(""+average, ((Integer)vms.size()).toString()));
-
+		
+		//Release les cores
+		releaseCore(vms);
+		
+		w.write(Arrays.asList(""+average, ((Integer)vms.size()).toString(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms)));
 	}
 
 	/**
@@ -394,7 +426,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	 * @param vms
 	 * @throws Exception 
 	 */
-	private void tooFastCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
+	private void tooSlowCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		
 		//Add a vm
 		/*if(!vmReserved.isEmpty())
@@ -409,6 +441,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 		//int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.HIGHER, randomVM);
 		System.err.println("je passe par lower mdr");
 
+		//Ajoute les cores
+		this.addCores(vms);
 		
 		//System.err.println("!!!!!!!!! " +this.cmops.get(randomVM.getApplicationVMURI()).reserveCore(randomVM.getApplicationVMURI()));
 	}
@@ -420,7 +454,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	 * @param vms
 	 * @throws Exception 
 	 */
-	private void tooSlowCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
+	private void tooFastCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		
 		boolean canRemoveVM = vms.size() > 1;
 		//boolean canDesalocate = coresAllocates  == StaticData.MIN_ALLOCATION;
@@ -432,6 +466,13 @@ implements 	RequestDispatcherStateDataConsumerI,
 			System.err.println("remove a vm");
 		}
 		
+		for (Entry<String, ApplicationVMDynamicStateI> entry : vms.entrySet())
+		{
+			if(entry.getValue().getAllocatedCoresNumber().length > StaticData.MIN_ALLOCATED_CORE) {
+				this.avms.get(entry.getKey()).desallocateCores(1);
+			}
+		}
+
 		
 		//System.err.println("!!!!!!!!! " +this.cmops.get(randomVM.getApplicationVMURI()).reserveCore(randomVM.getApplicationVMURI()));
 
@@ -457,27 +498,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		return nb;
 	}
 	
-	static class StaticData {
-		public static final double AVERAGE_TARGET=5E9D;
-		
-		public static final double VERRY_MUCH_LOWER_PERCENT= 0.5;
-		public static final double LOWER_PERCENT= 0.25;
-		public static final double HIGHER_PERCENT= 0.25;
-		public static final double VERY_MUCH_HIGHER_PERCENT=0.5;
 
-		public static final double TARGET_VERY_HIGHT = AVERAGE_TARGET * VERY_MUCH_HIGHER_PERCENT + AVERAGE_TARGET;
-		public static final double TARGET_HIGHT = AVERAGE_TARGET * HIGHER_PERCENT + AVERAGE_TARGET;
-		public static final double TARGET_LOWER = AVERAGE_TARGET * LOWER_PERCENT;
-		public static final double TARGET_VERY_LOWER = AVERAGE_TARGET * LOWER_PERCENT;
-
-		public static int DISPATCHER_PUSH_INTERVAL=5000;
-		public static int NB_VM_RESERVED = 1;
-		//Max core
-		public static int MAX_ALLOCATION=25;
-		
-		public static int MIN_ALLOCATION = 2;
-
-	}
 
 	/**
 	 * @see fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI#acceptRingNetworkDynamicData(java.lang.String, fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkDynamicStateI)
@@ -637,9 +658,9 @@ implements 	RequestDispatcherStateDataConsumerI,
 							vm.getComputerManagementInboundPortURI(),
 							ComputerControllerConnector.class.getCanonicalName());
 			}
-			this.cmops.put(vm.getApplicationVM(), ccmop);			
+			this.cmops.put(vm.getApplicationVM(), ccmop);
+			this.avms.put(vm.getApplicationVM(), avmPort);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -647,7 +668,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	@Override
 	public void receiveVMDisconnectionNotification(String vmURI) throws Exception {
 		assert vmURI != null;
-		
+		//TODO ajouter libération des coeurs réservés?
 		System.err.println("Receive a vm disconnected" + this.myVMs.size());
 		for(int i = 0; i < this.myVMs.size(); i++) {
 			if(myVMs.get(i).getApplicationVM().equals(vmURI)) {
@@ -714,5 +735,64 @@ implements 	RequestDispatcherStateDataConsumerI,
 	public void startPushing() throws Exception {
 		this.startUnlimitedPushing(RingDynamicState.RING_INTERVAL_TIME);
 	}
+
+	
+	private void reserveCore(Map<String, ApplicationVMDynamicStateI> virtualMachineDynamicStates, int i) {
+		assert virtualMachineDynamicStates != null;
+		assert i > 0;
+		
+		for (Entry<String, ApplicationVMDynamicStateI> entry : virtualMachineDynamicStates.entrySet()) {
+			System.out.println("core reserved : " + this.reserveCore(entry.getKey(), 1));
+	    }
+	}
+	
+	private void releaseCore(Map<String, ApplicationVMDynamicStateI> virtualMachineDynamicStates) {
+		assert virtualMachineDynamicStates != null;
+
+		
+		for (Entry<String, ApplicationVMDynamicStateI> entry : virtualMachineDynamicStates.entrySet()) {
+	     this.releaseCore(entry.getKey());
+	    }
+	}
+	
+	private void addCores(Map<String, ApplicationVMDynamicStateI> virtualMachineDynamicStates) throws Exception {
+		
+		for (Entry<String, ApplicationVMDynamicStateI> entry : virtualMachineDynamicStates.entrySet()) {
+		     this.addCores(entry.getKey());
+		}
+	}
+	
+	private int reserveCore(String vmURI, int nbToReserve) {
+		try {
+			return this.cmops.get(vmURI).tryReserveCore(vmURI, nbToReserve);
+		}catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
+
+
+	private void releaseCore(String vmURI) {
+		try {
+			this.cmops.get(vmURI).releaseCore(vmURI);
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	
+	private void addCores(String vmURI) throws Exception {
+		ApplicationVMManagementOutboundPort avm = this.avms.get(vmURI);
+		try {
+			if(avm == null || !avm.connected())
+				throw new Exception("AVM not found..");
+			avm.allocateCores(this.cmops.get(vmURI).addCores(vmURI));
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+
+
 }
 

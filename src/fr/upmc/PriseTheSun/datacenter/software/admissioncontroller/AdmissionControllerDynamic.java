@@ -4,6 +4,7 @@ package fr.upmc.PriseTheSun.datacenter.software.admissioncontroller;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -127,6 +128,8 @@ implements 	ApplicationSubmissionI,
 
 	protected ScheduledFuture<?>	pushingFuture ;
 	
+	/** Set pour check le nombre de vm dans le ring */
+	protected HashSet<String> vmURis;
 	
 	// Map between RequestDispatcher URIs and the management ports to call them.
 	protected Map<String, RequestDispatcherManagementOutboundPort> rdmopMap;
@@ -243,8 +246,9 @@ implements 	ApplicationSubmissionI,
 		this.freeApplicationVM = new ArrayList<>();
 		this.VMforNewApplication = new ArrayList<>();
 		this.processorController = new ProcessorsController("controller", ProcessorControllerManagementInboundPortURI);
-		
+		this.vmURis = new HashSet<>();
 		this.submissionInterfaces = new HashMap<>();
+		
 		
 	}
 
@@ -619,7 +623,15 @@ implements 	ApplicationSubmissionI,
 	public void acceptRingNetworkDynamicData(String requestDispatcherURI, RingNetworkDynamicStateI currentDynamicState)
 			throws Exception {
 		synchronized(o){
-			if(currentDynamicState.getApplicationVMInfo() != null) {
+			ApplicationVMInfo vm = currentDynamicState.getApplicationVMInfo();
+			if(vm != null) {
+				if(this.vmURis.contains(vm.getApplicationVM())) {
+					int numberVmInRing = this.vmURis.size();
+					System.err.println("Nombre de vm " + numberVmInRing);
+					this.vmURis.clear();
+				}else {
+					this.vmURis.add(vm.getApplicationVM());
+				}
 				if(this.VMforNewApplication.size() < MIN_VM) {
 					this.VMforNewApplication.add(currentDynamicState.getApplicationVMInfo());
 				}else {

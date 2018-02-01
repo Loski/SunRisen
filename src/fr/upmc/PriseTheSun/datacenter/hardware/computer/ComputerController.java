@@ -14,6 +14,7 @@ import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
 import fr.upmc.datacenter.hardware.computers.connectors.ComputerServicesConnector;
 import fr.upmc.datacenter.hardware.computers.interfaces.ComputerServicesI;
 import fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort;
+import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOutboundPort;
 
 public class ComputerController extends AbstractComponent implements ComputerControllerManagementI {
 	
@@ -24,9 +25,13 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 	
 	public ComputerController(final String ComputerControllerUri, final String ComputerServicesInboundPortURI, final String ComputerControllerManagementInboundPort) throws Exception {
 		super(ComputerControllerUri, 1, 1);
-		this.reservedCore = new HashMap<String, ArrayList<Point>>();
 		
 		this.addOfferedInterface(ComputerServicesI.class);
+		this.addOfferedInterface(ComputerControllerManagementI.class);
+
+		
+		this.reservedCore = new HashMap<String, ArrayList<Point>>();
+		
 		this.csop = new ComputerServicesOutboundPort(ComputerControllerUri + "-csop", this);
 		this.addPort(csop);		
 		csop.publishPort();
@@ -34,40 +39,56 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 				ComputerServicesInboundPortURI,
 				ComputerServicesConnector.class.getCanonicalName());
 		
-		this.addOfferedInterface(ComputerControllerManagementI.class);
 		ccmip = new ComputerControllerManagementInboundPort(ComputerControllerManagementInboundPort,this);
 		this.addPort(ccmip);
 		this.ccmip.publishPort();
 	}
 
-	public AllocatedCore[] addCores(String controllerURI) throws Exception {
-		return csop.allocateCores(reservedCore.get(controllerURI));
+	/**
+	 * @see fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagementI#addCores(java.lang.String)
+	 */
+	public AllocatedCore[] addCores(String vmUri) throws Exception {
+		assert vmUri != null;
+
+		return csop.allocateCores(reservedCore.get(vmUri));
 	}
 
+	/**
+	 * @see fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagementI#releaseCore(java.lang.String)
+	 */
 	@Override
-	public boolean supCores(int nbCores, String vmUri) throws Exception {
-		throw new Exception("TODO");
-	}
+	public void releaseCore(String vmUri) throws Exception {
+		assert vmUri != null;
 
-	@Override
-	public void releaseCore(String controllerURI) throws Exception {
-		ArrayList<Point> cores =  reservedCore.remove(controllerURI);
+		ArrayList<Point> cores =  reservedCore.remove(vmUri);
 		csop.releaseCore(cores);
 	}
 	
+	/**
+	 * @see fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagementI#tryReserveCore(java.lang.String, int)
+	 */
 	@Override
-	public int reserveCore(String controllerURI) throws Exception {
-		ArrayList<Point> cores =  csop.reserveCores(8);
-		/*if(reservedCore.size() > 0) {
-			reservedCore.get(controllerURI).addAll(cores);
-		}else {
-			reservedCore.put(controllerURI, cores);
-		}*/
-		reservedCore.put(controllerURI, cores);
+	public int tryReserveCore(String vmUri, int nbToReserve) throws Exception {
+		assert vmUri != null;
+		assert nbToReserve > 0;
+		
+		ArrayList<Point> cores =  csop.reserveCores(nbToReserve);
+		reservedCore.put(vmUri, cores);
 
 		return cores.size();
 	}
 
+
+	/**
+	 * @see fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagementI#allocateCores(int)
+	 */
+	@Override
+	public AllocatedCore[] allocateCores(int i) throws Exception {
+		assert i > 0;
+		
+		return this.csop.allocateCores(i);
+	}
+	
 	@Override
 	public void start() throws ComponentStartException {
 		// TODO Auto-generated method stub
@@ -87,8 +108,4 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 		super.shutdown();
 	}
 
-	@Override
-	public AllocatedCore[] allocateCores(int i) throws Exception {
-		return this.csop.allocateCores(i);
-	}
 }

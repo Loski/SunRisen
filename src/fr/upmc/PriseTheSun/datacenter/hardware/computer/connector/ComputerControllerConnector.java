@@ -7,25 +7,22 @@ import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
 public class ComputerControllerConnector extends AbstractConnector implements ComputerControllerManagementI {
 
 	@Override
-	public int reserveCore(String controllerURI) throws Exception {
-		return ((ComputerControllerManagementI)this.offering).reserveCore(controllerURI);
+	public int tryReserveCore(String vmUri, int nbToReserve) throws Exception {
+		return ((ComputerControllerManagementI)this.offering).tryReserveCore(vmUri, nbToReserve);
 	}
 
 	@Override
-	public void releaseCore(String controllerURI) throws Exception {
-		((ComputerControllerManagementI)this.offering).releaseCore(controllerURI);
+	public void releaseCore(String vmUri) throws Exception {
+		((ComputerControllerManagementI)this.offering).releaseCore(vmUri);
 	}
 
 	@Override
-	public AllocatedCore[] addCores(String controllerURI) throws Exception {
-		return ((ComputerControllerManagementI)this.offering).addCores(controllerURI);
+	public AllocatedCore[] addCores(String vmUri) throws Exception {
+		return ((ComputerControllerManagementI)this.offering).addCores(vmUri);
 
 	}
 
-	@Override
-	public boolean supCores(int nbCores, String vmUri) throws Exception {
-		return ((ComputerControllerManagementI)this.offering).supCores(nbCores, vmUri);
-	}
+
 
 	@Override
 	public AllocatedCore[] allocateCores(int i) throws Exception {
