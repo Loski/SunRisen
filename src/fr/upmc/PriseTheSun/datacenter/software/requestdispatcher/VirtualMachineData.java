@@ -83,12 +83,7 @@ public class VirtualMachineData {
 					res+=timeData.getDuration();
 				}
 				
-				res = res/this.requestTerminated.size();
-				
-				if(averageTime==null)
-					this.averageTime = res;
-				else
-					this.averageTime=(this.averageTime+res)/2.0;
+				this.averageTime = res/this.requestTerminated.size();
 			}
 			
 			this.requestTerminated.clear();
