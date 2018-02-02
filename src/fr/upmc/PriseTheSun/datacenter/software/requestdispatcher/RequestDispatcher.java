@@ -256,37 +256,6 @@ implements
 		this.currentVM = (this.currentVM+1)%this.virtualMachineDataList.size();
 	}
 	
-	protected Double averageTime()
-	{		
-		synchronized(this.lock)
-		{
-			double averageTime = 0.0;
-			boolean oneRequestFound = false;
-			
-			for(VirtualMachineData vmData: this.virtualMachineDataList)
-			{
-				vmData.calculateAverageTime();
-				Double average = vmData.getAverageTime();
-				if(average!=null)
-				{
-					averageTime+=average;
-					oneRequestFound=true;
-				}
-			}
-			
-			if(oneRequestFound)
-			{
-				averageTime = averageTime/this.virtualMachineDataList.size();
-				
-				return averageTime;
-			}
-			else
-			{
-				return null;
-			}
-		}
-	}
-	
 	@Override
 	public void acceptRequestSubmission(RequestI r) throws Exception {
 
@@ -555,12 +524,30 @@ implements
 		HashMap<String,Double> virtualMachineExecutionAverageTime = new HashMap<String,Double>();
 		HashMap<String,ApplicationVMDynamicStateI> virtualMachineDynamicStates = new HashMap<String,ApplicationVMDynamicStateI>();
 		
-		Double average = this.averageTime();
+		Double average = null;
 		
-		for(VirtualMachineData vmData : this.virtualMachineDataList)
+		synchronized(this.lock)
 		{
-			virtualMachineExecutionAverageTime.put(vmData.getVmURI(),vmData.getAverageTime());
-			virtualMachineDynamicStates.put(vmData.getVmURI(), vmData.getAvmiovp().getDynamicState());
+			double averageTime = 0.0;
+			boolean oneRequestFound = false;
+			
+			for(VirtualMachineData vmData: this.virtualMachineDataList)
+			{
+				vmData.calculateAverageTime();
+				Double averageVM = vmData.getAverageTime();
+				if(averageVM!=null)
+				{
+					averageTime+=averageVM;
+					oneRequestFound=true;
+				}
+				virtualMachineExecutionAverageTime.put(vmData.getVmURI(),vmData.getAverageTime());
+				virtualMachineDynamicStates.put(vmData.getVmURI(), vmData.getAvmiovp().getDynamicState());
+			}
+			
+			if(oneRequestFound)
+			{
+				average = averageTime/this.virtualMachineDataList.size();
+			}
 		}
 		
 		return new RequestDispatcherDynamicState(this.rdURI,average,virtualMachineExecutionAverageTime,virtualMachineDynamicStates,this.nbRequestReceived,this.nbRequestTerminated) ;
