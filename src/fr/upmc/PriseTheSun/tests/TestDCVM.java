@@ -166,9 +166,9 @@ public class TestDCVM extends AbstractDistributedCVM{
 	protected void testScenario() throws Exception {
 		if (thisJVMURI.equals(AdmissionController)) {}
 		else if(thisJVMURI.equals(Application1)) {
-			this.apmop.createAndSendApplication(RequestSubmissionI.class);
+			this.apmop.createAndSendApplication();
 		}else if(thisJVMURI.equals(Application2)) {
-			this.apmop2.createAndSendApplication(RequestSubmissionI.class);
+			this.apmop2.createAndSendApplication();
 		}
 	}
 }

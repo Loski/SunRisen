@@ -23,7 +23,7 @@ import fr.upmc.datacenter.hardware.processors.ports.ProcessorDynamicStateDataOut
 import fr.upmc.datacenter.hardware.processors.ports.ProcessorManagementOutboundPort;
 import fr.upmc.datacenter.hardware.processors.ports.ProcessorStaticStateDataOutboundPort;
 import fr.upmc.datacenter.interfaces.ControlledDataRequiredI;
-
+@Deprecated
 public class ProcessorsController extends AbstractComponent implements ProcessorStateDataConsumerI, ProcessorsControllerManagementI {
 
 	private static final String ProcessorStaticStateDataOutboundPortURI = "pss";
@@ -36,6 +36,7 @@ public class ProcessorsController extends AbstractComponent implements Processor
 	private Map<String, ProcessorManagementOutboundPort> processorsManagement;
 	private Map<String,String> processorsDynaToUri;
 	
+	@Deprecated
 	public ProcessorsController(String URI, String ProcessorControllerManagementInboundPortURI) throws Exception {
 		super(URI, 2, 2);
 		processorsStaticState = new HashMap<String, ProcessorStaticStateI>();

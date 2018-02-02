@@ -534,7 +534,7 @@ implements 	ApplicationSubmissionI,
 		int nbProc = staticState.getNumberOfProcessors();
 		this.cssdops.add(cssdop);
 
-      /*  ArrayList<String> processorsURIs = new ArrayList<String>();
+		ArrayList<String> processorsURIs = new ArrayList<String>();
         ArrayList<String> pmipURIs = new ArrayList<String>();
         ArrayList<String> pssdURIs = new ArrayList<String>();
         ArrayList<String> pdsdURIs = new ArrayList<String>();
@@ -549,15 +549,15 @@ implements 	ApplicationSubmissionI,
             pssdURIs.add(pPortsList.get(Processor.ProcessorPortTypes.STATIC_STATE));
             pdsdURIs.add(pPortsList.get(Processor.ProcessorPortTypes.DYNAMIC_STATE));
         }
-        */
+        cssdop.doDisconnection();
         String computerController[] = new String[4];
         computerController[0] = ComputerControllerManagementUri + cmops.size();						
 		computerController[1] = ComputerServicesInboundPortURI;
 		computerController[2] = ComputerControllerManagementInboundPortURI + cmops.size();
-
+		computerController[3] = ComputerStaticStateDataInboundPortURI;
 		
 		
-        ComputerController tmp = new ComputerController(computerController[0], computerController[1], computerController[2]);
+        ComputerController tmp = new ComputerController(computerController[0], computerController[1], computerController[2], computerController[3]);
         tmp.start();
         ComputerControllerManagementOutboutPort ccmop = new ComputerControllerManagementOutboutPort("ComputerControllerManagementOutboutPort" + cmops.size(), this);
 		
@@ -572,6 +572,7 @@ implements 	ApplicationSubmissionI,
 				//this.processorController.bindProcessor(processorsURIs.get(i), "ACHANGER", pmipURIs.get(i), pssdURIs.get(i), pdsdURIs.get(i));
 				createVM(computerController[2], ccmop.allocateCores(nbCores/2));
 			}
+		
 	}
 	
 	private String createVM(String computerManagementInboundPortURI, AllocatedCore[] allocatedCore) throws Exception {

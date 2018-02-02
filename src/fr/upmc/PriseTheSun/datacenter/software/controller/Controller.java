@@ -3,6 +3,7 @@ package fr.upmc.PriseTheSun.datacenter.software.controller;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +59,7 @@ import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOu
 
 
 /**
+ * 
  * @author Maxime Lavaste
  *
  */
@@ -117,7 +119,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	private Writter w;
 	private Object o = new Object();
 
-	private Map<String, ArrayList<Double>> statistique;
+	private Map<String, List<Mesure>> statistique;
 	
 	private VMDisconnectionNotificationHandlerInboundPort vmnibp;
 	private String nextRingDynamicStateDataInboundPort;
@@ -135,7 +137,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		public static final double TARGET_HIGHT = AVERAGE_TARGET * HIGHER_PERCENT + AVERAGE_TARGET;
 		public static final double TARGET_LOWER = AVERAGE_TARGET * LOWER_PERCENT;
 		public static final double TARGET_VERY_LOWER = AVERAGE_TARGET * LOWER_PERCENT;
-
+		public static final long minute = 60000l;
 		public static int DISPATCHER_PUSH_INTERVAL=5000;
 		public static int NB_VM_RESERVED = 1;
 		//Max core
@@ -164,9 +166,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			String VMDisconnectionNotificationHandlerInboundPortURI
 	) throws Exception
 	{
-		super(controllerURI,1,1);
-		
-		
+		super(controllerURI,1 ,1);
 		this.addOfferedInterface(NodeRingManagementI.class);
 		this.addOfferedInterface(ControlledDataOfferedI.ControlledPullI.class);
 		this.addOfferedInterface(VMDisconnectionNotificationHandlerI.class);
@@ -242,10 +242,10 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.avms = new HashMap<String, ApplicationVMManagementOutboundPort>();
 		
 		
-		this.statistique = new HashMap<String, ArrayList<Double>>();
+		this.statistique = new HashMap<String, List<Mesure>>();
 		
 		/** Moyenne de toute les VMs **/
-		this.statistique.put("All", new ArrayList<Double>());
+		this.statistique.put("All", Collections.synchronizedList(new ArrayList<Mesure>()));
 		
 		this.vmnibp = new VMDisconnectionNotificationHandlerInboundPort(VMDisconnectionNotificationHandlerInboundPortURI,this);
 		this.addPort(vmnibp);
@@ -261,20 +261,40 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 	}
 	
-	private Double calculAverage(String VMUri) {
-		ArrayList<Double> tmp = (ArrayList<Double>) this.statistique.get(VMUri).clone();
+	private Double calculAverage(String VMUri) throws Exception {
+		List<Mesure> tmp = this.statistique.get(VMUri);
 		Double average = 0.0;
 		double alpha = 0.8;
+		long timestamp_max = System.currentTimeMillis();
+		
+		//Nettoyage...
+		int erase = 0;
+		while(!tmp.isEmpty()) {
+			if( timestamp_max - tmp.get(0).timestamp > StaticData.minute) {
+				tmp.remove(0);
+				erase++;
+			}else {
+				break;
+			}
+		}
+		System.err.println("Erased " + erase);
+		if(tmp.isEmpty()) {
+			throw new Exception("Aucune valeur! timestamp incorrect?");
+		}
+		
+		
 		int taille = tmp.size();
 		Double[] result = new Double[taille];
-		result[0] =  tmp.get(0);
+		result[0] =  tmp.get(0).value;
 		for(int i = 1; i < taille; i++) {
-			result[i] = alpha * tmp.get(i) + (1 - alpha) * result[i-1];
+			result[i] = alpha * tmp.get(i).value + (1 - alpha) * result[i-1];
 		}
+		
+		
 		return result[taille-1];
 	}
 	
-	private Double calculAverage() {
+	private Double calculAverage() throws Exception {
 		return calculAverage("All");
 	}
 	
@@ -282,11 +302,12 @@ implements 	RequestDispatcherStateDataConsumerI,
 	/** 
 	 * @see fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStateDataConsumerI#acceptRequestDispatcherDynamicData(java.lang.String, fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherDynamicStateI)
 	 */
+
 	@Override
 	public void acceptRequestDispatcherDynamicData(String dispatcherURI,
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
 		//this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
-
+		System.err.println(currentDynamicState.getAvgExecutionTime());
 		if((waitDecision % REQUEST_MIN) == 0) {
 			//TODO Demander à loic si les vms peuvent être null
 			reserveCore(currentDynamicState.getVirtualMachineDynamicStates(), 1);
@@ -295,24 +316,22 @@ implements 	RequestDispatcherStateDataConsumerI,
 		if(currentDynamicState.getAvgExecutionTime() == null) {
 			return;
 		}
-
+		
+		long timestamp = currentDynamicState.getTimeStamp();
 	    for (Entry<String, Double> entry : currentDynamicState.getVirtualMachineExecutionAverageTime().entrySet()) {
 	    	if(entry.getValue() == null) {
 	    		continue;
 	    	}
 	    	if(this.statistique.get(entry.getKey()) == null) {
-	    		ArrayList<Double> tmp = new ArrayList<Double>();
-	    		tmp.add(entry.getValue());
-	    		this.statistique.put(entry.getKey(), tmp);
-	    	}else {
-	    		this.statistique.get(entry.getKey()).add(entry.getValue());
+	    		this.statistique.put(entry.getKey(),  Collections.synchronizedList(new ArrayList<Mesure>()));
 	    	}
+    		this.statistique.get(entry.getKey()).add(new Mesure(entry.getValue(), timestamp));
 	    }
 	    
-	    this.statistique.get("All").add(currentDynamicState.getAvgExecutionTime());
+	    this.statistique.get("All").add(new Mesure(currentDynamicState.getAvgExecutionTime(), timestamp));
 	    
 		if((waitDecision % REQUEST_MIN) == 0) {
-			processControl(currentDynamicState.getVirtualMachineDynamicStates());
+			processControl(currentDynamicState);
 			//On redonne les VMs au prochain controller.
 			while(!vmReserved.isEmpty()) {
 				synchronized (o) {
@@ -374,8 +393,15 @@ implements 	RequestDispatcherStateDataConsumerI,
 	}
 
 	
-	private void processControl(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
-		double average = calculAverage();
+	private void processControl(RequestDispatcherDynamicStateI currentDynamicState){
+		Map<String, ApplicationVMDynamicStateI > vms = currentDynamicState.getVirtualMachineDynamicStates();
+		double average = 0;
+		try {
+			average = calculAverage();
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		this.logMessage("" +average);
 		this.logMessage("" + waitDecision);
 		Threeshold th = getThreeshold(average);
@@ -402,7 +428,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		//Release les cores
 		releaseCore(vms);
 		
-		w.write(Arrays.asList(""+average, ((Integer)vms.size()).toString(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms)));
+		w.write(Arrays.asList(""+average, ((Integer)vms.size()).toString(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms), "" + statistique.get("All"), ""+currentDynamicState.getNbRequestReceived(), ""+currentDynamicState.getNbRequestTerminated()));
 	}
 
 	/**
@@ -792,6 +818,22 @@ implements 	RequestDispatcherStateDataConsumerI,
 		}
 	}
 
+	
+
+	public class Mesure{
+		@Override
+		public String toString() {
+			return ""+value;
+		}
+		public Double value;
+		public long timestamp;
+
+		public Mesure(Double value, long timespant) {
+			super();
+			this.value = value;
+			this.timestamp = timespant;
+		}
+	}
 
 
 }
