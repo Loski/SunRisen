@@ -6,5 +6,5 @@ package fr.upmc.PriseTheSun.datacenter.software.ring.interfaces;
  *
  */
 public interface RingNetworkStateDataConsumerI {
-	public void	acceptRingNetworkDynamicData(String requestDispatcherURI,RingNetworkDynamicStateI	currentDynamicState) throws Exception ;
+	public void	acceptRingNetworkDynamicData(String controllerUri, RingNetworkDynamicStateI	currentDynamicState) throws Exception ;
 }

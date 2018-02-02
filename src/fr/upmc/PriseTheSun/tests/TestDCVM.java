@@ -151,7 +151,7 @@ public class TestDCVM extends AbstractDistributedCVM{
 				}
 			}).start() ;
 			// Sleep to let the test scenario execute to completion.
-			Thread.sleep(90000L) ;
+			Thread.sleep(900000L) ;
 			// Shut down the application.
 			System.out.println("shutting down...") ;
 		//	trd.shutdown() ;

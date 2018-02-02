@@ -18,7 +18,7 @@ public class RingNetworkDynamicStateDataOutboundPort extends AbstractControlledD
 	private static final long serialVersionUID = 1L;
 	protected String			ringURI ;
 
-	public				RingNetworkDynamicStateDataOutboundPort(
+	public RingNetworkDynamicStateDataOutboundPort(
 			ComponentI owner,
 			String ringURI
 			) throws Exception
@@ -29,7 +29,7 @@ public class RingNetworkDynamicStateDataOutboundPort extends AbstractControlledD
 		assert	owner instanceof RingNetworkStateDataConsumerI ;
 	}
 
-	public				RingNetworkDynamicStateDataOutboundPort(
+	public RingNetworkDynamicStateDataOutboundPort(
 			String uri,
 			ComponentI owner,
 			String ringURI

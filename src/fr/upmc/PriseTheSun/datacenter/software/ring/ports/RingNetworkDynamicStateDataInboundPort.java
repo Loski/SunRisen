@@ -1,5 +1,7 @@
 package fr.upmc.PriseTheSun.datacenter.software.ring.ports;
 
+import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.AdmissionControllerDynamic;
+import fr.upmc.PriseTheSun.datacenter.software.controller.Controller;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatcher;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.interfaces.DataOfferedI;
@@ -24,7 +26,7 @@ public class RingNetworkDynamicStateDataInboundPort extends AbstractControlledDa
 		) throws Exception
 	{
 		super(owner);
-		//assert owner instanceof RequestDispatcher ;
+		assert (owner instanceof Controller) || (owner instanceof AdmissionControllerDynamic) ;
 	}
 
 	public				RingNetworkDynamicStateDataInboundPort(
@@ -34,7 +36,7 @@ public class RingNetworkDynamicStateDataInboundPort extends AbstractControlledDa
 	{
 		super(uri, owner);
 
-		//assert owner instanceof RequestDispatcher ;
+		assert (owner instanceof Controller) || (owner instanceof AdmissionControllerDynamic) ;
 	}
 
 	/**
@@ -43,13 +45,26 @@ public class RingNetworkDynamicStateDataInboundPort extends AbstractControlledDa
 	@Override
 	public DataOfferedI.DataI	get() throws Exception
 	{
-		final RequestDispatcher rd = (RequestDispatcher) this.owner ;
-		return rd.handleRequestSync(
+
+		if(this.owner instanceof Controller) {
+			final Controller rd = (Controller) this.owner;
+			return rd.handleRequestSync(
+					new ComponentI.ComponentService<DataOfferedI.DataI>() {
+						@Override
+						public DataOfferedI.DataI call() throws Exception {
+							return rd.getDynamicState() ;
+						}
+					});			
+		}else if(this.owner instanceof AdmissionControllerDynamic) {
+			final AdmissionControllerDynamic rd = (AdmissionControllerDynamic) this.owner;
+			return rd.handleRequestSync(
 					new ComponentI.ComponentService<DataOfferedI.DataI>() {
 						@Override
 						public DataOfferedI.DataI call() throws Exception {
 							return rd.getDynamicState() ;
 						}
 					});
+		}
+		return null;
 	}
 }

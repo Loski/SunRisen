@@ -121,7 +121,7 @@ implements 	ApplicationSubmissionI,
 	
 	protected Map<String, ApplicationVMManagementOutboundPort> avmOutPort;
 	
-
+	private static int nbappli = 0;
 	protected ArrayList<ComputerStaticStateDataOutboundPort> cssdops;
 	protected ArrayList<ComputerDynamicStateDataOutboundPort> cdsdops;
 	protected ArrayList<ComputerControllerManagementOutboutPort > cmops;
@@ -144,7 +144,7 @@ implements 	ApplicationSubmissionI,
 
 	private static final int MIN_VM = 5;
 
-
+	
 
 	private DynamicComponentCreationOutboundPort portTControllerJVM;
 	
@@ -190,6 +190,7 @@ implements 	ApplicationSubmissionI,
 		this.addRequiredInterface(ControlledDataRequiredI.ControlledPullI.class);
 		this.addRequiredInterface(ComputerControllerManagementI.class);
 		
+		this.addOfferedInterface(ComputerControllerManagementI.class);
 		this.addOfferedInterface(ControlledDataOfferedI.ControlledPullI.class);
 		this.addOfferedInterface(ApplicationSubmissionI.class);
 		this.addOfferedInterface(AdmissionControllerManagementI.class);
@@ -331,13 +332,15 @@ implements 	ApplicationSubmissionI,
 		controllerURIs[6] = controllerURIs[0]+"-VMDisconnectionHandler";
 		controllerURIs[7] = ADMNodeControllerManagementInboundPort;
 		controllerURIs[8] = null;
+		nbappli++;
 
-
+		boolean first = false;
 		/*First node*/
 		if(nextControllerDataRingUri==null){
 			controllerURIs[5] = this.AdmissionControllerDataRingInboundUri;
 			controllerURIs[8] = ADMNodeControllerManagementInboundPort;
 			nextControllerManagement = ADMNodeControllerManagementInboundPort;
+			first = true;
 		}else{ 
 			stopPushing();
 			controllerURIs[5] = nextControllerDataRingUri;
@@ -376,17 +379,21 @@ implements 	ApplicationSubmissionI,
 		rdsdop.doConnection(controllerURIs[4], ControlledDataConnector.class.getCanonicalName()); 
 		this.bindSendingDataUri(controllerURIs[4]);
 		this.startPushing();
-		/*
-		 * NodeManagementOutboundPort cmopPrevious = new NodeManagementOutboundPort("cmop-previous-"+this.admissionControllerURI + appURI, this);
-		this.addPort(cmopPrevious);
-
-		cmopPrevious.publishPort();
-
-		cmopPrevious.doConnection(nextControllerManagement, NodeManagementConnector.class.getCanonicalName());
-
-		cmopPrevious.setPreviousManagementInboundPort(controllerURIs[1]);
-
-		cmopPrevious.doDisconnection();*/
+		try {
+			if(first) {
+				this.setPreviousManagementInboundPort(controllerURIs[1]);
+			}else {
+				NodeManagementOutboundPort cmopPrevious = new NodeManagementOutboundPort("cmop-previous-"+this.admissionControllerURI + appURI, this);
+				this.addPort(cmopPrevious);
+		
+				cmopPrevious.publishPort();
+				cmopPrevious.doConnection(nextControllerManagement, NodeManagementConnector.class.getCanonicalName());
+				cmopPrevious.setPreviousManagementInboundPort(controllerURIs[1]);
+				cmopPrevious.doDisconnection();
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		//sauvegarde pour le prochain noeud
 		nextControllerDataRingUri = controllerURIs[4];
@@ -766,11 +773,13 @@ implements 	ApplicationSubmissionI,
 
 	@Override
 	public void setNextManagementInboundPort(String managementInboundPort) throws Exception {
+		System.out.println("je rentre");
 		this.controllerManagementNextInboundPort = managementInboundPort;
 	}
 
 	@Override
 	public void setPreviousManagementInboundPort(String managementInboundPort) throws Exception {
+		System.out.println("imin");
 		this.controllerManagementPreviousInboundPort = managementInboundPort;
 	}
 

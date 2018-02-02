@@ -171,6 +171,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.addOfferedInterface(ControlledDataOfferedI.ControlledPullI.class);
 		this.addOfferedInterface(VMDisconnectionNotificationHandlerI.class);
 		
+		this.addRequiredInterface(NodeRingManagementI.class);
 		this.addRequiredInterface(ControlledDataRequiredI.ControlledPullI.class);
 		this.addRequiredInterface(ProcessorsControllerManagementI.class);
 		this.addRequiredInterface(RequestDispatcherManagementI.class);
@@ -754,6 +755,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 	@Override
 	public void setPreviousManagementInboundPort(String managementInboundPort) throws Exception {
+		System.err.println("je rentre");
+
 		this.controllerManagementPreviousInboundPort = managementInboundPort;
 	}
 
