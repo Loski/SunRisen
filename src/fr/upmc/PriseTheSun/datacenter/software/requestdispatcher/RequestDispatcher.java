@@ -342,7 +342,7 @@ implements
 				vm.addRequest(r.getRequestURI(),timeData);
 				
 				RequestSubmissionOutboundPort port = vm.getRsobp();
-				port.submitRequest(r);
+				port.submitRequestAndNotify(r);
 				
 				if (RequestGenerator.DEBUG_LEVEL >= 1) 
 					this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,r.getRequestURI(),vm.getVmURI(),port.getPortURI()));
@@ -387,7 +387,7 @@ implements
 			vm.addRequest(req.getRequestURI(),timeData);
 			
 			RequestSubmissionOutboundPort port = vm.getRsobp();
-			port.submitRequest(req);
+			port.submitRequestAndNotify(req);
 			
 			if (RequestGenerator.DEBUG_LEVEL >= 1) 
 				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),vm.getVmURI(),port.getPortURI()));
@@ -468,7 +468,7 @@ implements
 			vm.addRequest(req.getRequestURI(),timeData);
 			
 			RequestSubmissionOutboundPort port = vm.getRsobp();
-			port.submitRequest(req);
+			port.submitRequestAndNotify(req);
 			
 			if (RequestGenerator.DEBUG_LEVEL >= 1) 
 				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),vm.getVmURI(),port.getPortURI()));
