@@ -116,6 +116,7 @@ implements
 	protected int nbRequestReceived = 0;
 	
 	protected Queue<RequestI> queue;
+	protected HashMap<String,RequestTimeData> timeDataMap;
 
 	
 	/**
@@ -217,6 +218,7 @@ implements
 				this.virtualMachineWaitingForDisconnection = new HashSet<String>();
 				this.taskExecutedBy = new HashMap<String,VirtualMachineData>();
 				this.queue = new LinkedList<RequestI>();
+				this.timeDataMap = new HashMap<>();
 	}
 	
 	protected VirtualMachineData findAvaibleVM()
@@ -225,8 +227,8 @@ implements
 		{
 			return this.virtualMachineDataList.get(0);
 		}
-		else if(this.getCurrentVMData().getRequestInQueue().isEmpty())
-			return this.getCurrentVMData();
+		else if(this.virtualMachineDataList.get(this.currentVM).getRequestInQueue().isEmpty())
+			return this.virtualMachineDataList.get(this.currentVM);
 		else
 		{
 			synchronized(this.lock)
@@ -235,9 +237,9 @@ implements
 				this.nextVM();
 				while(this.currentVM!=previousIndex)
 				{
-					if(this.getCurrentVMData().getRequestInQueue().isEmpty())
+					if(this.virtualMachineDataList.get(this.currentVM).getRequestInQueue().isEmpty())
 					{
-						VirtualMachineData avaible = this.getCurrentVMData();
+						VirtualMachineData avaible = this.virtualMachineDataList.get(this.currentVM);
 						this.nextVM();
 						return avaible;
 					}		
@@ -252,11 +254,6 @@ implements
 	protected void nextVM()
 	{
 		this.currentVM = (this.currentVM+1)%this.virtualMachineDataList.size();
-	}
-	
-	protected VirtualMachineData getCurrentVMData()
-	{
-		return this.virtualMachineDataList.get(this.currentVM);
 	}
 	
 	protected Double averageTime()
@@ -295,6 +292,9 @@ implements
 
 		assert r != null;
 		
+		RequestTimeData timeData = new RequestTimeData(this.rdURI,null, r.getRequestURI());
+		this.timeDataMap.put(r.getRequestURI(),timeData);
+		
 		if(this.queue.isEmpty())
 		{	
 			VirtualMachineData vm = findAvaibleVM();
@@ -305,12 +305,12 @@ implements
 			}
 			else
 			{
-				vm.addRequest(this.rdURI,r.getRequestURI());
+				vm.addRequest(r.getRequestURI(),timeData);
 				
 				RequestSubmissionOutboundPort port = vm.getRsobp();
 				port.submitRequest(r);
 
-				this.taskExecutedBy.put(r.getRequestURI(),getCurrentVMData());
+				this.taskExecutedBy.put(r.getRequestURI(),vm);
 				
 				this.nbRequestReceived++;
 			}
@@ -326,6 +326,9 @@ implements
 		
 		assert r != null;
 		
+		RequestTimeData timeData = new RequestTimeData(this.rdURI,null, r.getRequestURI());
+		this.timeDataMap.put(r.getRequestURI(),timeData);
+
 		if(this.queue.isEmpty())
 		{	
 			VirtualMachineData vm = findAvaibleVM();
@@ -336,7 +339,7 @@ implements
 			}
 			else
 			{
-				vm.addRequest(this.rdURI,r.getRequestURI());
+				vm.addRequest(r.getRequestURI(),timeData);
 				
 				RequestSubmissionOutboundPort port = vm.getRsobp();
 				port.submitRequest(r);
@@ -344,7 +347,7 @@ implements
 				if (RequestGenerator.DEBUG_LEVEL >= 1) 
 					this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,r.getRequestURI(),vm.getVmURI(),port.getPortURI()));
 				
-				this.taskExecutedBy.put(r.getRequestURI(),getCurrentVMData());
+				this.taskExecutedBy.put(r.getRequestURI(),vm);
 				
 				this.nbRequestReceived++;
 			}
@@ -379,7 +382,9 @@ implements
 		{
 			RequestI req = this.queue.remove();
 			
-			vm.addRequest(this.rdURI,req.getRequestURI());
+			RequestTimeData timeData = this.timeDataMap.remove(req.getRequestURI());
+			
+			vm.addRequest(req.getRequestURI(),timeData);
 			
 			RequestSubmissionOutboundPort port = vm.getRsobp();
 			port.submitRequest(req);
@@ -441,7 +446,7 @@ implements
 		this.doPortConnection(
 				rsobp.getPortURI(),
 				requestSubmissionInboundPortURI,
-				getConnectorClassName());
+				RequestSubmissionConnector.class.getCanonicalName());
 		
 		this.addPort( avmiovp );
 		avmiovp.publishPort();
@@ -458,7 +463,9 @@ implements
 		{
 			RequestI req = this.queue.remove();
 			
-			vm.addRequest(this.rdURI,req.getRequestURI());
+			RequestTimeData timeData = this.timeDataMap.remove(req.getRequestURI());
+			
+			vm.addRequest(req.getRequestURI(),timeData);
 			
 			RequestSubmissionOutboundPort port = vm.getRsobp();
 			port.submitRequest(req);

@@ -53,11 +53,9 @@ public class VirtualMachineData {
 		}
 	}
 	
-	public void addRequest(String dispatcherURI,String requestURI)
+	public void addRequest(String requestURI,RequestTimeData reqTimeData)
 	{
-		RequestTimeData req = new RequestTimeData(dispatcherURI, vmURI,requestURI);
-		this.requestInQueue.put(requestURI,req);
-		req.begin();
+		this.requestInQueue.put(requestURI,reqTimeData);
 	}
 	
 	public void endRequest(String requestURI)
@@ -67,6 +65,7 @@ public class VirtualMachineData {
 		synchronized(this.lock)
 		{
 			this.requestTerminated.add(req);
+			
 		}
 	}
 	

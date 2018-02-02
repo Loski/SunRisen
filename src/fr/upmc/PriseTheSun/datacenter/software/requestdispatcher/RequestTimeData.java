@@ -19,6 +19,8 @@ public class RequestTimeData {
 		this.operatedBy=vmURI;
 		this.finished=false;
 		this.request=requestURI;
+		
+		this.begin();
 	}
 	
 	public String getOperatedBy() {
