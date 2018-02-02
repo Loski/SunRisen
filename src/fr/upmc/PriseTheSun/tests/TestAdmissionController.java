@@ -63,8 +63,30 @@ extends		AbstractCVM
 		super();
 	}
 
-	public static final int NB_COMPUTER = 35;
-	private static final int NB_APPLICATION = 5;
+	
+	public class ComputerWrapper {
+		String uri;
+		String csip;
+		String cssdip;
+		String cdsdip;
+		
+		/**
+		 * @param uri
+		 * @param csip
+		 * @param cssdip
+		 * @param cdsdip
+		 */
+		public ComputerWrapper(String uri, String csip, String cssdip, String cdsdip) {
+			super();
+			this.uri = uri;
+			this.csip = csip;
+			this.cssdip = cssdip;
+			this.cdsdip = cdsdip;
+		}
+
+	}
+	public static final int NB_COMPUTER = 50;
+	private static final int NB_APPLICATION = 10;
 
 	protected AdmissionControllerDynamic ac;
 	protected AdmissionControllerManagementOutboundPort acmop;
@@ -79,7 +101,7 @@ extends		AbstractCVM
 	// ------------------------------------------------------------------------
 	// Component virtual machine methods
 	// ------------------------------------------------------------------------
-
+	
 	private void createAdmissionController() throws Exception {
 
 		this.ac = new AdmissionControllerDynamic("AdmController", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, "");
@@ -183,6 +205,8 @@ extends		AbstractCVM
 	//	this.apmop[4].stopApplication();
 	}
 
+	
+	
 	/**
 	 * execute the test application.
 	 * 
