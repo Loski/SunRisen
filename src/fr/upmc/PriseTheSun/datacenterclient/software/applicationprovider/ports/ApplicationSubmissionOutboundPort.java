@@ -27,13 +27,11 @@ public class ApplicationSubmissionOutboundPort extends AbstractOutboundPort impl
 	      ( ( ApplicationSubmissionI ) this.connector ).submitGenerator(requestNotificationInboundPort, appURI, rgURI );
 	}
 
-    /**
-     * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int, java.lang.Class)
-     */
+	/*
     @Override
     public String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
       return  ( ( ApplicationSubmissionI ) this.connector ).submitApplication(appURI, nbVM, submissionInterface);
-    }
+    }*/
 
 	@Override
 	public void stopApplication(String appUri) throws Exception {

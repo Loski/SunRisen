@@ -48,9 +48,7 @@ public class ApplicationSubmissionInboundPort extends AbstractInboundPort implem
 				}) ;
 	}
 
-	/**
-	 * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int, java.lang.Class)
-	 */
+	/*
 	@Override
 	public String[] submitApplication(final String appURI, final int nbVM, final Class submissionInterface) throws Exception {
         final ApplicationSubmissionI aps = ( ApplicationSubmissionI ) this.owner;
@@ -60,7 +58,7 @@ public class ApplicationSubmissionInboundPort extends AbstractInboundPort implem
                 return aps.submitApplication(appURI, nbVM,submissionInterface );
             }
         } );
-	}
+	}*/
 
 	@Override
 	public void stopApplication(final String appUri) throws Exception {

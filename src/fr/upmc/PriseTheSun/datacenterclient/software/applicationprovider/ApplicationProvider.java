@@ -184,7 +184,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 		assert submissionInterface.isInterface();
 		
 		System.out.println("Waiting acception of Application ["+this.apURI+"] with submissionInterface ["+submissionInterface.getCanonicalName()+"]");
-		rdUri = this.asop.submitApplication(apURI, 2, submissionInterface);
+		rdUri = this.asop.submitApplication(apURI, 2);
 		System.err.println("Request submitted, the reply is : " + rdUri[0]);
 		
         if ( rdUri != null ) {

@@ -520,8 +520,8 @@ implements 	ApplicationSubmissionI,
 	/**
 	 * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int, java.lang.Class)
 	 */
-	@Override
-	public  String[]  submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
+	@Deprecated
+	public  synchronized String[]  submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
 		
 		assert submissionInterface.isInterface();
 		

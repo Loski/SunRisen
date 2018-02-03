@@ -19,17 +19,7 @@ public interface ApplicationSubmissionI extends	OfferedI, RequiredI {
 	 */
 	public String[] submitApplication(String appURI, int nbVM) throws Exception;
 	
-	
-	
-	/**
-	 * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int)
-	 * @param appURI
-	 * @param nbVM
-	 * @param submissionInterface
-	 * @return
-	 * @throws Exception
-	 */
-	public String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception;
+	//public String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception;
 	
 	/**
 	 * Submit a generator to the administration controller.

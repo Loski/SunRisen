@@ -736,13 +736,14 @@ implements 	RequestDispatcherStateDataConsumerI,
 		//TODO ajouter libération des coeurs réservés?
 		System.err.println("Receive a vm disconnected" + this.myVMs.size());
 		ApplicationVMManagementOutboundPort avm = this.avms.remove(vmURI);
+		ComputerControllerManagementOutboutPort ccmop = this.cmops.remove(vmURI);
+		ccmop.releaseCore(vmURI);
 		for(int i = 0; i < this.myVMs.size(); i++) {
 			if(myVMs.get(i).getApplicationVM().equals(vmURI)) {
-				this.cmops.remove(vmURI);
+				
 				avm.disconnectWithRequestSubmissioner();
-				/*avm.desallocateCores();
-				this.cmops.
-				freeApplicationVM.add(myVMs.remove(i));*/
+				avm.desallocateAllCores();
+				freeApplicationVM.add(myVMs.remove(i));
 				return;
 			}
 		}
@@ -767,7 +768,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 		//On attends jusqu'a ce qu'il ne reste plus de vm.
 		while(!this.freeApplicationVM.isEmpty()) {
-			System.err.println("waiting...");
 			Thread.sleep(300);
 		}
 		// On raccorde les ports de managements
@@ -873,6 +873,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			return this.cmops.get(vmURI).tryReserveCore(vmURI, nbToReserve);
 		}catch (Exception e) {
 			e.printStackTrace();
+			System.err.println(vmURI + "is null?");
 			return 0;
 		}
 	}
