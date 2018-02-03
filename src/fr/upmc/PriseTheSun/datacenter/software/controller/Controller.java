@@ -720,8 +720,9 @@ implements 	RequestDispatcherStateDataConsumerI,
 		System.err.println("Receive a vm disconnected" + this.myVMs.size());
 		for(int i = 0; i < this.myVMs.size(); i++) {
 			if(myVMs.get(i).getApplicationVM().equals(vmURI)) {
-				freeApplicationVM.add(myVMs.remove(i));
 				this.cmops.remove(vmURI);
+				this.avms.remove(vmURI);
+				freeApplicationVM.add(myVMs.remove(i));
 				return;
 			}
 		}
@@ -745,8 +746,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 		// On raccorde les ports de managements
 		cmopPrevious.setNextManagementInboundPort(controllerManagementNextInboundPort);
-		cmopPrevious.bindSendingDataUri(this.nextRingDynamicStateDataInboundPort);
-		cmopPrevious.startPushing();
+
 		
 		
 		NodeManagementOutboundPort cmopNext = new NodeManagementOutboundPort("cmop-next-"+this.controllerURI, this);
@@ -754,7 +754,15 @@ implements 	RequestDispatcherStateDataConsumerI,
 		cmopNext.publishPort();
 		cmopNext.doConnection(controllerManagementNextInboundPort, NodeManagementConnector.class.getCanonicalName());
 		cmopNext.setPreviousManagementInboundPort(controllerManagementPreviousInboundPort);
+		
+		//Déconnection de l'ancien inbound port...
 		cmopNext.doDisconnectionInboundPort();
+		
+		
+		cmopPrevious.bindSendingDataUri(this.nextRingDynamicStateDataInboundPort);
+		cmopPrevious.startPushing();
+		
+		
 		cmopNext.unpublishPort();
 		cmopPrevious.unpublishPort();
 		
@@ -767,6 +775,10 @@ implements 	RequestDispatcherStateDataConsumerI,
 			System.err.println("je te kill");
 			this.rdsdop.doDisconnection();
 		}
+		this.logMessage("Disconnect " + this.controllerURI + " of the ring" );
+
+		w.write(Arrays.asList("disconnected !!"));
+
 		}catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
@@ -803,6 +815,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		assert i > 0;
 		
 		for (Entry<String, ApplicationVMDynamicStateI> entry : virtualMachineDynamicStates.entrySet()) {
+			System.err.println(entry.getKey());
 			System.out.println("core reserved : " + this.reserveCore(entry.getKey(), 1));
 	    }
 	}

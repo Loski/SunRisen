@@ -202,7 +202,7 @@ extends		AbstractCVM
 			//this.apmop[i].createAndSendApplication();
 			this.apmop[i].createAndSendApplication();
 		}
-		Thread.sleep(2500);
+		Thread.sleep(25000);
 
 		this.apmop[4].stopApplication();
 	}

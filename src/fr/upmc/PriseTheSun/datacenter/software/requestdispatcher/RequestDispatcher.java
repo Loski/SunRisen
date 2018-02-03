@@ -463,7 +463,7 @@ implements
 		if(portIntrospection!=null && portIntrospection.connected())
 		{
 			portIntrospection.doDisconnection();
-		//	portIntrospection.destroyPort();
+			portIntrospection.destroyPort();
 		}
 		
 		this.vmnobp.receiveVMDisconnectionNotification(vmData.getVmURI());
