@@ -67,7 +67,7 @@ implements
 	
 	//public static int NB_REQUEST_MAX_IN_QUEUE = 10;
 
-	public static int	DEBUG_LEVEL = 2 ;
+	public static int	DEBUG_LEVEL = -10 ;
 	
 	/** URI of this request dispatcher */
 	protected String rdURI;

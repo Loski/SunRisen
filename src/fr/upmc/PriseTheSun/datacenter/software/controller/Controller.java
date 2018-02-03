@@ -403,8 +403,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		this.logMessage("" +average);
-		this.logMessage("" + waitDecision);
+
 		Threeshold th = getThreeshold(average);
 		try {
 			switch(th){

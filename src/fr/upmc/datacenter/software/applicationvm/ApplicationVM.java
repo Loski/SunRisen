@@ -218,8 +218,8 @@ implements	ProcessorServicesNotificationConsumerI,
 		assert	requestSubmissionInboundPortURI != null ;
 		assert	requestNotificationOutboundPortURI != null ;
 
-		this.toggleLogging();
-		this.toggleTracing();
+		/*this.toggleLogging();
+		this.toggleTracing();*/
 		
 		this.vmURI = vmURI ;
 		// hash map keeping track of the idle status of cores

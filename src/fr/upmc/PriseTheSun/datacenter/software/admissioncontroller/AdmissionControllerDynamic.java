@@ -3,6 +3,7 @@ package fr.upmc.PriseTheSun.datacenter.software.admissioncontroller;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +34,7 @@ import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkDynami
 import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI;
 import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingNetworkDynamicStateDataInboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.ring.ports.RingNetworkDynamicStateDataOutboundPort;
+import fr.upmc.PriseTheSun.datacenter.tools.Writter;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.ports.ApplicationSubmissionInboundPort;
 import fr.upmc.components.AbstractComponent;
@@ -111,9 +113,7 @@ implements 	ApplicationSubmissionI,
 	protected static final String ComputerControllerManagementInboundPortURI = "ccmip";
 	protected static final String ComputerControllerManagementUri = "ccm";
 	protected static final String VMDisconnectionHandlerOutboundPort = "VMDisconnectionHandlerOutboundPort";
-
-
-	
+	private Writter w;
 
 	protected AdmissionControllerManagementInboundPort acmip;
 	protected ApplicationSubmissionInboundPort asip;
@@ -250,7 +250,8 @@ implements 	ApplicationSubmissionI,
 		this.vmURis = new HashSet<>();
 		this.submissionInterfaces = new HashMap<>();
 		
-		
+		w = new Writter(this.admissionControllerURI+ ".csv");
+
 	}
 
 	/**
@@ -635,7 +636,8 @@ implements 	ApplicationSubmissionI,
 			if(vm != null) {
 				if(this.vmURis.contains(vm.getApplicationVM())) {
 					int numberVmInRing = this.vmURis.size();
-					System.err.println("Nombre de vm " + numberVmInRing);
+					w.write(Arrays.asList("Nombre de vm " + numberVmInRing));
+				//	System.err.println("Nombre de vm " + numberVmInRing);
 					this.vmURis.clear();
 				}else {
 					this.vmURis.add(vm.getApplicationVM());

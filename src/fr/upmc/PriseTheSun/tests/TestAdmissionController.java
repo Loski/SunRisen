@@ -200,9 +200,11 @@ extends		AbstractCVM
 		}
 		
 		
+		//this.apmop[3].stopApplication();
+		
 		Thread.sleep(8_000);
-		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TRY TO DESTROY MY FRIEND");
-	//	this.apmop[4].stopApplication();
+		System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TRY TO DESTROY MY FRIEND");
+		this.apmop[4].stopApplication();
 	}
 
 	
