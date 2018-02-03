@@ -109,4 +109,18 @@ public class NodeManagementInboundPort extends AbstractInboundPort implements No
 		});
 	}
 
+	@Override
+	public void doDisconnectionInboundPort() throws Exception {
+		final NodeRingManagementI cm = ( NodeRingManagementI ) this.owner;
+		
+		 this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Void>() {
+					@Override
+					public Void call() throws Exception {
+						cm.doDisconnectionInboundPort();
+						return null;
+					}
+		});
+	}
+
 }

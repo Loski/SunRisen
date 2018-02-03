@@ -61,4 +61,9 @@ implements	NodeRingManagementI{
 		((NodeRingManagementI)this.connector).startPushing();
 	}
 
+	@Override
+	public void doDisconnectionInboundPort() throws Exception {
+		((NodeRingManagementI)this.connector).doDisconnectionInboundPort();
+	}
+
 }

@@ -754,7 +754,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		cmopNext.publishPort();
 		cmopNext.doConnection(controllerManagementNextInboundPort, NodeManagementConnector.class.getCanonicalName());
 		cmopNext.setPreviousManagementInboundPort(controllerManagementPreviousInboundPort);
-		
+		cmopNext.doDisconnectionInboundPort();
 		cmopNext.unpublishPort();
 		cmopPrevious.unpublishPort();
 		
@@ -869,6 +869,14 @@ implements 	RequestDispatcherStateDataConsumerI,
 			super();
 			this.value = value;
 			this.timestamp = timespant;
+		}
+	}
+
+
+	@Override
+	public void doDisconnectionInboundPort() throws Exception {
+		if(this.rdsdip.connected()) {
+			this.rdsdip.doDisconnection();
 		}
 	}
 

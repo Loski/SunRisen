@@ -23,5 +23,6 @@ public interface NodeRingManagementI extends OfferedI,RequiredI{
 	public void setPreviousManagementInboundPort(String managementInboundPort) throws Exception;
 	public void stopPushing() throws Exception;
 	public void startPushing() throws Exception;
+	public void doDisconnectionInboundPort()  throws Exception;
 
 }

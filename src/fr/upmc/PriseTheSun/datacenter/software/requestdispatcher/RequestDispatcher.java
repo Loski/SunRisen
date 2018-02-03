@@ -450,7 +450,7 @@ implements
 
 	protected void disconnectVirtualMachine(VirtualMachineData vmData) throws Exception
 	{
-		System.err.println(vmData.getVmURI());
+		System.err.println("coucou" + vmData.getVmURI());
 		
 		RequestSubmissionOutboundPort port = vmData.getRsobp();
 		if(port!=null && port.connected())
@@ -465,7 +465,7 @@ implements
 		{
 			this.removePort(portIntrospection);
 			portIntrospection.doDisconnection();
-			portIntrospection.destroyPort();
+		//	portIntrospection.destroyPort();
 		}
 		
 		this.vmnobp.receiveVMDisconnectionNotification(vmData.getVmURI());

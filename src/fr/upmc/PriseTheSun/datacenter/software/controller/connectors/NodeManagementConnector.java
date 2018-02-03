@@ -48,4 +48,9 @@ implements	NodeRingManagementI{
 		((NodeRingManagementI)this.offering ).startPushing();
 
 	}
+
+	@Override
+	public void doDisconnectionInboundPort() throws Exception {
+		((NodeRingManagementI)this.offering ).doDisconnectionInboundPort();
+	}
 }
