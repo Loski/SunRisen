@@ -331,6 +331,8 @@ implements
 	public void acceptRequestTerminationNotification(RequestI r) throws Exception {
 
 		assert r != null;
+
+		this.nbRequestTerminated++;
 		
 		VirtualMachineData vm = this.taskExecutedBy.remove(r.getRequestURI());
 		vm.endRequest(r.getRequestURI());
@@ -342,26 +344,26 @@ implements
 				this.disconnectVirtualMachine(vm);
 			}
 		}
-
-		this.requestNotificationOutboundPort.notifyRequestTermination( r );
 		
-		this.nbRequestTerminated++;
+		this.requestNotificationOutboundPort.notifyRequestTermination( r );
 		
 		if(!this.queue.isEmpty())
 		{
+			VirtualMachineData vmData = findAvaibleVM();
+			
 			RequestI req = this.queue.remove();
 			
 			RequestTimeData timeData = this.timeDataMap.remove(req.getRequestURI());
 			
-			vm.addRequest(req.getRequestURI(),timeData);
+			vmData.addRequest(req.getRequestURI(),timeData);
 			
-			RequestSubmissionOutboundPort port = vm.getRsobp();
+			RequestSubmissionOutboundPort port = vmData.getRsobp();
 			port.submitRequestAndNotify(req);
 			
 			if (RequestGenerator.DEBUG_LEVEL >= 1) 
-				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),vm.getVmURI(),port.getPortURI()));
+				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),vmData.getVmURI(),port.getPortURI()));
 			
-			this.taskExecutedBy.put(req.getRequestURI(),vm);
+			this.taskExecutedBy.put(req.getRequestURI(),vmData);
 		}
 		
 		if (RequestGenerator.DEBUG_LEVEL >= 1) 
