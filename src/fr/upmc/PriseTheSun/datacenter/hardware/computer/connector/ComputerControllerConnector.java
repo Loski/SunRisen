@@ -29,4 +29,9 @@ public class ComputerControllerConnector extends AbstractConnector implements Co
 		return ((ComputerControllerManagementI)this.offering).allocateCores(i);
 	}
 
+	@Override
+	public int compteurVM() throws Exception {
+		return ((ComputerControllerManagementI)this.offering).compteurVM();
+	}
+
 }

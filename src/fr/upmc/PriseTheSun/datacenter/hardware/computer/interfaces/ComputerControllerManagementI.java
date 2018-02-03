@@ -32,4 +32,6 @@ public interface ComputerControllerManagementI extends OfferedI, RequiredI {
 	
 	
 	public AllocatedCore[] allocateCores(int i) throws Exception;
+	
+	public int compteurVM() throws Exception;
 }

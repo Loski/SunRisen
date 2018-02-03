@@ -43,4 +43,10 @@ public class ComputerControllerManagementOutboutPort extends AbstractOutboundPor
 		return ((ComputerControllerManagementI)this.connector).allocateCores(i);
 	}
 
+	@Override
+	public int compteurVM() throws Exception {
+		return ((ComputerControllerManagementI)this.connector).compteurVM();
+
+	}
+
 }

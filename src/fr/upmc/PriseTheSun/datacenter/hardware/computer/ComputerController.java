@@ -202,6 +202,11 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public int compteurVM() throws Exception {
+		return reservedCore.size();
+	}
 	
 	
 }

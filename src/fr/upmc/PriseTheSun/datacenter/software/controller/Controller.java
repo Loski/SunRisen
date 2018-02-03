@@ -253,6 +253,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		this.addVm(vm);
 
+		w.write(Arrays.asList("Moyenne", "Nombre de VM", "Threeshold", "Nombre de coeurs alloué",  "Nombre de requêtes reçues", "Nombre de requêtes terminées"));
 
 	}
 	
@@ -295,7 +296,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		try {
 			this.startPushing();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -422,7 +422,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		try {
 			average = calculAverage();
 		} catch (Exception e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
@@ -450,7 +449,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		//Release les cores
 		releaseCore(vms);
 		
-		w.write(Arrays.asList(""+average, ((Integer)vms.size()).toString(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms), "" + statistique.get("All"), ""+currentDynamicState.getNbRequestReceived(), ""+currentDynamicState.getNbRequestTerminated()));
+		w.write(Arrays.asList(""+average, ((Integer)vms.size()).toString(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms),  ""+currentDynamicState.getNbRequestReceived(), ""+currentDynamicState.getNbRequestTerminated()));
 	}
 
 	/**
@@ -537,7 +536,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 			try {
 				nb +=  (pcmop.setCoreFrequency(ask, vm.getProcessorURI(), vm.getAllocatedCoresNumber()[i])) ? 1 : 0;
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -707,6 +705,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 							vm.getComputerManagementInboundPortURI(),
 							ComputerControllerConnector.class.getCanonicalName());
 			}
+			AllocatedCore[] cores = ccmop.addCores(vm.getApplicationVM());
+			avmPort.allocateCores(cores);
 			this.cmops.put(vm.getApplicationVM(), ccmop);
 			this.avms.put(vm.getApplicationVM(), avmPort);
 		} catch (Exception e) {
@@ -719,13 +719,14 @@ implements 	RequestDispatcherStateDataConsumerI,
 		assert vmURI != null;
 		//TODO ajouter libération des coeurs réservés?
 		System.err.println("Receive a vm disconnected" + this.myVMs.size());
+		ApplicationVMManagementOutboundPort avm = this.avms.remove(vmURI);
 		for(int i = 0; i < this.myVMs.size(); i++) {
 			if(myVMs.get(i).getApplicationVM().equals(vmURI)) {
 				this.cmops.remove(vmURI);
-				this.avms.get(vmURI).disconnectWithRequestSubmissioner();
-				this.avms.remove(vmURI);
-				Thread.sleep(500);
-				freeApplicationVM.add(myVMs.remove(i));
+				avm.disconnectWithRequestSubmissioner();
+				/*avm.desallocateCores();
+				this.cmops.
+				freeApplicationVM.add(myVMs.remove(i));*/
 				return;
 			}
 		}
@@ -797,7 +798,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		System.err.println("Disconnect " + this.controllerURI + " of the ring" );
 
 		}catch (Exception e) {
-			// TODO: handle exception
 			e.printStackTrace();
 		}
 	}
@@ -886,8 +886,13 @@ implements 	RequestDispatcherStateDataConsumerI,
 		}
 	}
 
+	@Override
+	public void doDisconnectionInboundPort() throws Exception {
+		if(this.rdsdip.connected()) {
+			this.rdsdip.doDisconnection();
+		}
+	}
 	
-
 	public class Mesure{
 		@Override
 		public String toString() {
@@ -902,15 +907,5 @@ implements 	RequestDispatcherStateDataConsumerI,
 			this.timestamp = timespant;
 		}
 	}
-
-
-	@Override
-	public void doDisconnectionInboundPort() throws Exception {
-		if(this.rdsdip.connected()) {
-			this.rdsdip.doDisconnection();
-		}
-	}
-
-
 }
 
