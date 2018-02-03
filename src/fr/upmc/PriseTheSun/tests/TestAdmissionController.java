@@ -107,7 +107,6 @@ extends		AbstractCVM
 	private void createAdmissionController() throws Exception {
 
 		this.ac = new AdmissionControllerDynamic("AdmController", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, "");
-        this.ac.start();
         this.addDeployedComponent(this.ac); 
 		this.acmop = new AdmissionControllerManagementOutboundPort("acmop", new AbstractComponent(0, 0) {});
 		this.acmop.publishPort();
@@ -134,10 +133,7 @@ extends		AbstractCVM
             Computer c = new Computer(computer[i], admissibleFrequencies, processingPower, 1500, 1500,
                     numberOfProcessors, numberOfCores, csip[i], cssdip[i], cdsdip[i]);
             this.addDeployedComponent(c);
-            c.start();
-
             cw.add(new ComputerWrapper(computer[i], csip[i], cssdip[i], cdsdip[i]));
-            this.acmop.linkComputer(computer[i], csip[i], cssdip[i], cdsdip[i]);
         }
 	}
 	
@@ -148,12 +144,11 @@ extends		AbstractCVM
 		for(int i =0; i < nbApplication; i++) {
 			this.ap[i] = new ApplicationProvider("App"+"-"+i, applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI+"-"+i, applicationManagementInboundPort+"-"+i);
 			this.addDeployedComponent(this.ap[i]);
-		
 		}
 	}
 	
 	@Override
-	public void			deploy() throws Exception
+	public void	deploy() throws Exception
 	{
 		AbstractComponent.configureLogging("", "", 0, '|') ;
 		Processor.DEBUG = true ;
@@ -168,12 +163,13 @@ extends		AbstractCVM
 	@Override
 	public void			start() throws Exception
 	{
+		
 		super.start() ;
 		for(ComputerWrapper c : cw) {
 			this.acmop.linkComputer(c.uri, c.csip, c.cssdip, c.cdsdip);
 		}
+
 		for(int i = 0; i < NB_APPLICATION; i++) {
-			this.ap[i].start();
 			this.apmop[i] = new ApplicationProviderManagementOutboundPort("apmop"+"-"+i, new AbstractComponent(0, 0) {});
 			this.apmop[i].publishPort();
 			this.apmop[i].doConnection(applicationManagementInboundPort+"-"+i, ApplicationProviderManagementConnector.class.getCanonicalName());
@@ -208,8 +204,9 @@ extends		AbstractCVM
 			//this.apmop[i].createAndSendApplication();
 			this.apmop[i].createAndSendApplication();
 		}
-		
-		//this.apmop[4].stopApplication();
+		Thread.sleep(2500);
+
+		this.apmop[4].stopApplication();
 	}
 
 	
