@@ -48,6 +48,7 @@ import fr.upmc.PriseTheSun.datacenter.tools.Writter;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.exceptions.ComponentShutdownException;
+import fr.upmc.components.exceptions.ComponentStartException;
 import fr.upmc.datacenter.connectors.ControlledDataConnector;
 import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
@@ -258,7 +259,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		this.addVm(vm);
 
-		this.startPushing();
 
 	}
 	
@@ -295,6 +295,17 @@ implements 	RequestDispatcherStateDataConsumerI,
 		return result[taille-1];
 	}
 	
+	@Override
+	public void start() throws ComponentStartException {
+		super.start();
+		try {
+			this.startPushing();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	private Double calculAverage() throws Exception {
 		return calculAverage("All");
 	}
@@ -535,7 +546,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	 */
 	@Override
 	public void acceptRingNetworkDynamicData(String controllerDataRingOutboundPortURI, RingNetworkDynamicStateI currentDynamicState)
-			throws Exception {;
+			throws Exception {
 		synchronized(o){
 			ApplicationVMInfo vm =  currentDynamicState.getApplicationVMInfo();
 			if(vm != null) {
@@ -716,7 +727,9 @@ implements 	RequestDispatcherStateDataConsumerI,
 	@Override
 	public void disconnectController() throws Exception {
 		System.err.println("tentative de déconnexion..");
+		try {
 		NodeManagementOutboundPort cmopPrevious = new NodeManagementOutboundPort("cmop-previous-"+this.controllerURI, this);
+		this.addPort(cmopPrevious);
 		cmopPrevious.publishPort();
 		cmopPrevious.doConnection(controllerManagementPreviousInboundPort, NodeManagementConnector.class.getCanonicalName());
 		
@@ -730,9 +743,14 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		
 		NodeManagementOutboundPort cmopNext = new NodeManagementOutboundPort("cmop-next-"+this.controllerURI, this);
+		this.addPort(cmopNext);
 		cmopNext.publishPort();
 		cmopNext.doConnection(controllerManagementNextInboundPort, NodeManagementConnector.class.getCanonicalName());
 		cmopNext.setPreviousManagementInboundPort(controllerManagementPreviousInboundPort);
+		
+		cmopNext.unpublishPort();
+		cmopPrevious.unpublishPort();
+		
 		
 		cmopPrevious.doDisconnection();
 		cmopNext.doDisconnection();
@@ -741,6 +759,10 @@ implements 	RequestDispatcherStateDataConsumerI,
 			this.logMessage("Disconnect " + this.controllerURI + " of the ring" );
 			System.err.println("je te kill");
 			this.rdsdop.doDisconnection();
+		}
+		}catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
 		}
 	}
 	

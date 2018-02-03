@@ -461,6 +461,8 @@ implements 	ApplicationSubmissionI,
 	public synchronized String[] submitApplication(String appURI, int nbVM) throws Exception{
 		
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
+		w.write(Arrays.asList("application accepted"));
+
 		ApplicationVMInfo vm;
 		synchronized(o){
 			if(!this.VMforNewApplication.isEmpty()) {

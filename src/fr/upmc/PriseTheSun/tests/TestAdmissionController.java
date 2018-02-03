@@ -199,12 +199,7 @@ extends		AbstractCVM
 			this.apmop[i].createAndSendApplication();
 		}
 		
-		
-		//this.apmop[3].stopApplication();
-		
-		Thread.sleep(8_000);
-		System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TRY TO DESTROY MY FRIEND");
-		this.apmop[4].stopApplication();
+		//this.apmop[4].stopApplication();
 	}
 
 	
@@ -217,7 +212,7 @@ extends		AbstractCVM
 	public static void	main(String[] args)
 	{
 		// Uncomment next line to execute components in debug mode.
-		// AbstractCVM.toggleDebugMode() ;
+		//AbstractCVM.toggleDebugMode() ;
 		try {
 			final TestAdmissionController trd = new TestAdmissionController() ;
 			// Deploy the components
