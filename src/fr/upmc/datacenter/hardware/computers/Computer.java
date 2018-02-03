@@ -1135,6 +1135,8 @@ implements	ProcessorStateDataConsumerI,
 	
 	@Override
 	public AllocatedCore[] allocateCores(ArrayList<Point> tmp) {
+		assert tmp != null;
+		
 		AllocatedCore cores[] = new AllocatedCore[tmp.size()];
 
 		int i = 0;

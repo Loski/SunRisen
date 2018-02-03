@@ -660,7 +660,7 @@ implements	ProcessorServicesNotificationConsumerI,
 	 * @see fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMManagementI#allocateCores(fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore[])
 	 */
 	@Override
-	public void			allocateCores(AllocatedCore[] allocatedCores)
+	public void	allocateCores(AllocatedCore[] allocatedCores)
 	throws Exception
 	{
 		assert	allocatedCores != null && allocatedCores.length != 0 ;
@@ -736,13 +736,13 @@ implements	ProcessorServicesNotificationConsumerI,
 	}
 
 	@Override
-	public AllocatedCore[] desallocateAllCores() throws Exception {
+	public synchronized AllocatedCore[] desallocateAllCores() throws Exception {
 		
 		AllocatedCore[] cores = new AllocatedCore[this.allocatedCoresIdleStatus.size()];
 		
 		int i = 0;
-		
-		for(Iterator<Map.Entry<AllocatedCore,Boolean>> it =  this.allocatedCoresIdleStatus.entrySet().iterator(); it.hasNext();)
+		Iterator<Map.Entry<AllocatedCore,Boolean>> it =  this.allocatedCoresIdleStatus.entrySet().iterator();
+		while(it.hasNext())
 		{
 			Map.Entry<AllocatedCore,Boolean> entry = it.next();
 		    AllocatedCore ac = entry.getKey();
@@ -758,22 +758,15 @@ implements	ProcessorServicesNotificationConsumerI,
 			if(psobp.connected())
 			{
 				psobp.doDisconnection();
+				psobp.destroyPort();
+
 			}
 			
-			psobp.destroyPort();
-			
-			ProcessorServicesNotificationInboundPort psnibp = this.processorNotificationInboundPorts.get(ac.processorURI);
-			if(psnibp.connected())
-			{
-				psnibp.doDisconnection();
-			}
-			
-			psnibp.destroyPort();
-			
-			this.allocatedCoresIdleStatus.remove(ac);
+			//this.allocatedCoresIdleStatus.remove(ac);
 			
 			i++;
 		}
+		this.allocatedCoresIdleStatus.clear();
 		return cores;
 	}
 }

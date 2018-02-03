@@ -474,9 +474,11 @@ implements
 			portIntrospection.doDisconnection();
 			portIntrospection.destroyPort();
 		}
-		
-		this.vmnobp.receiveVMDisconnectionNotification(vmData.getVmURI());
-		
+		try {
+			this.vmnobp.receiveVMDisconnectionNotification(vmData.getVmURI());
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
 		if(inDisconnectionState && this.virtualMachineDataList.isEmpty() && this.virtualMachineWaitingForDisconnection.isEmpty())
 		{			
 			if(this.vmnobp.connected())
