@@ -1136,12 +1136,13 @@ implements	ProcessorStateDataConsumerI,
 	@Override
 	public AllocatedCore[] allocateCores(ArrayList<Point> tmp) {
 		AllocatedCore cores[] = new AllocatedCore[tmp.size()];
+
 		int i = 0;
 		while(!tmp.isEmpty()) {
 			Point pt =  tmp.remove(0);
 			cores[i] = new AllocatedCore(
 					(int) pt.getX(),
-					this.processorsURI.get((int)pt.getY()), 
+					this.processorsURI.get((int)pt.getX()), 
 					pt.y,
 					this.processorsInboundPortURI.get(
 										this.processorsURI.get((int)pt.getX()))) ;
