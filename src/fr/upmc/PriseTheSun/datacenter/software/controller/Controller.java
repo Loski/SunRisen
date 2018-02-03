@@ -128,15 +128,15 @@ implements 	RequestDispatcherStateDataConsumerI,
 	static class StaticData {
 		public static final double AVERAGE_TARGET=5E9D;
 		
-		public static final double VERRY_MUCH_LOWER_PERCENT= 0.5;
-		public static final double LOWER_PERCENT= 0.95;
-		public static final double HIGHER_PERCENT= 0.05;
-		public static final double VERY_MUCH_HIGHER_PERCENT=0.5;
+		public static final double VERY_FAST_PERCENT_LIMIT=0.78;
+		public static final double FASTER_PERCENT_LIMIT=0.85;
+		public static final double SLOWER_PERCENT_LIMIT=1.15;
+		public static final double VERY_SLOW_PERCENT_LIMIT=1.22;
 
-		public static final double TARGET_VERY_HIGHT = AVERAGE_TARGET * VERY_MUCH_HIGHER_PERCENT + AVERAGE_TARGET;
-		public static final double TARGET_HIGHT = AVERAGE_TARGET * HIGHER_PERCENT + AVERAGE_TARGET;
-		public static final double TARGET_LOWER = AVERAGE_TARGET * LOWER_PERCENT;
-		public static final double TARGET_VERY_LOWER = AVERAGE_TARGET * LOWER_PERCENT;
+		public static final double TARGET_VERY_SLOW = AVERAGE_TARGET * VERY_SLOW_PERCENT_LIMIT;
+		public static final double TARGET_SLOW = AVERAGE_TARGET * SLOWER_PERCENT_LIMIT;
+		public static final double TARGET_FAST = AVERAGE_TARGET * FASTER_PERCENT_LIMIT;
+		public static final double TARGET_VERY_FAST = AVERAGE_TARGET * VERY_FAST_PERCENT_LIMIT;
 		public static final long minute = 60000l;
 		public static int DISPATCHER_PUSH_INTERVAL=5000;
 		public static int NB_VM_RESERVED = 1;
@@ -377,19 +377,23 @@ implements 	RequestDispatcherStateDataConsumerI,
     }
     
     public enum Threeshold{
-    	LOWER, HIGHER, GOOD
+    	SLOWER, FASTER, GOOD
     }
     
 	public Threeshold getThreeshold(Double time){
-		if(false) {
+		
+		double speed = time.doubleValue();
+		
+		if(speed>StaticData.TARGET_SLOW)
+			return Threeshold.SLOWER;
+		else if(speed<StaticData.TARGET_SLOW && speed>StaticData.TARGET_FAST)
+		{
 			return Threeshold.GOOD;
 		}
-		else if(Double.compare(time, (StaticData.TARGET_HIGHT)) == 1)
-			return Threeshold.HIGHER;
-		else if(Double.compare(time, (StaticData.TARGET_LOWER)) == -1) {
-			return Threeshold.LOWER;
+		else if(speed<StaticData.TARGET_FAST) {
+			return Threeshold.FASTER;
 		}else {
-			return Threeshold.GOOD;
+			return null;
 		}
 	}
 
@@ -407,12 +411,12 @@ implements 	RequestDispatcherStateDataConsumerI,
 		Threeshold th = getThreeshold(average);
 		try {
 			switch(th){
-			case HIGHER :
+			case SLOWER :
 
 				tooSlowCase(vms);
 				//this.acmop.addCores(null, randomVM.getApplicationVMURI(), 1);
 				break;
-			case LOWER :
+			case FASTER :
 				tooFastCase(vms);
 				break;
 			case GOOD :
