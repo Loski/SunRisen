@@ -274,6 +274,8 @@ implements
 		RequestTimeData timeData = new RequestTimeData(this.rdURI,null, r.getRequestURI());
 		this.timeDataMap.put(r.getRequestURI(),timeData);
 		
+		this.nbRequestReceived++;
+		
 		if(this.queue.isEmpty())
 		{	
 			VirtualMachineData vm = this.virtualMachineDataList.get(this.currentVM);
@@ -291,8 +293,6 @@ implements
 				port.submitRequestAndNotify(r);
 
 				this.taskExecutedBy.put(r.getRequestURI(),vm);
-				
-				this.nbRequestReceived++;
 			}
 		}
 		else
@@ -309,6 +309,8 @@ implements
 		RequestTimeData timeData = new RequestTimeData(this.rdURI,null, r.getRequestURI());
 		this.timeDataMap.put(r.getRequestURI(),timeData);
 
+		this.nbRequestReceived++;
+		
 		if(this.queue.isEmpty())
 		{	
 			VirtualMachineData vm = findAvaibleVM();
@@ -328,8 +330,6 @@ implements
 					this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,r.getRequestURI(),vm.getVmURI(),port.getPortURI()));
 				
 				this.taskExecutedBy.put(r.getRequestURI(),vm);
-				
-				this.nbRequestReceived++;
 			}
 		}
 		else
