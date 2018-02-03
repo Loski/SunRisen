@@ -86,8 +86,10 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 	 */
 	public AllocatedCore[] addCores(String vmUri) throws Exception {
 		assert vmUri != null;
-
-		return csop.allocateCores(reservedCore.get(vmUri));
+		ArrayList<Point> pts = reservedCore.get(vmUri);
+		if(pts == null)
+			return null;
+		return csop.allocateCores(pts);
 	}
 
 	/**

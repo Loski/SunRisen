@@ -123,7 +123,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	private VMDisconnectionNotificationHandlerInboundPort vmnibp;
 	private String nextRingDynamicStateDataInboundPort;
 	
-	public final static int PUSH_INTERVAL = 1000;
+	public final static int PUSH_INTERVAL = 500;
 	public final static int REQUEST_MIN = PUSH_INTERVAL/100;
 	
 	static class StaticData {
@@ -140,7 +140,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		public static final double TARGET_VERY_FAST = AVERAGE_TARGET * VERY_FAST_PERCENT_LIMIT;
 		public static final long minute = 60000l;
 		public static int DISPATCHER_PUSH_INTERVAL=5000;
-		public static int NB_VM_RESERVED = 1;
+		public static final int NB_VM_RESERVED = 2;
 		//Max core
 		public static int MAX_ALLOCATION=25;
 		
@@ -289,7 +289,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 				break;
 			}
 		}
-		System.err.println("Erased " + erase);
 		if(tmp.isEmpty()) {
 			throw new Exception("Aucune valeur! timestamp incorrect?");
 		}
@@ -329,35 +328,40 @@ implements 	RequestDispatcherStateDataConsumerI,
 	public void acceptRequestDispatcherDynamicData(String dispatcherURI,
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
 		//this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
-		if((waitDecision % REQUEST_MIN) == 0) {
-			reserveCore(currentDynamicState.getVirtualMachineDynamicStates(), 1);
-		}
-		waitDecision++;
-		if(currentDynamicState.getAvgExecutionTime() == null) {
-			return;
-		}
 		
-		long timestamp = currentDynamicState.getTimeStamp();
-	    for (Entry<String, Double> entry : currentDynamicState.getVirtualMachineExecutionAverageTime().entrySet()) {
-	    	if(entry.getValue() == null) {
-	    		continue;
-	    	}
-	    	if(this.statistique.get(entry.getKey()) == null) {
-	    		this.statistique.put(entry.getKey(),  Collections.synchronizedList(new ArrayList<Mesure>()));
-	    	}
-    		this.statistique.get(entry.getKey()).add(new Mesure(entry.getValue(), timestamp));
-	    }
-	    
-	    this.statistique.get("All").add(new Mesure(currentDynamicState.getAvgExecutionTime(), timestamp));
-	    
-		if((waitDecision % REQUEST_MIN) == 0) {
-			processControl(currentDynamicState);
-			//On redonne les VMs au prochain controller.
-			while(!vmReserved.isEmpty()) {
+		try {
+			if((waitDecision % REQUEST_MIN) == 0) {
+				reserveCore(1);
+			}
+			waitDecision++;
+			if(currentDynamicState.getAvgExecutionTime() == null) {
+				return;
+			}
+			
+			long timestamp = currentDynamicState.getTimeStamp();
+		    for (Entry<String, Double> entry : currentDynamicState.getVirtualMachineExecutionAverageTime().entrySet()) {
+		    	if(entry.getValue() == null) {
+		    		continue;
+		    	}
+		    	if(this.statistique.get(entry.getKey()) == null) {
+		    		this.statistique.put(entry.getKey(),  Collections.synchronizedList(new ArrayList<Mesure>()));
+		    	}
+	    		this.statistique.get(entry.getKey()).add(new Mesure(entry.getValue(), timestamp));
+		    }
+		    
+		    this.statistique.get("All").add(new Mesure(currentDynamicState.getAvgExecutionTime(), timestamp));
+		    
+			if((waitDecision % REQUEST_MIN) == 0) {
+				processControl(currentDynamicState);
+				//On redonne les VMs au prochain controller.
 				synchronized (o) {
-					freeApplicationVM.add(vmReserved.remove(0));
+					while(!vmReserved.isEmpty()) {
+							freeApplicationVM.add(vmReserved.remove(0));
+					}
 				}
 			}
+		}catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -463,8 +467,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		}
 		
 		//Release les cores
-		releaseCore(vms);
-		
+		//releaseCore(vms);
 		w.write(Arrays.asList(""+average, ((Integer)vms.size()).toString(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms),  ""+currentDynamicState.getNbRequestReceived(), ""+currentDynamicState.getNbRequestTerminated()));
 	}
 
@@ -520,13 +523,9 @@ implements 	RequestDispatcherStateDataConsumerI,
 	private void tooFastCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		
 		boolean canRemoveVM = vms.size() > 1;
-		//boolean canDesalocate = coresAllocates  == StaticData.MIN_ALLOCATION;
-		
-
 		if(canRemoveVM) {
-			ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
-			this.rdmop.askVirtualMachineDisconnection(randomVM.getApplicationVMURI());
-			System.err.println("remove a vm");
+			ApplicationVMInfo randomVM = this.myVMs.remove(0);
+			this.rdmop.askVirtualMachineDisconnection(randomVM.getApplicationVM());
 		}
 		
 		for (Entry<String, ApplicationVMDynamicStateI> entry : vms.entrySet())
@@ -536,13 +535,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			}
 		}
 
-		
-		//System.err.println("!!!!!!!!! " +this.cmops.get(randomVM.getApplicationVMURI()).reserveCore(randomVM.getApplicationVMURI()));
-
-		
-		//Try to lower frequency
-		//int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.LOWER, randomVM);
-		
+		System.err.println("je passe par faster mdr");		
 	}
 	
 /*	private int setCoreFrequency(CoreAsk ask, ApplicationVMDynamicStateI vm){
@@ -573,7 +566,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			//System.out.println(vm + controllerDataRingOutboundPortURI);
 
 			if(vm != null) {
-				if(vmReserved.size() < StaticData.NB_VM_RESERVED) {
+				if(vmReserved.size() < StaticData.NB_VM_RESERVED /*&& (waitDecision % REQUEST_MIN == 1)*/) {
 					vmReserved.add(vm);
 				}
 				else {
@@ -722,6 +715,9 @@ implements 	RequestDispatcherStateDataConsumerI,
 							ComputerControllerConnector.class.getCanonicalName());
 			}
 			AllocatedCore[] cores = ccmop.addCores(vm.getApplicationVM());
+			if(cores == null || cores.length == 0) {
+				throw new Exception("No cores found..");
+			}
 			avmPort.allocateCores(cores);
 			this.cmops.put(vm.getApplicationVM(), ccmop);
 			this.avms.put(vm.getApplicationVM(), avmPort);
@@ -732,22 +728,25 @@ implements 	RequestDispatcherStateDataConsumerI,
 	
 	@Override
 	public void receiveVMDisconnectionNotification(String vmURI) throws Exception {
+		
 		assert vmURI != null;
-		//TODO ajouter libération des coeurs réservés?
-		System.err.println("Receive a vm disconnected" + this.myVMs.size());
+		this.logMessage(this.controllerURI + " receive a signal to disconnect "+vmURI);
 		ApplicationVMManagementOutboundPort avm = this.avms.remove(vmURI);
 		ComputerControllerManagementOutboutPort ccmop = this.cmops.remove(vmURI);
 		ccmop.releaseCore(vmURI);
+		avm.disconnectWithRequestSubmissioner();
+		avm.desallocateAllCores();
+	//	freeApplicationVM.add(vm);		
+	}
+	
+	
+	private int findVm(String vmURI) {
 		for(int i = 0; i < this.myVMs.size(); i++) {
 			if(myVMs.get(i).getApplicationVM().equals(vmURI)) {
-				
-				avm.disconnectWithRequestSubmissioner();
-				avm.desallocateAllCores();
-				freeApplicationVM.add(myVMs.remove(i));
-				return;
+				return i;
 			}
 		}
-		throw new Exception("Vm was not found. Can't delete.");
+		return -1;
 	}
 
 	/**
@@ -841,15 +840,11 @@ implements 	RequestDispatcherStateDataConsumerI,
 	}
 
 	
-	private void reserveCore(Map<String, ApplicationVMDynamicStateI> virtualMachineDynamicStates, int i) {
-		assert virtualMachineDynamicStates != null;
-		assert i > 0;
-		
-		for (Entry<String, ApplicationVMDynamicStateI> entry : virtualMachineDynamicStates.entrySet()) {
-			System.err.println(entry.getKey());
-
-			System.out.println("core reserved : " + this.reserveCore(entry.getKey(), 1));
-	    }
+	private void reserveCore(int nbToAllocate) {
+		assert nbToAllocate > 0;		
+		for(int i = 0; i < this.myVMs.size(); i++) {
+			this.reserveCore(this.myVMs.get(i).getApplicationVM(), nbToAllocate);
+		}
 	}
 	
 	private void releaseCore(Map<String, ApplicationVMDynamicStateI> virtualMachineDynamicStates) {
@@ -891,10 +886,12 @@ implements 	RequestDispatcherStateDataConsumerI,
 	private void addCores(String vmURI) throws Exception {
 		ApplicationVMManagementOutboundPort avm = this.avms.get(vmURI);
 		try {
-			if(avm == null || !avm.connected())
-				throw new Exception("AVM " + vmURI +"not found..");
+			if(avm == null || !avm.connected()) {
+				this.logMessage("AVM " + vmURI +"not found..");
+				return;
+			}
 			AllocatedCore cores[] = this.cmops.get(vmURI).addCores(vmURI);
-			if(cores.length > 0)
+			if(cores != null && cores.length > 0)
 				avm.allocateCores(cores);
 		}catch (Exception e) {
 			e.printStackTrace();

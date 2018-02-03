@@ -674,8 +674,7 @@ implements	ProcessorServicesNotificationConsumerI,
 		for (int i = 0 ; i < allocatedCores.length ; i++) {
 			if (!this.processorServicesPorts.
 								containsKey(allocatedCores[i].processorURI)) {
-				ProcessorServicesOutboundPort p =
-									new ProcessorServicesOutboundPort(this) ;
+				ProcessorServicesOutboundPort p = new ProcessorServicesOutboundPort(this) ;
 				this.addPort(p) ;
 				p.publishPort() ;
 				p.doConnection(
@@ -695,21 +694,7 @@ implements	ProcessorServicesNotificationConsumerI,
 		}
 	}
 
-	/** 
-	 * @see fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMManagementI#desallocateCores(int)
-	 */
-	@Override
-	public void	desallocateCores(int nbCore) throws Exception {
-		assert	nbCore >= 0 && nbCore < allocatedCoresIdleStatus.size();
 
-		for(int i = 0; i < nbCore; i++) {
-			AllocatedCore ac = findIdleCore();
-			if(ac == null) {
-				continue;
-			}
-			this.allocatedCoresIdleStatus.remove(ac);
-		}
-	}
 	
 	/**
 	 * @see fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMManagementI#connectWithRequestSubmissioner(String,String)
@@ -736,7 +721,7 @@ implements	ProcessorServicesNotificationConsumerI,
 	}
 
 	@Override
-	public synchronized AllocatedCore[] desallocateAllCores() throws Exception {
+	public AllocatedCore[] desallocateAllCores() throws Exception {
 		
 		AllocatedCore[] cores = new AllocatedCore[this.allocatedCoresIdleStatus.size()];
 		
@@ -757,8 +742,8 @@ implements	ProcessorServicesNotificationConsumerI,
 			ProcessorServicesOutboundPort psobp = this.processorServicesPorts.get(ac.processorURI);
 			if(psobp.connected())
 			{
-				psobp.doDisconnection();
-				psobp.destroyPort();
+				//psobp.doDisconnection();
+			//	psobp.destroyPort();
 
 			}
 			
@@ -768,5 +753,30 @@ implements	ProcessorServicesNotificationConsumerI,
 		}
 		this.allocatedCoresIdleStatus.clear();
 		return cores;
+	}
+	
+	
+	/** 
+	 * @see fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMManagementI#desallocateCores(int)
+	 */
+	@Override
+	public void	desallocateCores(int nbCore) throws Exception {
+		assert	nbCore >= 0 && nbCore < allocatedCoresIdleStatus.size();
+		
+		for(int i = 0; i < nbCore; i++) {
+			AllocatedCore ac = findIdleCore();
+			if(ac == null) {
+				continue;
+			}
+			
+			ProcessorServicesOutboundPort psobp = this.processorServicesPorts.get(ac.processorURI);
+			if(psobp.connected())
+			{
+				//psobp.doDisconnection();
+				//psobp.destroyPort();
+
+			}
+			this.allocatedCoresIdleStatus.remove(ac);
+		}
 	}
 }

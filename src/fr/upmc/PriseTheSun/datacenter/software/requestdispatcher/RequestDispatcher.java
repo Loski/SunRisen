@@ -704,10 +704,10 @@ implements
 	@Override
 	public void disconnectController() throws Exception 
 	{
-			inDisconnectionState = true;
-			while(!this.virtualMachineDataList.isEmpty()) {
-				this.askVirtualMachineDisconnection(this.virtualMachineDataList.get(0).getVmURI());
-			}
+		inDisconnectionState = true;
+		while(!this.virtualMachineDataList.isEmpty()) {
+			this.askVirtualMachineDisconnection(this.virtualMachineDataList.get(0).getVmURI());
+		}
 	}
 
 }
