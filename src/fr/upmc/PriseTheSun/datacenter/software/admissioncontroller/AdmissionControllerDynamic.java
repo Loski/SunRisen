@@ -631,10 +631,12 @@ implements 	ApplicationSubmissionI,
 	 * @see fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI#acceptRingNetworkDynamicData(java.lang.String, fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkDynamicStateI)
 	 */
 	@Override
-	public void acceptRingNetworkDynamicData(String requestDispatcherURI, RingNetworkDynamicStateI currentDynamicState)
+	public void acceptRingNetworkDynamicData(String controllerDataRingOutboundPortURI, RingNetworkDynamicStateI currentDynamicState)
 			throws Exception {
 		synchronized(o){
 			ApplicationVMInfo vm = currentDynamicState.getApplicationVMInfo();
+		//	System.out.println(vm + controllerDataRingOutboundPortURI);
+
 			if(vm != null) {
 				if(this.vmURis.contains(vm.getApplicationVM())) {
 					int numberVmInRing = this.vmURis.size();

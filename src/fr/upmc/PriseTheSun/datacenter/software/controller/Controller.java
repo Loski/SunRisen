@@ -549,6 +549,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 			throws Exception {
 		synchronized(o){
 			ApplicationVMInfo vm =  currentDynamicState.getApplicationVMInfo();
+			//System.out.println(vm + controllerDataRingOutboundPortURI);
+
 			if(vm != null) {
 				if(vmReserved.size() < StaticData.NB_VM_RESERVED) {
 					vmReserved.add(vm);

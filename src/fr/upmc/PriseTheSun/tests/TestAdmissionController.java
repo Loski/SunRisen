@@ -1,5 +1,7 @@
 package fr.upmc.PriseTheSun.tests;
 
+import java.util.ArrayList;
+
 //Copyright Jacques Malenfant, Univ. Pierre et Marie Curie.
 //
 //Jacques.Malenfant@lip6.fr
@@ -86,13 +88,13 @@ extends		AbstractCVM
 
 	}
 	public static final int NB_COMPUTER = 50;
-	private static final int NB_APPLICATION = 10;
+	private static final int NB_APPLICATION = 5;
 
 	protected AdmissionControllerDynamic ac;
 	protected AdmissionControllerManagementOutboundPort acmop;
 	protected ApplicationProvider ap[];
 	public ApplicationProviderManagementOutboundPort apmop[];
-
+	public ArrayList<ComputerWrapper> cw = new ArrayList<>();
 	public static final  String applicationSubmissionInboundPortURI = "asip";
 	public static final String AdmissionControllerManagementInboundPortURI = "acmip";
 	public static final String applicationSubmissionOutboundPortURI = "asop";
@@ -131,8 +133,10 @@ extends		AbstractCVM
             System.out.println("Creating computer " + i + "with " +numberOfProcessors + "proc of "+ numberOfCores + " cores");
             Computer c = new Computer(computer[i], admissibleFrequencies, processingPower, 1500, 1500,
                     numberOfProcessors, numberOfCores, csip[i], cssdip[i], cdsdip[i]);
-            this.addDeployedComponent(c); 
+            this.addDeployedComponent(c);
             c.start();
+
+            cw.add(new ComputerWrapper(computer[i], csip[i], cssdip[i], cdsdip[i]));
             this.acmop.linkComputer(computer[i], csip[i], cssdip[i], cdsdip[i]);
         }
 	}
@@ -144,10 +148,7 @@ extends		AbstractCVM
 		for(int i =0; i < nbApplication; i++) {
 			this.ap[i] = new ApplicationProvider("App"+"-"+i, applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI+"-"+i, applicationManagementInboundPort+"-"+i);
 			this.addDeployedComponent(this.ap[i]);
-			this.ap[i].start();
-			this.apmop[i] = new ApplicationProviderManagementOutboundPort("apmop"+"-"+i, new AbstractComponent(0, 0) {});
-			this.apmop[i].publishPort();
-			this.apmop[i].doConnection(applicationManagementInboundPort+"-"+i, ApplicationProviderManagementConnector.class.getCanonicalName());
+		
 		}
 	}
 	
@@ -156,7 +157,8 @@ extends		AbstractCVM
 	{
 		AbstractComponent.configureLogging("", "", 0, '|') ;
 		Processor.DEBUG = true ;
-
+		createAdmissionController();
+		createApplication(NB_APPLICATION);
 		super.deploy();
 	}
 
@@ -167,6 +169,15 @@ extends		AbstractCVM
 	public void			start() throws Exception
 	{
 		super.start() ;
+		for(ComputerWrapper c : cw) {
+			this.acmop.linkComputer(c.uri, c.csip, c.cssdip, c.cdsdip);
+		}
+		for(int i = 0; i < NB_APPLICATION; i++) {
+			this.ap[i].start();
+			this.apmop[i] = new ApplicationProviderManagementOutboundPort("apmop"+"-"+i, new AbstractComponent(0, 0) {});
+			this.apmop[i].publishPort();
+			this.apmop[i].doConnection(applicationManagementInboundPort+"-"+i, ApplicationProviderManagementConnector.class.getCanonicalName());
+		}
 	}
 
 	/**
@@ -190,8 +201,7 @@ extends		AbstractCVM
 	 */
 	public void			testScenario() throws Exception
 	{
-		createAdmissionController();
-		createApplication(NB_APPLICATION);
+
 		
 		for(int i = 0; i < this.apmop.length;i++) {
 			Thread.sleep(500);
@@ -241,6 +251,7 @@ extends		AbstractCVM
 			// Exit from Java.
 			System.exit(0) ;
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new RuntimeException(e) ;
 		}
 	}
