@@ -72,11 +72,13 @@ extends		OfferedI,
 	 * @param allocatedCores	array of cores already reserved provided to the VM.
 	 * @throws Exception
 	 */
-	public void			allocateCores(AllocatedCore[] allocatedCores)
+	public void	allocateCores(AllocatedCore[] allocatedCores)
 	throws Exception ;
 
-	public void			connectWithRequestSubmissioner(String rgURI, String RequestNotificationInboundPortURI)
+	public void	connectWithRequestSubmissioner(String rgURI, String RequestNotificationInboundPortURI)
 	throws Exception ;
 	
 	public void	desallocateCores(int nbCore) throws Exception;
+
+	void disconnectWithRequestSubmissioner() throws Exception;
 }

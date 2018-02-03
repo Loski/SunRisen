@@ -158,6 +158,18 @@ implements	ApplicationVMManagementI
 				return null;
 			}
 		}) ;
-		
+	}
+
+	@Override
+	public void disconnectWithRequestSubmissioner() throws Exception {
+		final ApplicationVMManagementI avm = (ApplicationVMManagementI) this.owner ;
+		this.owner.handleRequestSync(
+			new ComponentI.ComponentService<Void>() {
+			@Override
+			public Void call() throws Exception {
+				avm.disconnectWithRequestSubmissioner();
+				return null;
+			}
+		}) ;
 	}
 }

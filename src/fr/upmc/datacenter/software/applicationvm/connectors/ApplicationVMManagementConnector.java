@@ -85,4 +85,9 @@ implements	ApplicationVMManagementI
 	public void desallocateCores(int nbCore) throws Exception {
 		((ApplicationVMManagementI)this.offering).desallocateCores(nbCore);
 	}
+
+	@Override
+	public void disconnectWithRequestSubmissioner() throws Exception {
+		((ApplicationVMManagementI)this.offering).disconnectWithRequestSubmissioner();
+	}
 }

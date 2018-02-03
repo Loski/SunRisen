@@ -721,6 +721,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		for(int i = 0; i < this.myVMs.size(); i++) {
 			if(myVMs.get(i).getApplicationVM().equals(vmURI)) {
 				this.cmops.remove(vmURI);
+				this.avms.get(vmURI).disconnectWithRequestSubmissioner();
 				this.avms.remove(vmURI);
 				freeApplicationVM.add(myVMs.remove(i));
 				return;
@@ -736,6 +737,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	public void disconnectController() throws Exception {
 		System.err.println("tentative de déconnexion..");
 		try {
+		
 		NodeManagementOutboundPort cmopPrevious = new NodeManagementOutboundPort("cmop-previous-"+this.controllerURI, this);
 		this.addPort(cmopPrevious);
 		cmopPrevious.publishPort();
@@ -744,6 +746,11 @@ implements 	RequestDispatcherStateDataConsumerI,
 		// On arrête le push 
 		cmopPrevious.stopPushing();
 
+		//On attends jusqu'a ce qu'il ne reste plus de vm.
+		while(!this.freeApplicationVM.isEmpty()) {
+			System.err.println("waiting...");
+			Thread.sleep(300);
+		}
 		// On raccorde les ports de managements
 		cmopPrevious.setNextManagementInboundPort(controllerManagementNextInboundPort);
 
@@ -763,13 +770,20 @@ implements 	RequestDispatcherStateDataConsumerI,
 		cmopPrevious.startPushing();
 		
 		
-		cmopNext.unpublishPort();
-		cmopPrevious.unpublishPort();
+
+		
+		if(cmopNext.connected()) {
+			cmopNext.doDisconnection();
+			cmopNext.destroyPort();
+		}
+		
+		if(cmopPrevious.connected()) {
+			cmopPrevious.destroyPort();
+			cmopPrevious.doDisconnection();
+		}
 		
 		
-		cmopPrevious.doDisconnection();
-		cmopNext.doDisconnection();
-		this.stopPushing();
+		
 		if(this.rdsdop.connected()) {
 			this.logMessage("Disconnect " + this.controllerURI + " of the ring" );
 			System.err.println("je te kill");
@@ -778,6 +792,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.logMessage("Disconnect " + this.controllerURI + " of the ring" );
 
 		w.write(Arrays.asList("disconnected !!"));
+		System.err.println("Disconnect " + this.controllerURI + " of the ring" );
 
 		}catch (Exception e) {
 			// TODO: handle exception
@@ -816,6 +831,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		for (Entry<String, ApplicationVMDynamicStateI> entry : virtualMachineDynamicStates.entrySet()) {
 			System.err.println(entry.getKey());
+
 			System.out.println("core reserved : " + this.reserveCore(entry.getKey(), 1));
 	    }
 	}
@@ -825,7 +841,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 		
 		for (Entry<String, ApplicationVMDynamicStateI> entry : virtualMachineDynamicStates.entrySet()) {
-	     this.releaseCore(entry.getKey());
+			this.releaseCore(entry.getKey());
 	    }
 	}
 	
@@ -859,7 +875,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		ApplicationVMManagementOutboundPort avm = this.avms.get(vmURI);
 		try {
 			if(avm == null || !avm.connected())
-				throw new Exception("AVM not found..");
+				throw new Exception("AVM " + vmURI +"not found..");
 			AllocatedCore cores[] = this.cmops.get(vmURI).addCores(vmURI);
 			if(cores.length > 0)
 				avm.allocateCores(cores);

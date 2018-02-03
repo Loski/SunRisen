@@ -714,7 +714,7 @@ implements	ProcessorServicesNotificationConsumerI,
 	 * @see fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMManagementI#connectWithRequestSubmissioner(String,String)
 	 */
 	@Override
-	public void			connectWithRequestSubmissioner(String rgURI, String RequestNotificationInboundPortURI)
+	public void	connectWithRequestSubmissioner(String rgURI, String RequestNotificationInboundPortURI)
 	throws Exception
 	{		
 		this.doPortConnection(
@@ -723,5 +723,15 @@ implements	ProcessorServicesNotificationConsumerI,
 				RequestNotificationConnector.class.getCanonicalName()) ;
 		
 		this.logMessage(String.format("[RequestNotificationConnector] Connecting %s with %s using %s -> %s", this.vmURI,rgURI,this.requestNotificationOutboundPort.getPortURI(),RequestNotificationInboundPortURI));
+	}
+
+	@Override
+	public void disconnectWithRequestSubmissioner()
+			throws Exception {
+		// TODO Auto-generated method stub
+		if(this.requestNotificationOutboundPort.connected()) {
+			this.requestNotificationOutboundPort.doDisconnection();
+			this.requestNotificationOutboundPort.destroyPort();
+		}
 	}
 }
