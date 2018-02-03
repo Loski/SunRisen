@@ -288,15 +288,17 @@ implements 	ApplicationSubmissionI,
 				}
 			}
 			
-			/*if (this.cssdop.connected()) {
-				this.cssdop.doDisconnection();
-			}*/
+			if (this.rdsdop.connected()) {
+				this.rdsdop.doDisconnection();
+			}
 			for(Entry<String, RequestDispatcherManagementOutboundPort> entry : this.rdmopMap.entrySet()) {
 				if(entry.getValue().connected()) {
 					entry.getValue().doDisconnection();
 				}
 			}
-
+			if(this.portTControllerJVM.connected()) {
+				this.portTControllerJVM.doDisconnection();
+			}
 			if (this.portTControllerJVM.connected()) {
 				this.portTControllerJVM.doDisconnection();
 			}
