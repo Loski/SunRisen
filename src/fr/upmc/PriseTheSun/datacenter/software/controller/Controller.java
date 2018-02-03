@@ -88,11 +88,12 @@ implements 	RequestDispatcherStateDataConsumerI,
 	
 	int idVm = 0;
 	int waitDecision = 0;
-	//Vm reserved
+	
+	/** VMs réservées au prochain tour d'allocation */
 	private List<ApplicationVMInfo> vmReserved;
-	//vm to propagate to other controller
+	/** Vms a propagées au prochain node **/ 
 	private List<ApplicationVMInfo> freeApplicationVM;
-	 
+	 /** VMs connectées au dispatcher pour résoudre les requêtes **/
 	private List<ApplicationVMInfo> myVMs;
 	
 	
@@ -105,13 +106,12 @@ implements 	RequestDispatcherStateDataConsumerI,
 	private String controllerManagementNextInboundPort;
 	private String controllerManagementPreviousInboundPort;
 
-	public final static int PUSH_INTERVAL = 1000;
-	public final static int REQUEST_MIN = PUSH_INTERVAL/100;
+
 	
-	/** Vm vers le controller de son computer */
+	/** Uri d'une VM vers le controller de son computer */
 	private Map<String, ComputerControllerManagementOutboutPort> cmops;
 	
-	/** VM vers son port Out de management */
+	/** Uri d'une VM vers son port Out de management */
 	private Map<String, ApplicationVMManagementOutboundPort> avms;
 
 	private String appURI; 	
@@ -123,6 +123,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 	private VMDisconnectionNotificationHandlerInboundPort vmnibp;
 	private String nextRingDynamicStateDataInboundPort;
 	
+	public final static int PUSH_INTERVAL = 1000;
+	public final static int REQUEST_MIN = PUSH_INTERVAL/100;
 	
 	static class StaticData {
 		public static final double AVERAGE_TARGET=5E9D;
@@ -679,8 +681,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		return new RingDynamicState(removed);
 	}
 	
-	//TODO  WHY SYNCHRO DESU
-	public synchronized void addVm(ApplicationVMInfo vm){
+	public void addVm(ApplicationVMInfo vm){
 		assert vm != null;
 		
 		// Create a mock up port to manage the AVM component (allocate cores).
@@ -723,6 +724,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 				this.cmops.remove(vmURI);
 				this.avms.get(vmURI).disconnectWithRequestSubmissioner();
 				this.avms.remove(vmURI);
+				Thread.sleep(500);
 				freeApplicationVM.add(myVMs.remove(i));
 				return;
 			}

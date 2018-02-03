@@ -1,11 +1,16 @@
 package fr.upmc.PriseTheSun.datacenter.software.applicationvm;
 
+/**
+ * JavaBean pour représenter une VM dans le ring network. On peut accéder ainsi à ses principaux ports pour la lier directement à un <code>Controller</code> et à un <code>RequestDispatcher</code> sans repasser par <code>AdmissionControllerDynamic</code>
+ * @author Maxime Lavaste
+ */
 public class ApplicationVMInfo{
 
 	private String applicationVM;
 	public String avmInbound;
 	private String submissionInboundPortUri;
 	private String computerManagementInboundPortURI;
+	
 	
 	public ApplicationVMInfo(String applicationVM, String avmInbound, String submissionInboundPortUri, String computerManagementInboundPortURI2) {
 		super();

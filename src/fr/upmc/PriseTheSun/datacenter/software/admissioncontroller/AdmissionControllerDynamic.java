@@ -467,19 +467,29 @@ implements 	ApplicationSubmissionI,
 	 * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int)
 	 */
 	@Override
-	public synchronized String[] submitApplication(String appURI, int nbVM) throws Exception{
+	public String[] submitApplication(String appURI, int nbVM) throws Exception{
 		
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
 		w.write(Arrays.asList("application accepted"));
 
-		ApplicationVMInfo vm;
-		synchronized(o){
-			if(!this.VMforNewApplication.isEmpty()) {
-				vm = VMforNewApplication.remove(0);
-			}else {
-				System.out.println("kek");
-				return null;
+		ApplicationVMInfo vm = null;
+		boolean failedToCreated = true;
+		
+		// 3 retry
+		for(int i = 0; i < 3 && failedToCreated; i++) {
+			synchronized(o){
+				if(!this.VMforNewApplication.isEmpty()) {
+					vm = VMforNewApplication.remove(0);
+					failedToCreated = false;
+				}
 			}
+			if(failedToCreated) {
+				Thread.sleep(200);
+			}
+		}
+		
+		if(failedToCreated) {
+			return null;
 		}
 		
 		String dispatcherUri[] = createDispatcher(appURI, RequestDispatcher.class.getCanonicalName());
@@ -495,7 +505,7 @@ implements 	ApplicationSubmissionI,
 	 * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int, java.lang.Class)
 	 */
 	@Override
-	public synchronized String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
+	public String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
 		
 		assert submissionInterface.isInterface();
 		

@@ -728,10 +728,9 @@ implements	ProcessorServicesNotificationConsumerI,
 	@Override
 	public void disconnectWithRequestSubmissioner()
 			throws Exception {
-		// TODO Auto-generated method stub
+		
 		if(this.requestNotificationOutboundPort.connected()) {
 			this.requestNotificationOutboundPort.doDisconnection();
-			this.requestNotificationOutboundPort.destroyPort();
 		}
 	}
 }
