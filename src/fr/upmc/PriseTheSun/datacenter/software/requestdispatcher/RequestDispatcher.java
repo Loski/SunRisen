@@ -403,7 +403,7 @@ implements
 		if(inDisconnectionState)
 			throw new Exception("cant add vm");
 
-		RequestSubmissionOutboundPort rsobp = new RequestSubmissionOutboundPort( rdURI+"-rsbop-"+this.virtualMachineDataList.size(), this );
+		RequestSubmissionOutboundPort rsobp = new RequestSubmissionOutboundPort( rdURI+"-rsbop-"+vmURI, this );
 		ApplicationVMIntrospectionOutboundPort avmiovp = new ApplicationVMIntrospectionOutboundPort( vmURI+"-introObp", this );
 		
 		VirtualMachineData vm = new VirtualMachineData(vmURI, rsobp,avmiovp);
@@ -453,9 +453,20 @@ implements
 		RequestSubmissionOutboundPort port = vmData.getRsobp();
 		if(port!=null && port.connected())
 		{
+			this.removePort(port);
 			port.doDisconnection();
-			this.vmnobp.receiveVMDisconnectionNotification(vmData.getVmURI());
+			port.destroyPort();
 		}
+		
+		ApplicationVMIntrospectionOutboundPort portIntrospection = vmData.getAvmiovp();
+		if(portIntrospection!=null && portIntrospection.connected())
+		{
+			this.removePort(portIntrospection);
+			portIntrospection.doDisconnection();
+			portIntrospection.destroyPort();
+		}
+		
+		this.vmnobp.receiveVMDisconnectionNotification(vmData.getVmURI());
 		
 		if(inDisconnectionState && this.virtualMachineDataList.isEmpty() && this.virtualMachineWaitingForDisconnection.isEmpty())
 		{			
