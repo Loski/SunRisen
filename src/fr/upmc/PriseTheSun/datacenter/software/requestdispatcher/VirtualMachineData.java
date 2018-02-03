@@ -71,8 +71,6 @@ public class VirtualMachineData {
 	
 	public void calculateAverageTime()
 	{		
-		synchronized(this.lock)
-		{
 			Double res = 0.0;
 			
 			if(this.requestTerminated.size()>0)
@@ -85,8 +83,10 @@ public class VirtualMachineData {
 				this.averageTime = res/this.requestTerminated.size();
 			}
 			
-			this.requestTerminated.clear();
-		}
+			synchronized(this.lock)
+			{
+				this.requestTerminated.clear();
+			}
 	}
 
 	public ApplicationVMIntrospectionOutboundPort getAvmiovp() {
