@@ -380,6 +380,9 @@ implements 	RequestDispatcherStateDataConsumerI,
             if(rdsdop.connected()) {
             	this.rdsdop.doDisconnection();
             }
+            if(rdsdip.connected()) {
+            	this.rdsdip.doDisconnection();
+            }
             if(rdiobp.connected()) {
             	this.rdiobp.doDisconnection();
             }

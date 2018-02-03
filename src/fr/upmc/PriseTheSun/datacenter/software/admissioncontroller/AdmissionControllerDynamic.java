@@ -304,8 +304,11 @@ implements 	ApplicationSubmissionI,
 			if(this.portTControllerJVM.connected()) {
 				this.portTControllerJVM.doDisconnection();
 			}
-			if (this.portTControllerJVM.connected()) {
-				this.portTControllerJVM.doDisconnection();
+			if (this.rdsdop.connected()) {
+				this.rdsdop.doDisconnection();
+			}
+			if(rdsdip.connected()) {
+				rdsdip.doDisconnection();
 			}
 		} catch (Exception e) {
 			throw new ComponentShutdownException("Port disconnection error", e);
