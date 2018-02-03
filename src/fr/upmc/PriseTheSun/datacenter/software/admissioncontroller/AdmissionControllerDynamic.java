@@ -136,7 +136,6 @@ implements 	ApplicationSubmissionI,
 	
 	//Map Between a vm and his computer
 	protected List<ApplicationVMInfo> freeApplicationVM;
-	private ProcessorsController processorController;
 
 	Object o=new Object();
 	protected static final int NB_CORES = 2;
@@ -246,7 +245,6 @@ implements 	ApplicationSubmissionI,
 		this.cmops = new ArrayList<ComputerControllerManagementOutboutPort>();
 		this.freeApplicationVM = new ArrayList<>();
 		this.VMforNewApplication = new ArrayList<>();
-		this.processorController = new ProcessorsController("controller", ProcessorControllerManagementInboundPortURI);
 		this.vmURis = new HashSet<>();
 		this.submissionInterfaces = new HashMap<>();
 		
@@ -288,8 +286,15 @@ implements 	ApplicationSubmissionI,
 				}
 			}
 			
-			if (this.rdsdop.connected()) {
-				this.rdsdop.doDisconnection();
+			for(ComputerStaticStateDataOutboundPort cssdop : cssdops) {
+				if (cssdop.connected()) {
+					cssdop.doDisconnection();
+				}
+			}
+			for(Entry<String, ApplicationVMManagementOutboundPort> entry : this.avmOutPort.entrySet()) {
+				if(entry.getValue().connected()) {
+					entry.getValue().doDisconnection();
+				}
 			}
 			for(Entry<String, RequestDispatcherManagementOutboundPort> entry : this.rdmopMap.entrySet()) {
 				if(entry.getValue().connected()) {
@@ -365,7 +370,6 @@ implements 	ApplicationSubmissionI,
 							rdURI,
 							requestDispatcherDynamicStateDataInboundPortURI,
 							this.acmip.getPortURI(),
-							ProcessorControllerManagementInboundPortURI,
 							controllerURIs[3],
 							controllerURIs[4],
 							controllerURIs[5],

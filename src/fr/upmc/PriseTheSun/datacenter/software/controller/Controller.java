@@ -157,7 +157,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 			String rdURI, 
 			String requestDispatcherDynamicStateDataInboundPortURI, 
 			String ADMManagementInboundPort,
-			String ProcessorControllerManagementInboundUri, 
 			String RingDynamicStateDataOutboundPortURI, 
 			String RingDynamicStateDataInboundPortURI, 
 			String nextRingDynamicStateDataInboundPort,
@@ -174,7 +173,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		this.addRequiredInterface(NodeRingManagementI.class);
 		this.addRequiredInterface(ControlledDataRequiredI.ControlledPullI.class);
-		this.addRequiredInterface(ProcessorsControllerManagementI.class);
 		this.addRequiredInterface(RequestDispatcherManagementI.class);
 		this.addRequiredInterface(RequestDispatcherIntrospectionI.class);
 		this.addRequiredInterface(ComputerControllerManagementI.class);
@@ -213,11 +211,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.rddsdop.doConnection(requestDispatcherDynamicStateDataInboundPortURI, ControlledDataConnector.class.getCanonicalName());
 		this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
 		
-		
-		this.pcmop = new ProcessorsControllerManagementOutboundPort("pcmop-"+this.controllerURI, this);
-		this.pcmop.publishPort();
-		this.pcmop.doConnection(ProcessorControllerManagementInboundUri, ProcessorControllerManagementConnector.class.getCanonicalName());
-				
+
 		
 		rdsdop = new RingNetworkDynamicStateDataOutboundPort(this, RingDynamicStateDataOutboundPortURI);
 		this.addPort(rdsdop);
