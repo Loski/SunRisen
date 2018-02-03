@@ -151,6 +151,7 @@ implements
 				
 				this.rdURI=requestDispatcherURI;
 				
+				System.err.println("Dispatcher " + this.rdURI);
 				// Interfaces and ports
 
 				this.addOfferedInterface(RequestDispatcherManagementI.class) ;

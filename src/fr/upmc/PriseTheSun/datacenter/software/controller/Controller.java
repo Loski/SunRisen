@@ -167,6 +167,25 @@ implements 	RequestDispatcherStateDataConsumerI,
 	) throws Exception
 	{
 		super(controllerURI,1 ,1);
+
+		assert appURI !=null;
+		assert controllerURI != null;
+		assert controllerManagement != null;
+		assert rdURI !=null;
+		assert requestDispatcherDynamicStateDataInboundPortURI !=null;
+		assert ADMManagementInboundPort !=null;
+		assert RingDynamicStateDataOutboundPortURI !=null;
+		assert RingDynamicStateDataInboundPortURI !=null;
+		assert nextRingDynamicStateDataInboundPort != null;
+		assert controllerManagementNextPort != null;
+		assert controllerManagementPreviousPort !=null;
+		assert vm != null && vm.getApplicationVM() != null;
+		
+		this.controllerURI = controllerURI;
+		this.rdUri = rdURI;
+		this.appURI = appURI;
+		System.err.println("controller !!! " +this.appURI);
+
 		this.addOfferedInterface(NodeRingManagementI.class);
 		this.addOfferedInterface(ControlledDataOfferedI.ControlledPullI.class);
 		this.addOfferedInterface(VMDisconnectionNotificationHandlerI.class);
@@ -181,14 +200,11 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.toggleTracing();
 		w = new Writter(controllerURI+ ".csv");
 		
-		this.controllerURI = controllerURI;
-		this.rdUri = rdURI;
-		this.appURI = appURI;
+
 		this.rdiobp = new RequestDispatcherIntrospectionOutboundPort( rdURI+"-introObp", this );
 		
 		this.addPort( rdiobp );
 		rdiobp.publishPort();
-		
 		this.doPortConnection(
 				rdiobp.getPortURI(),
 				rdURI+"-intro",

@@ -12,6 +12,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import com.sun.swing.internal.plaf.synth.resources.synth;
+
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.ComputerController;
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.connector.ComputerControllerConnector;
 import fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagementI;
@@ -28,6 +30,7 @@ import fr.upmc.PriseTheSun.datacenter.software.controller.ports.NodeManagementOu
 import fr.upmc.PriseTheSun.datacenter.software.javassist.RequestDispatcherCreator;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.RequestDispatcher;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.connectors.RequestDispatcherManagementConnector;
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.ports.RequestDispatcherManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenter.software.ring.RingDynamicState;
 import fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkDynamicStateI;
@@ -143,10 +146,12 @@ implements 	ApplicationSubmissionI,
 	protected List<ApplicationVMInfo> freeApplicationVM;
 
 	Object o=new Object();
+	
+	Object lockController = new Object();
 	protected static final int NB_CORES = 2;
 	
 
-	private static final int MIN_VM = 5;
+	private static final int MIN_VM = 15;
 
 	
 
@@ -190,6 +195,7 @@ implements 	ApplicationSubmissionI,
 		this.addRequiredInterface(ComputerServicesI.class);
 		this.addRequiredInterface(ControlledDataRequiredI.ControlledPullI.class);
 		this.addRequiredInterface(ComputerControllerManagementI.class);
+		this.addRequiredInterface(RequestDispatcherManagementI.class);
 		
 		this.addOfferedInterface(ComputerControllerManagementI.class);
 		this.addOfferedInterface(ControlledDataOfferedI.ControlledPullI.class);
@@ -330,7 +336,7 @@ implements 	ApplicationSubmissionI,
 	 * </ul>
 	 * @throws Exception
 	 */
-	private synchronized String[] createController(String appURI, String requestDispatcherDynamicStateDataInboundPortURI, String VMDisconnectionHandlerOutboundPortURI, String rdURI, ApplicationVMInfo vm) throws Exception
+	private  String[] createController(String appURI, String requestDispatcherDynamicStateDataInboundPortURI, String VMDisconnectionHandlerOutboundPortURI, String rdURI, ApplicationVMInfo vm) throws Exception
 	{
 		String controllerURIs[] = new String[9];
 		controllerURIs[0] = appURI + "-controller";
@@ -348,7 +354,7 @@ implements 	ApplicationSubmissionI,
 		
 		boolean first = false;
 		
-		synchronized (o) {
+		synchronized (lockController) {
 		/*First node*/
 			if(nextControllerDataRingUri==null){
 				controllerURIs[5] = this.AdmissionControllerDataRingInboundUri;
@@ -364,7 +370,6 @@ implements 	ApplicationSubmissionI,
 				}
 			}
 			
-	 
 			try {
 				this.portTControllerJVM.createComponent(
 						Controller.class.getCanonicalName(),
@@ -406,11 +411,12 @@ implements 	ApplicationSubmissionI,
 			}catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
 	
 			//sauvegarde pour le prochain noeud
 			nextControllerDataRingUri = controllerURIs[4];
 			nextControllerManagement = controllerURIs[1];
-		}
+		
 		return controllerURIs;
 	}
 	
@@ -461,10 +467,11 @@ implements 	ApplicationSubmissionI,
 					});
 			
 	
-			RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
-					RequestDispatcherManagementOutboundPortURI + rdmopMap.size(),
+			RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(dispatcherURI[0]+
+					RequestDispatcherManagementOutboundPortURI,
 					this);
 			
+		    this.addPort(rdmop);
 			rdmop.publishPort();
 			rdmop.doConnection(dispatcherURI[1], RequestDispatcherManagementConnector.class.getCanonicalName());
 			rdmopMap.put(appURI, rdmop);
@@ -478,7 +485,7 @@ implements 	ApplicationSubmissionI,
 	 * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int)
 	 */
 	@Override
-	public String[] submitApplication(String appURI, int nbVM) throws Exception{
+	public  String[] submitApplication(String appURI, int nbVM) throws Exception{
 		
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
 		w.write(Arrays.asList("application " + appURI +" accepted"));
@@ -503,11 +510,8 @@ implements 	ApplicationSubmissionI,
 		if(failedToCreated) {
 			return null;
 		}
-		System.err.println(appURI);
-		Thread.sleep(150);
 
 		String dispatcherUri[] = createDispatcher(appURI, RequestDispatcher.class.getCanonicalName());
-		Thread.sleep(150);
 		String controllerUris[] = createController(appURI,dispatcherUri[6],dispatcherUri[8],dispatcherUri[0], vm);
 		this.rdmopMap.get(appURI).connectController(controllerUris[0],controllerUris[6]);
 		return dispatcherUri;
@@ -517,7 +521,7 @@ implements 	ApplicationSubmissionI,
 	 * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int, java.lang.Class)
 	 */
 	@Override
-	public String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
+	public  String[]  submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
 		
 		assert submissionInterface.isInterface();
 		
@@ -533,7 +537,6 @@ implements 	ApplicationSubmissionI,
 		}
 		
 		Class<?> dispa = this.submissionInterfaces.get(submissionInterface.getName());
-		
 		if(dispa==null)
 		{
 			dispa = RequestDispatcherCreator.createRequestDispatcher("JAVASSIST-dispa", RequestDispatcher.class, submissionInterface);
