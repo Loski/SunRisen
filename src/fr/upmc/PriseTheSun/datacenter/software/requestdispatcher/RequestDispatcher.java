@@ -454,6 +454,7 @@ implements
 		if(port!=null && port.connected())
 		{
 			port.doDisconnection();
+			port.destroyPort();
 			this.vmnobp.receiveVMDisconnectionNotification(vmData.getVmURI());
 		}
 		
