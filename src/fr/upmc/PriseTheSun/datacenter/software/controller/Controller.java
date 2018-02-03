@@ -75,7 +75,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 	protected String controllerURI;
 	protected String rdUri;
 	
-	protected AdmissionControllerManagementOutboundPort acmop;
 	protected RequestDispatcherDynamicStateDataOutboundPort rddsdop;
 	protected ProcessorsControllerManagementOutboundPort pcmop;
 
@@ -364,10 +363,22 @@ implements 	RequestDispatcherStateDataConsumerI,
 	@Override
     public void shutdown() throws ComponentShutdownException {
         try {
-            if (this.acmop.connected())
-                this.acmop.doDisconnection();
+
             if(rddsdop.connected()) {
             	this.rddsdop.doDisconnection();
+            }
+            for (Entry<String, ComputerControllerManagementOutboutPort> entry : cmops.entrySet()) {
+            	if(entry.getValue().connected()) {
+            		entry.getValue().doDisconnection();
+            	}
+            }
+            for (Entry<String, ApplicationVMManagementOutboundPort> entry : avms.entrySet()) {
+            	if(entry.getValue().connected()) {
+            		entry.getValue().doDisconnection();
+            	}
+            }
+            if(rdsdop.connected()) {
+            	this.rdsdop.doDisconnection();
             }
             if(rdiobp.connected()) {
             	this.rdiobp.doDisconnection();
