@@ -456,14 +456,12 @@ implements
 		if(port!=null && port.connected())
 		{
 			port.doDisconnection();
-
-			this.removePort(port);
+			port.destroyPort();
 		}
 		
 		ApplicationVMIntrospectionOutboundPort portIntrospection = vmData.getAvmiovp();
 		if(portIntrospection!=null && portIntrospection.connected())
 		{
-			this.removePort(portIntrospection);
 			portIntrospection.doDisconnection();
 		//	portIntrospection.destroyPort();
 		}
