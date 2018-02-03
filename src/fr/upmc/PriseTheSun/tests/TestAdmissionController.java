@@ -88,7 +88,7 @@ extends		AbstractCVM
 
 	}
 	public static final int NB_COMPUTER = 50;
-	private static final int NB_APPLICATION = 5;
+	private static final int NB_APPLICATION = 8;
 
 	protected AdmissionControllerDynamic ac;
 	protected AdmissionControllerManagementOutboundPort acmop;
@@ -197,16 +197,14 @@ extends		AbstractCVM
 	 */
 	public void			testScenario() throws Exception
 	{
-
-		
-		for(int i = 0; i < this.apmop.length;i++) {
+		for(int i = 0; i < NB_APPLICATION;i++) {
 			Thread.sleep(500);
 			//this.apmop[i].createAndSendApplication();
 			this.apmop[i].createAndSendApplication();
 		}
-		//Thread.sleep(2500);
+		Thread.sleep(2500);
 
-		//this.apmop[4].stopApplication();
+		this.apmop[4].stopApplication();
 	}
 
 	
@@ -240,7 +238,7 @@ extends		AbstractCVM
 				}
 			}).start() ;
 			// Sleep to let the test scenario execute to completion.
-			Thread.sleep(4000L) ;
+			Thread.sleep(400000L) ;
 			// Shut down the application.
 			System.out.println("shutting down...") ;
 			trd.shutdown() ;

@@ -76,7 +76,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 	protected String rdUri;
 	
 	protected RequestDispatcherDynamicStateDataOutboundPort rddsdop;
-	protected ProcessorsControllerManagementOutboundPort pcmop;
 
 	private ScheduledFuture<?> pushingFuture;
 	private NodeManagementInboundPort cmip;
@@ -312,9 +311,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	public void acceptRequestDispatcherDynamicData(String dispatcherURI,
 			RequestDispatcherDynamicStateI currentDynamicState) throws Exception {
 		//this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
-		System.err.println(currentDynamicState.getAvgExecutionTime());
 		if((waitDecision % REQUEST_MIN) == 0) {
-			//TODO Demander à loic si les vms peuvent être null
 			reserveCore(currentDynamicState.getVirtualMachineDynamicStates(), 1);
 		}
 		waitDecision++;
@@ -531,7 +528,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 	}
 	
-	private int setCoreFrequency(CoreAsk ask, ApplicationVMDynamicStateI vm){
+/*	private int setCoreFrequency(CoreAsk ask, ApplicationVMDynamicStateI vm){
 		this.logMessage("Try to " + ask.toString() + " for " + vm.getApplicationVMURI());
 		int nb = 0;
 		for(int i = 0; i < vm.getAllocatedCoresNumber().length; i++) {
@@ -546,7 +543,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 		return nb;
 	}
-	
+	*/
 
 
 	/**

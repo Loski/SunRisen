@@ -453,9 +453,9 @@ implements
 		RequestSubmissionOutboundPort port = vmData.getRsobp();
 		if(port!=null && port.connected())
 		{
-			this.removePort(port);
 			port.doDisconnection();
-			port.destroyPort();
+
+			this.removePort(port);
 		}
 		
 		ApplicationVMIntrospectionOutboundPort portIntrospection = vmData.getAvmiovp();

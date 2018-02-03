@@ -644,8 +644,6 @@ implements 	ApplicationSubmissionI,
 			throws Exception {
 		synchronized(o){
 			ApplicationVMInfo vm = currentDynamicState.getApplicationVMInfo();
-		//	System.out.println(vm + controllerDataRingOutboundPortURI);
-
 			if(vm != null) {
 				if(this.vmURis.contains(vm.getApplicationVM())) {
 					int numberVmInRing = this.vmURis.size();
@@ -773,9 +771,14 @@ implements 	ApplicationSubmissionI,
 
 	@Override
 	public void stopApplication(String appUri) throws Exception {
-		RequestDispatcherManagementOutboundPort rdmop = this.rdmopMap.get(appUri);
-		rdmop.disconnectRequestGenerator();
-		rdmop.disconnectController();
+		try {
+			RequestDispatcherManagementOutboundPort rdmop = this.rdmopMap.get(appUri);
+			rdmop.disconnectRequestGenerator();
+			System.err.println("marche !!!");
+			rdmop.disconnectController();
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
