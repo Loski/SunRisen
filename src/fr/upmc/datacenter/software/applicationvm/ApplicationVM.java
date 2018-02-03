@@ -726,12 +726,8 @@ implements	ProcessorServicesNotificationConsumerI,
 		AllocatedCore[] cores = new AllocatedCore[this.allocatedCoresIdleStatus.size()];
 		
 		int i = 0;
-		Iterator<Map.Entry<AllocatedCore,Boolean>> it =  this.allocatedCoresIdleStatus.entrySet().iterator();
-		while(it.hasNext())
+		for(AllocatedCore ac : this.allocatedCoresIdleStatus.keySet())
 		{
-			Map.Entry<AllocatedCore,Boolean> entry = it.next();
-		    AllocatedCore ac = entry.getKey();
-
 		    cores[i]=ac;
 		    
 			if(!this.allocatedCoresIdleStatus.get(ac))
@@ -746,9 +742,6 @@ implements	ProcessorServicesNotificationConsumerI,
 			//	psobp.destroyPort();
 
 			}
-			
-			//this.allocatedCoresIdleStatus.remove(ac);
-			
 			i++;
 		}
 		this.allocatedCoresIdleStatus.clear();
