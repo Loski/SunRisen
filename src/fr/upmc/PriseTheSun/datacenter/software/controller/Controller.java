@@ -842,7 +842,9 @@ implements 	RequestDispatcherStateDataConsumerI,
 		try {
 			if(avm == null || !avm.connected())
 				throw new Exception("AVM not found..");
-			avm.allocateCores(this.cmops.get(vmURI).addCores(vmURI));
+			AllocatedCore cores[] = this.cmops.get(vmURI).addCores(vmURI);
+			if(cores.length > 0)
+				avm.allocateCores(cores);
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
