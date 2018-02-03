@@ -125,7 +125,6 @@ implements 	ApplicationSubmissionI,
 	@SuppressWarnings("unused")
 	private String controllerManagementPreviousInboundPort;
 	
-	protected Map<String, ApplicationVMManagementOutboundPort> avmOutPort;
 	
 	private static int nbappli = 0;
 	protected ArrayList<ComputerStaticStateDataOutboundPort> cssdops;
@@ -212,8 +211,6 @@ implements 	ApplicationSubmissionI,
 		this.addPort(acmip);
 		this.acmip.publishPort();
 		
-		
-
 		this.portTControllerJVM = new DynamicComponentCreationOutboundPort(this);
 		this.portTControllerJVM.publishPort();
 		this.addPort(this.portTControllerJVM);
@@ -225,8 +222,6 @@ implements 	ApplicationSubmissionI,
 		this.AdmissionControllerDataRingInboundUri = this.admissionControllerURI +"-"+ControllerDataRingInboundPortURI;
 		this.AdmissionControllerDataRingOutboundUri = this.admissionControllerURI +"-"+ControllerDataRingOutboundPortURI;
 		
-
-		
 		rdsdop = new RingNetworkDynamicStateDataOutboundPort(this,  this.AdmissionControllerDataRingOutboundUri);
 		this.addPort(rdsdop);
 		this.rdsdop.publishPort();
@@ -235,13 +230,11 @@ implements 	ApplicationSubmissionI,
 		this.addPort(rdsdip) ;
 		this.rdsdip.publishPort();
 		
-		
 		ADMNodeControllerManagementInboundPort = admissionControllerURI + NODE_MANAGEMENT;
 		nmip = new NodeManagementInboundPort(ADMNodeControllerManagementInboundPort, this);
 		this.addPort(nmip);
 		this.nmip.publishPort();
 		
-		this.avmOutPort = new HashMap<String, ApplicationVMManagementOutboundPort>();
 		this.rdmopMap = new HashMap<String, RequestDispatcherManagementOutboundPort>();
 		this.cssdops = new ArrayList<ComputerStaticStateDataOutboundPort>();
 		this.cdsdops = new ArrayList<ComputerDynamicStateDataOutboundPort>();
@@ -294,11 +287,7 @@ implements 	ApplicationSubmissionI,
 					cssdop.doDisconnection();
 				}
 			}
-			for(Entry<String, ApplicationVMManagementOutboundPort> entry : this.avmOutPort.entrySet()) {
-				if(entry.getValue().connected()) {
-					entry.getValue().doDisconnection();
-				}
-			}
+
 			for(Entry<String, RequestDispatcherManagementOutboundPort> entry : this.rdmopMap.entrySet()) {
 				if(entry.getValue().connected()) {
 					entry.getValue().doDisconnection();
@@ -329,7 +318,15 @@ implements 	ApplicationSubmissionI,
 	 * @param vm Data d'une VM.
 	 * @return Tableau d'URI du controller.
 	 * <ul>
-	 * 
+	 * <li>controllerURIs[0] = Controller URI</li>
+	 * <li>controllerURIs[1] = Controller URI management</li>
+	 * <li>controllerURIs[2] = Dispatcher URI out dynamic data</li>
+	 * <li>controllerURIs[3] = Controller URI ring out</li>
+	 * <li>controllerURIs[4] = Controller URI ring in</li>
+	 * <li>controllerURIs[5] = next controller URI ring in</li>
+	 * <li>controllerURIs[6] = VMDisconnectionHandler Inbound Port </li>
+	 * <li>controllerURIs[7] = ADMNodeControllerManagementInboundPort </li>
+	 * <li>controllerURIs[8] = précédent NodeControllerManagement </li>
 	 * </ul>
 	 * @throws Exception
 	 */
@@ -343,7 +340,7 @@ implements 	ApplicationSubmissionI,
 		controllerURIs[4] = controllerURIs[0]+"-"+ ControllerDataRingInboundPortURI;
 		//next dataring inbound uri
 		controllerURIs[5] = null;
-		controllerURIs[6] = controllerURIs[0]+"-VMDisconnectionHandler";
+		controllerURIs[6] = controllerURIs[0]+"-VMDisconnectionHandlerIp";
 		controllerURIs[7] = ADMNodeControllerManagementInboundPort;
 		controllerURIs[8] = null;
 		nbappli++;
@@ -434,7 +431,10 @@ implements 	ApplicationSubmissionI,
 	 * </ul>
 	 * @throws Exception
 	 */
-	private String[] createDispatcher(String appURI, String className) throws Exception {
+	private String[] createDispatcher(String appURI, String className)  throws Exception{
+		
+		assert className != null;
+		assert appURI != null && !appURI.isEmpty();
 		
 		String dispatcherURI[] = new String[9];
 		dispatcherURI[0] = "RD_" + rdmopMap.size()+"_"+appURI;
@@ -447,25 +447,30 @@ implements 	ApplicationSubmissionI,
 		dispatcherURI[7] = RequestSubmissionOutboundPortURI + "_"+ appURI;
 		dispatcherURI[8] = VMDisconnectionHandlerOutboundPort + "_"+ appURI;
 		
-		this.portTControllerJVM.createComponent(
-				className,
-				new Object[] {
-						dispatcherURI[0],							
-						dispatcherURI[1],
-						dispatcherURI[2],
-						dispatcherURI[3],
-						dispatcherURI[4],
-						dispatcherURI[6],
-						dispatcherURI[8]
-				});		
+		try {
+			this.portTControllerJVM.createComponent(
+					className,
+					new Object[] {
+							dispatcherURI[0],							
+							dispatcherURI[1],
+							dispatcherURI[2],
+							dispatcherURI[3],
+							dispatcherURI[4],
+							dispatcherURI[6],
+							dispatcherURI[8]
+					});
+			
 	
-		RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
-				RequestDispatcherManagementOutboundPortURI + rdmopMap.size(),
-				this);
-		
-		rdmop.publishPort();
-		rdmop.doConnection(dispatcherURI[1], RequestDispatcherManagementConnector.class.getCanonicalName());
-		rdmopMap.put(appURI, rdmop);
+			RequestDispatcherManagementOutboundPort rdmop = new RequestDispatcherManagementOutboundPort(
+					RequestDispatcherManagementOutboundPortURI + rdmopMap.size(),
+					this);
+			
+			rdmop.publishPort();
+			rdmop.doConnection(dispatcherURI[1], RequestDispatcherManagementConnector.class.getCanonicalName());
+			rdmopMap.put(appURI, rdmop);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}	
 		return dispatcherURI;
 	}
 	
@@ -476,7 +481,7 @@ implements 	ApplicationSubmissionI,
 	public String[] submitApplication(String appURI, int nbVM) throws Exception{
 		
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
-		w.write(Arrays.asList("application accepted"));
+		w.write(Arrays.asList("application " + appURI +" accepted"));
 
 		ApplicationVMInfo vm = null;
 		boolean failedToCreated = true;
@@ -490,6 +495,7 @@ implements 	ApplicationSubmissionI,
 				}
 			}
 			if(failedToCreated) {
+				System.err.println("waiting for " + appURI);
 				Thread.sleep(200);
 			}
 		}
@@ -497,9 +503,12 @@ implements 	ApplicationSubmissionI,
 		if(failedToCreated) {
 			return null;
 		}
-		
+		System.err.println(appURI);
+		Thread.sleep(150);
+
 		String dispatcherUri[] = createDispatcher(appURI, RequestDispatcher.class.getCanonicalName());
-		String controllerUris[] = this.createController(appURI,dispatcherUri[6],dispatcherUri[8],dispatcherUri[0], vm);
+		Thread.sleep(150);
+		String controllerUris[] = createController(appURI,dispatcherUri[6],dispatcherUri[8],dispatcherUri[0], vm);
 		this.rdmopMap.get(appURI).connectController(controllerUris[0],controllerUris[6]);
 		return dispatcherUri;
 	}
@@ -541,9 +550,6 @@ implements 	ApplicationSubmissionI,
 		
 	}
 	
-	private ApplicationVMManagementOutboundPort findVM(String vmUri) throws Exception {
-		return avmOutPort.get(vmUri);
-	}
 
 	/**
 	 * @see fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI#linkComputer(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
@@ -788,7 +794,7 @@ implements 	ApplicationSubmissionI,
 						this.pushingFuture.isDone())) {
 			this.pushingFuture.cancel(false) ;
 		}
-}
+	}
 
 	@Override
 	public void stopApplication(String appUri) throws Exception {
@@ -817,7 +823,6 @@ implements 	ApplicationSubmissionI,
 
 	@Override
 	public void setPreviousManagementInboundPort(String managementInboundPort) throws Exception {
-		System.out.println("imin");
 		this.controllerManagementPreviousInboundPort = managementInboundPort;
 	}
 
