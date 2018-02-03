@@ -200,7 +200,7 @@ extends		AbstractCVM
 		for(int i = 0; i < NB_APPLICATION;i++) {
 		//	Thread.sleep(500);
 			//this.apmop[i].createAndSendApplication();
-			this.apmop[i].createAndSendApplication();
+			this.apmop[i].createAndSendApplication(RequestSubmissionI.class);
 		}
 		//Thread.sleep(25000);
 

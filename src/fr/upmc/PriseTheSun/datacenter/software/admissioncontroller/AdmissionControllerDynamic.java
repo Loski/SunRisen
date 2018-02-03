@@ -513,10 +513,7 @@ implements 	ApplicationSubmissionI,
 		return dispatcherUri;
 	}
 	
-	/**
-	 * @see fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int, java.lang.Class)
-	 */
-	@Override
+	/*@Override
 	public String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception {
 		
 		assert submissionInterface.isInterface();
@@ -532,12 +529,16 @@ implements 	ApplicationSubmissionI,
 			}
 		}
 		
-		Class<?> dispa = this.submissionInterfaces.get(submissionInterface.getName());
+		Class<?> dispa = null;
+		
+		synchronized(o){
+		dispa = this.submissionInterfaces.get(submissionInterface.getName());
 		
 		if(dispa==null)
 		{
 			dispa = RequestDispatcherCreator.createRequestDispatcher("JAVASSIST-dispa", RequestDispatcher.class, submissionInterface);
 			this.submissionInterfaces.put(submissionInterface.getName(), dispa);
+		}
 		}
 		
 		String dispatcherUri[] = createDispatcher(appURI, dispa.getCanonicalName());
@@ -548,7 +549,7 @@ implements 	ApplicationSubmissionI,
 		
 		return dispatcherUri;
 		
-	}
+	}*/
 	
 
 	/**
