@@ -109,7 +109,7 @@ implements
 	
 	protected VMDisconnectionNotificationHandlerOutboundPort vmnobp;
 	
-	protected Object lock;
+	protected Object listLock;
 	protected boolean inDisconnectionState = false;
 	
 	protected int nbRequestTerminated = 0;
@@ -200,7 +200,7 @@ implements
 				
 				this.requestVirtalMachineDataMap = new HashMap<>();
 				
-				this.lock = new Object(); 
+				this.listLock = new Object();
 				
 				this.addOfferedInterface(RequestDispatcherIntrospectionI.class) ;
 				this.rdIntrospectionInboundPort =
@@ -228,10 +228,19 @@ implements
 			return this.virtualMachineDataList.get(0);
 		}
 		else if(this.virtualMachineDataList.get(this.currentVM).getRequestInQueue().isEmpty())
-			return this.virtualMachineDataList.get(this.currentVM);
+		{
+			VirtualMachineData machineData = this.virtualMachineDataList.get(this.currentVM);
+			this.nextVM();
+			return machineData;
+		}
 		else
 		{
-			synchronized(this.lock)
+			return null;
+		}
+			
+		/*else
+		{
+			synchronized(this.nextVMLock)
 			{
 				int previousIndex = this.currentVM;
 				this.nextVM();
@@ -242,13 +251,13 @@ implements
 						VirtualMachineData avaible = this.virtualMachineDataList.get(this.currentVM);
 						this.nextVM();
 						return avaible;
-					}		
+					}	
 					this.nextVM();
 				}
 				
 				return null;
 			}
-		}
+		}*/
 	}
 	
 	protected void nextVM()
@@ -266,7 +275,8 @@ implements
 		
 		if(this.queue.isEmpty())
 		{	
-			VirtualMachineData vm = findAvaibleVM();
+			VirtualMachineData vm = this.virtualMachineDataList.get(this.currentVM);
+			this.nextVM();
 			
 			if(vm==null)
 			{
@@ -277,7 +287,7 @@ implements
 				vm.addRequest(r.getRequestURI(),timeData);
 				
 				RequestSubmissionOutboundPort port = vm.getRsobp();
-				port.submitRequest(r);
+				port.submitRequestAndNotify(r);
 
 				this.taskExecutedBy.put(r.getRequestURI(),vm);
 				
@@ -344,27 +354,24 @@ implements
 				this.disconnectVirtualMachine(vm);
 			}
 		}
-		
-		this.requestNotificationOutboundPort.notifyRequestTermination( r );
-		
-		if(!this.queue.isEmpty())
-		{
-			VirtualMachineData vmData = findAvaibleVM();
-			
+		else if(!this.queue.isEmpty())
+		{			
 			RequestI req = this.queue.remove();
 			
 			RequestTimeData timeData = this.timeDataMap.remove(req.getRequestURI());
 			
-			vmData.addRequest(req.getRequestURI(),timeData);
+			vm.addRequest(req.getRequestURI(),timeData);
 			
-			RequestSubmissionOutboundPort port = vmData.getRsobp();
+			RequestSubmissionOutboundPort port = vm.getRsobp();
 			port.submitRequestAndNotify(req);
 			
-			if (RequestGenerator.DEBUG_LEVEL >= 1) 
-				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),vmData.getVmURI(),port.getPortURI()));
+			if (RequestGenerator.DEBUG_LEVEL >= 1)
+				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),vm.getVmURI(),port.getPortURI()));
 			
-			this.taskExecutedBy.put(req.getRequestURI(),vmData);
+			this.taskExecutedBy.put(req.getRequestURI(),vm);
 		}
+		
+		this.requestNotificationOutboundPort.notifyRequestTermination( r );
 		
 		if (RequestGenerator.DEBUG_LEVEL >= 1) 
 			this.logMessage(String.format("RequestDispatcher [%s] notifies end of request %s",this.rdURI,r.getRequestURI()));
@@ -400,10 +407,11 @@ implements
 	@Override
 	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception {
 		
+		assert !inDisconnectionState;
+		assert !this.requestVirtalMachineDataMap.containsKey(vmURI);
+		
 		/*if(this.requestSubmissionOutboundPortList.get(indexVM)!=null && this.requestSubmissionOutboundPortList.get(indexVM).getPortURI().equals(RequestSubmissionOutboundPortURI))
 			throw new Exception("VM déjà connecté sur ce port");*/
-		if(inDisconnectionState)
-			throw new Exception("cant add vm");
 
 		RequestSubmissionOutboundPort rsobp = new RequestSubmissionOutboundPort( rdURI+"-rsbop-"+vmURI, this );
 		ApplicationVMIntrospectionOutboundPort avmiovp = new ApplicationVMIntrospectionOutboundPort( vmURI+"-introObp", this );
@@ -471,9 +479,7 @@ implements
 		if(inDisconnectionState && this.virtualMachineDataList.isEmpty() && this.virtualMachineWaitingForDisconnection.isEmpty())
 		{			
 			if(this.vmnobp.connected())
-			{
-				System.err.println("RIP LE CONTOLLER");
-				
+			{				
 				this.vmnobp.disconnectController();
 				this.vmnobp.doDisconnection();
 			}
@@ -483,8 +489,7 @@ implements
 	@Override
 	public void askVirtualMachineDisconnection(String vmURI) throws Exception {
 		
-		System.err.println("ASK :"+vmURI);	
-		synchronized(this.lock)
+		synchronized(this.listLock)
 		{			
 			VirtualMachineData vmData = this.requestVirtalMachineDataMap.remove(vmURI);
 			this.virtualMachineDataList.remove(vmData);
@@ -495,7 +500,7 @@ implements
 			else
 			{
 				this.virtualMachineWaitingForDisconnection.add(vmURI);
-			}	
+			}
 		}
 	}
 	
@@ -537,7 +542,7 @@ implements
 		
 		Double average = null;
 		
-		synchronized(this.lock)
+		synchronized(this.listLock)
 		{
 			double averageTime = 0.0;
 			boolean oneRequestFound = false;
@@ -696,12 +701,10 @@ implements
 	@Override
 	public void disconnectController() throws Exception 
 	{
-		synchronized(this.lock){
 			inDisconnectionState = true;
 			while(!this.virtualMachineDataList.isEmpty()) {
 				this.askVirtualMachineDisconnection(this.virtualMachineDataList.get(0).getVmURI());
 			}
-		}
 	}
 
 }
