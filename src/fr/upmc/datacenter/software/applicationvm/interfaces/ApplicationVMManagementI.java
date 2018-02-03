@@ -80,5 +80,7 @@ extends		OfferedI,
 	
 	public void	desallocateCores(int nbCore) throws Exception;
 
+	public AllocatedCore[]	desallocateAllCores() throws Exception;
+	
 	void disconnectWithRequestSubmissioner() throws Exception;
 }

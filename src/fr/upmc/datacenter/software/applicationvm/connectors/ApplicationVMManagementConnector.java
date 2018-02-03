@@ -90,4 +90,9 @@ implements	ApplicationVMManagementI
 	public void disconnectWithRequestSubmissioner() throws Exception {
 		((ApplicationVMManagementI)this.offering).disconnectWithRequestSubmissioner();
 	}
+
+	@Override
+	public AllocatedCore[] desallocateAllCores() throws Exception {
+		return ((ApplicationVMManagementI)this.offering).desallocateAllCores();
+	}
 }

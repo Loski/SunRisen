@@ -172,4 +172,16 @@ implements	ApplicationVMManagementI
 			}
 		}) ;
 	}
+
+	@Override
+	public AllocatedCore[] desallocateAllCores() throws Exception {
+		final ApplicationVMManagementI avm = (ApplicationVMManagementI) this.owner ;
+		return this.owner.handleRequestSync(
+			new ComponentI.ComponentService<AllocatedCore[]>() {
+			@Override
+			public AllocatedCore[] call() throws Exception {
+				return avm.desallocateAllCores();
+			}
+		});
+	}
 }

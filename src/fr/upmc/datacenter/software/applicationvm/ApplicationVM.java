@@ -36,6 +36,7 @@ package fr.upmc.datacenter.software.applicationvm;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
@@ -732,5 +733,47 @@ implements	ProcessorServicesNotificationConsumerI,
 		if(this.requestNotificationOutboundPort.connected()) {
 			this.requestNotificationOutboundPort.doDisconnection();
 		}
+	}
+
+	@Override
+	public AllocatedCore[] desallocateAllCores() throws Exception {
+		
+		AllocatedCore[] cores = new AllocatedCore[this.allocatedCoresIdleStatus.size()];
+		
+		int i = 0;
+		
+		for(Iterator<Map.Entry<AllocatedCore,Boolean>> it =  this.allocatedCoresIdleStatus.entrySet().iterator(); it.hasNext();)
+		{
+			Map.Entry<AllocatedCore,Boolean> entry = it.next();
+		    AllocatedCore ac = entry.getKey();
+
+		    cores[i]=ac;
+		    
+			if(!this.allocatedCoresIdleStatus.get(ac))
+			{
+				throw new Exception("desallocation but one core is not idle");
+			}
+
+			ProcessorServicesOutboundPort psobp = this.processorServicesPorts.get(ac.processorURI);
+			if(psobp.connected())
+			{
+				psobp.doDisconnection();
+			}
+			
+			psobp.destroyPort();
+			
+			ProcessorServicesNotificationInboundPort psnibp = this.processorNotificationInboundPorts.get(ac.processorURI);
+			if(psnibp.connected())
+			{
+				psnibp.doDisconnection();
+			}
+			
+			psnibp.destroyPort();
+			
+			this.allocatedCoresIdleStatus.remove(ac);
+			
+			i++;
+		}
+		return cores;
 	}
 }
