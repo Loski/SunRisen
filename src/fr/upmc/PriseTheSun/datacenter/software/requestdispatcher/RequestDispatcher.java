@@ -223,6 +223,9 @@ implements
 				this.taskExecutedBy = new HashMap<String,VirtualMachineData>();
 				this.queue = new LinkedList<RequestI>();
 				this.timeDataMap = new HashMap<>();
+				
+				this.nbRequestReceived=0;
+				this.nbRequestTerminated=0;
 	}
 	
 	protected VirtualMachineData findAvaibleVM()
