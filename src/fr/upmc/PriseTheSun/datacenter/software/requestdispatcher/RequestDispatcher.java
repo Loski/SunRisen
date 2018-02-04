@@ -344,7 +344,6 @@ implements
 		{
 			if(vm.getRequestInQueue().isEmpty())
 			{
-				this.virtualMachineWaitingForDisconnection.remove(vm.getVmURI());
 				this.disconnectVirtualMachine(vm);
 			}
 		}
@@ -446,7 +445,7 @@ implements
 
 	protected void disconnectVirtualMachine(VirtualMachineData vmData) throws Exception
 	{
-		System.err.println("coucou" + vmData.getVmURI());
+		System.err.println("coucou issou la chancla :" + vmData.getVmURI());
 		
 		try {
 		
@@ -469,6 +468,8 @@ implements
 
 		if(inDisconnectionState && this.requestVirtualMachineDataMap.isEmpty() && this.virtualMachineWaitingForDisconnection.isEmpty())
 		{			
+			System.err.println("JAMBON FC");
+			
 			if(this.vmnobp.connected())
 			{				
 				this.vmnobp.disconnectController();
@@ -485,7 +486,7 @@ implements
 	public void askVirtualMachineDisconnection(String vmURI) throws Exception {
 		
 		synchronized(this.listLock)
-		{			
+		{
 			VirtualMachineData vmData = this.requestVirtualMachineDataMap.remove(vmURI);
 			
 			if(vmData.getRequestInQueue().isEmpty())
