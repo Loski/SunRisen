@@ -281,6 +281,7 @@ implements
 		
 		assert r != null;
 		
+		try {
 		RequestTimeData timeData = new RequestTimeData(this.rdURI,null, r.getRequestURI());
 		this.timeDataMap.put(r.getRequestURI(),timeData);
 
@@ -311,6 +312,10 @@ implements
 		{
 			this.queue.add(r);
 		}
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -320,6 +325,7 @@ implements
 		
 		this.nbRequestTerminated++;
 		
+		try {
 		VirtualMachineData vm = this.taskExecutedBy.remove(r.getRequestURI());
 		vm.endRequest(r.getRequestURI());
 		if(!this.virtualMachineWaitingForDisconnection.isEmpty() && this.virtualMachineWaitingForDisconnection.contains(vm.getVmURI()))
@@ -356,6 +362,10 @@ implements
 		}
 		
 		this.requestNotificationOutboundPort.notifyRequestTermination( r );
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+		}
 		
 		if (RequestGenerator.DEBUG_LEVEL >= 1) 
 			this.logMessage(String.format("RequestDispatcher [%s] notifies end of request %s",this.rdURI,r.getRequestURI()));
