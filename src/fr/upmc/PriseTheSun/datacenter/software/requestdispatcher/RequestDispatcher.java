@@ -244,7 +244,7 @@ implements
 	
 	protected VirtualMachineData findAvaibleVM() throws Exception
 	{		
-		synchronized(this.virtualMachineAvailable)
+		synchronized(this.listLock)
 		{			
 			if(this.virtualMachineAvailable.isEmpty())
 			{
@@ -256,7 +256,7 @@ implements
 				String uri = this.virtualMachineAvailable.peek();
 				VirtualMachineData vm = this.requestVirtualMachineDataMap.get(uri);
 				if(vm == null) {
-					throw new Exception("ISSOU" +uri);
+					throw new Exception(uri);
 				}
 				if(vm.getAvmiovp().getNumberOfCores()<vm.getRequestInQueue().size())
 				{					
@@ -509,11 +509,11 @@ implements
 	@Override
 	public void askVirtualMachineDisconnection(String vmURI) throws Exception {
 		
-		synchronized(this.virtualMachineAvailable)
+		synchronized(this.listLock)
 		{
 			VirtualMachineData vmData = this.requestVirtualMachineDataMap.remove(vmURI);
-			boolean boole = this.virtualMachineAvailable.remove(vmURI);
-			boolean b = this.virtualMachineNotAvailable.remove(vmURI);
+			this.virtualMachineAvailable.remove(vmURI);
+			this.virtualMachineNotAvailable.remove(vmURI);
 			
 			if(vmData.getRequestInQueue().isEmpty())
 			{
