@@ -36,6 +36,8 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 	private static final String ProcessorDynamicStateDataOutboundPortURI = "pds";
 	private static final String ProcessorManagementOutboundPortURI = "pmop";
 	
+
+
 	private ComputerServicesOutboundPort csop;
 	private Map<String, ArrayList<Point>> reservedCore;
 	private ComputerControllerManagementInboundPort ccmip;
@@ -229,5 +231,11 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 	public int compteurVM() throws Exception {
 		return reservedCore.size();
 	}
+
+	@Override
+	public int compteurCoreReserved(String Vmrui) throws Exception {
+		return reservedCore.get(Vmrui).size();
+	}
 	
+
 }

@@ -49,4 +49,9 @@ public class ComputerControllerManagementOutboutPort extends AbstractOutboundPor
 
 	}
 
+	@Override
+	public int compteurCoreReserved(String Vmrui) throws Exception {
+		return ((ComputerControllerManagementI)this.connector).compteurCoreReserved(Vmrui);
+	}
+
 }

@@ -45,4 +45,12 @@ public interface ComputerControllerManagementI extends OfferedI, RequiredI {
 	 * @throws Exception
 	 */
 	public int compteurVM() throws Exception;
+	
+	/**
+	 * Retourne le nombre de coeurs réservés à la VM
+	 * @param Vmrui URI de la VM
+	 * @return nombre de coeurs réservés
+	 * @throws Exception
+	 */
+	public int compteurCoreReserved(String Vmrui) throws Exception;
 }

@@ -99,6 +99,19 @@ public class ComputerControllerManagementInboundPort extends AbstractInboundPort
 				}
 		);
 	}
+
+	@Override
+	public int compteurCoreReserved(String Vmrui) throws Exception {
+		final ComputerControllerManagementI ccm = ( ComputerControllerManagementI ) this.owner;
+		 return this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Integer>() {
+					@Override
+					public Integer call() throws Exception {
+						return ccm.compteurCoreReserved(Vmrui);
+					}
+				}
+		);
+	}
 	
 
 
