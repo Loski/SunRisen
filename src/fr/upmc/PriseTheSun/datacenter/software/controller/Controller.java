@@ -234,7 +234,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 
 		
-		rdsdop = new RingNetworkDynamicStateDataOutboundPort(this, RingDynamicStateDataOutboundPortURI);
+		rdsdop = new RingNetworkDynamicStateDataOutboundPort(RingDynamicStateDataOutboundPortURI,this,this.controllerURI);
 		this.addPort(rdsdop);
 		this.rdsdop.publishPort();
 		this.rdsdop.doConnection(nextRingDynamicStateDataInboundPort, ControlledDataConnector.class.getCanonicalName());
