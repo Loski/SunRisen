@@ -129,7 +129,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	private VMDisconnectionNotificationHandlerInboundPort vmnibp;
 	private String nextRingDynamicStateDataInboundPort;
 	
-	public final static int PUSH_INTERVAL = 100;
+	public final static int PUSH_INTERVAL = 300;
 	public final static int REQUEST_MIN = PUSH_INTERVAL/100;
 	
 	static class StaticData {
@@ -713,8 +713,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 			avmPort.publishPort() ;
 			avmPort.doConnection(vm.getAvmInbound(),
 						ApplicationVMManagementConnector.class.getCanonicalName());
-			rdmop.connectVirtualMachine(vm.getApplicationVM(), vm.getSubmissionInboundPortUri());
-			avmPort.connectWithRequestSubmissioner(rdUri, requestDispatcherNotificationInboundPort);
+			
+
 			
 			ComputerControllerManagementOutboutPort ccmop = cmops.get(vm.getApplicationVM());
 			if(ccmop == null) {
@@ -730,7 +730,14 @@ implements 	RequestDispatcherStateDataConsumerI,
 			if(cores == null || cores.length == 0) {
 				throw new Exception("No cores found..");
 			}
+			
 			avmPort.allocateCores(cores);
+			
+			
+			rdmop.connectVirtualMachine(vm.getApplicationVM(), vm.getSubmissionInboundPortUri());
+			avmPort.connectWithRequestSubmissioner(rdUri, requestDispatcherNotificationInboundPort);
+			
+			
 			this.cmops.put(vm.getApplicationVM(), ccmop);
 			this.avms.put(vm.getApplicationVM(), avmPort);
 			this.myVMs.add(vm);
@@ -744,12 +751,16 @@ implements 	RequestDispatcherStateDataConsumerI,
 	public void receiveVMDisconnectionNotification(String vmURI) throws Exception {
 		
 		assert vmURI != null;
+		try {
 		this.logMessage(this.controllerURI + " receive a signal to disconnect "+vmURI);
 		ApplicationVMManagementOutboundPort avm = this.avms.remove(vmURI);
 		//ComputerControllerManagementOutboutPort ccmop = this.cmops.remove(vmURI);
 	//	ccmop.releaseCore(vmURI);
-		avm.disconnectWithRequestSubmissioner();
-		this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
+		//avm.disconnectWithRequestSubmissioner();
+	//	this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
 	//	avm.desallocateAllCores();
 	//	freeApplicationVM.add(vm);		
 	}
