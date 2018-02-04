@@ -17,9 +17,8 @@ import fr.upmc.datacenterclient.requestgenerator.ports.RequestGeneratorManagemen
 
 
 /**
- * Application provider is responsible to create and connect a requestGenerator to a requestDispatcher.
- * He needs to submit an application to the admissionController and receive the requestDispatcher create by the admissionController.
- * 
+ <code>ApplicationProvider</code> est responsable de créer et de connecter un <code>requestGenerator</code> à un <code>requestDispatcher</code>.
+ Il doit soumettre une demande au contrôleur d'admission et recevoir les URIS du <code>requestDispatcher</code> créée par le contrôleur d'admission.
  * @author maxime Lavaste
  *
  */

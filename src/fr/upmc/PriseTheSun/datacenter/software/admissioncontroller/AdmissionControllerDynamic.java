@@ -68,18 +68,16 @@ import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOu
 
 
 /**
- * The class <code>AdmissionController</code> implements a component that represents an
- * Admission Controller in a datacenter, receiving new application.
+ * La classe <code>AdmissionControllerDynamic</code> implemente un composant qui représente un 
  *
  * <p><strong>Description</strong></p>
  * 
- * The Admission Controller Purpose is to manage the new applications and computers sent to the datacenter.
- * 
- * The Admission Controller receive new Request Generator through the <code>ApplicationSubmissionI</code> Interface.
- * When receiving a new request generator, it check if he has enough Virtual Machine at disposition and create
- * a Request Dispatcher linked to the request generator and a Controller linked to the request Dispatcher.
- * 
- * 
+ * Le but de <code>AdmissionControllerDynamic</code> est d'accepter ou de refuser
+ * des applications selon son pool de <code>ApplicationVirtuelMachine</code>.
+ * Ensuite, un <code>RequestDispatcher</code> ainsi qu'un <code>Controller</code> sont créés pour pouvoir résoudre les requêtes.
+ * Le Controller est ensuite ajouté au data ring où des VMs cirule librement entre chaque controllers et l'AdmissionController.
+ * <code>AdmissionControllerDynamic</code> reçoie un  <code>RequestGenerator</code> via <code>ApplicationSubmissionI</code>.
+ * De plus, il implémente l'interface <code>NodeRingManagementI</code> pour implémenter le comportement d'un node d'un data ring network.
  * @author	Maxime LAVASTE Loïc LAFONTAINE
  */
 public class AdmissionControllerDynamic extends AbstractComponent 
@@ -678,7 +676,6 @@ implements 	ApplicationSubmissionI,
 				if(this.vmURis.contains(vm.getApplicationVM())) {
 					int numberVmInRing = this.vmURis.size();
 					w.write(Arrays.asList("Nombre de vm " + numberVmInRing));
-				//	System.err.println("Nombre de vm " + numberVmInRing);
 					this.vmURis.clear();
 				}else {
 					this.vmURis.add(vm.getApplicationVM());
