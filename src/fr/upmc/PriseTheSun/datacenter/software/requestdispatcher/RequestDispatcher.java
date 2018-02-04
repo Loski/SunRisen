@@ -3,9 +3,11 @@ package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -80,13 +82,14 @@ implements
 	
 	/** InboundPort to receive VM notification */
 	protected RequestNotificationInboundPort  requestNotificationInboundPort;
-
-	/** List of virtual machines' data (URI,submissionOutboundPort,...)*/
-	protected List<VirtualMachineData> virtualMachineDataList;
 	
 	protected HashMap<String,VirtualMachineData> requestVirtalMachineDataMap;
 	/** */
 	protected HashSet<String> virtualMachineWaitingForDisconnection;
+	
+	protected Queue<String> virtualMachineAvailable;
+	protected Queue<String> virtualMachineInAction;
+	
 	/** map associating the uri of a Request with the VirtualMachineData*/
 	protected HashMap<String,VirtualMachineData> taskExecutedBy;
 	
@@ -117,7 +120,6 @@ implements
 	
 	protected Queue<RequestI> queue;
 	protected HashMap<String,RequestTimeData> timeDataMap;
-
 	
 	/**
 	 * Construct a <code>RequestDispatcher</code>.
@@ -188,7 +190,8 @@ implements
 				this.addPort(this.requestNotificationOutboundPort) ;
 				this.requestNotificationOutboundPort.publishPort() ;
 				
-				this.virtualMachineDataList = new ArrayList<VirtualMachineData>();
+				this.virtualMachineAvailable = new LinkedList<String>();
+				this.virtualMachineInAction = new LinkedList<String>();
 				this.addRequiredInterface( RequestSubmissionI.class );
 				this.addRequiredInterface(ApplicationVMIntrospectionI.class );
 				
@@ -224,46 +227,19 @@ implements
 	
 	protected VirtualMachineData findAvaibleVM()
 	{		
-		if(this.virtualMachineDataList.size()==1)
-		{
-			return this.virtualMachineDataList.get(0);
-		}
-		else if(this.virtualMachineDataList.get(this.currentVM).getRequestInQueue().isEmpty())
-		{
-			VirtualMachineData machineData = this.virtualMachineDataList.get(this.currentVM);
-			this.nextVM();
-			return machineData;
-		}
-		else
-		{
-			return null;
-		}
-			
-		/*else
-		{
-			synchronized(this.nextVMLock)
+		synchronized(this.listLock)
+		{			
+			if(this.virtualMachineAvailable.isEmpty())
 			{
-				int previousIndex = this.currentVM;
-				this.nextVM();
-				while(this.currentVM!=previousIndex)
-				{
-					if(this.virtualMachineDataList.get(this.currentVM).getRequestInQueue().isEmpty())
-					{
-						VirtualMachineData avaible = this.virtualMachineDataList.get(this.currentVM);
-						this.nextVM();
-						return avaible;
-					}	
-					this.nextVM();
-				}
-				
 				return null;
 			}
-		}*/
-	}
-	
-	protected void nextVM()
-	{
-		this.currentVM = (this.currentVM+1)%this.virtualMachineDataList.size();
+			else 
+			{
+				String uri = this.virtualMachineAvailable.remove();
+				this.virtualMachineInAction.add(uri);
+				return this.requestVirtalMachineDataMap.get(uri);
+			}
+		}
 	}
 	
 	@Override
@@ -278,8 +254,7 @@ implements
 		
 		if(this.queue.isEmpty())
 		{	
-			VirtualMachineData vm = this.virtualMachineDataList.get(this.currentVM);
-			this.nextVM();
+			VirtualMachineData vm = findAvaibleVM();
 			
 			if(vm==null)
 			{
@@ -342,7 +317,7 @@ implements
 	public void acceptRequestTerminationNotification(RequestI r) throws Exception {
 
 		assert r != null;
-
+		
 		this.nbRequestTerminated++;
 		
 		VirtualMachineData vm = this.taskExecutedBy.remove(r.getRequestURI());
@@ -356,7 +331,7 @@ implements
 			}
 		}
 		else if(!this.queue.isEmpty())
-		{			
+		{	
 			RequestI req = this.queue.remove();
 			
 			RequestTimeData timeData = this.timeDataMap.remove(req.getRequestURI());
@@ -370,6 +345,14 @@ implements
 				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),vm.getVmURI(),port.getPortURI()));
 			
 			this.taskExecutedBy.put(req.getRequestURI(),vm);
+		}
+		else
+		{
+			synchronized(this.listLock)
+			{
+				this.virtualMachineInAction.remove(vm.getVmURI());
+				this.virtualMachineAvailable.add(vm.getVmURI());
+			}
 		}
 		
 		this.requestNotificationOutboundPort.notifyRequestTermination( r );
@@ -385,7 +368,7 @@ implements
 	            if ( this.requestNotificationOutboundPort.connected() ) {
 	                this.requestNotificationOutboundPort.doDisconnection();
 	            }
-	            for (VirtualMachineData data : virtualMachineDataList)
+	            for (VirtualMachineData data : this.requestVirtalMachineDataMap.values())
 	            {
 	            	RequestSubmissionOutboundPort port = data.getRsobp();
 	            	
@@ -418,8 +401,7 @@ implements
 		ApplicationVMIntrospectionOutboundPort avmiovp = new ApplicationVMIntrospectionOutboundPort( vmURI+"-introObp", this );
 		
 		VirtualMachineData vm = new VirtualMachineData(vmURI, rsobp,avmiovp);
-		this.virtualMachineDataList.add(vm);
-		this.requestVirtalMachineDataMap.put(vmURI, vm);
+
 		this.addPort( rsobp );
 		rsobp.publishPort();
 		
@@ -439,6 +421,8 @@ implements
 		if (RequestGenerator.DEBUG_LEVEL >= 2)
 			this.logMessage(String.format("[%s] Connecting %s with %s using %s -> %s",getConnectorSimpleName(),this.rdURI,vmURI,rsobp.getPortURI(),requestSubmissionInboundPortURI));
 	
+		this.requestVirtalMachineDataMap.put(vmURI, vm);
+		
 		if(!this.queue.isEmpty())
 		{
 			RequestI req = this.queue.remove();
@@ -454,6 +438,11 @@ implements
 				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),vm.getVmURI(),port.getPortURI()));
 			
 			this.taskExecutedBy.put(req.getRequestURI(),vm);
+			this.virtualMachineInAction.add(vmURI);
+		}
+		else
+		{
+			this.virtualMachineAvailable.add(vmURI);
 		}
 	}
 
@@ -479,7 +468,7 @@ implements
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
-		if(inDisconnectionState && this.virtualMachineDataList.isEmpty() && this.virtualMachineWaitingForDisconnection.isEmpty())
+		if(inDisconnectionState && this.requestVirtalMachineDataMap.isEmpty() && this.virtualMachineWaitingForDisconnection.isEmpty())
 		{			
 			if(this.vmnobp.connected())
 			{				
@@ -495,13 +484,15 @@ implements
 		synchronized(this.listLock)
 		{			
 			VirtualMachineData vmData = this.requestVirtalMachineDataMap.remove(vmURI);
-			this.virtualMachineDataList.remove(vmData);
+			
 			if(vmData.getRequestInQueue().isEmpty())
 			{
+				this.virtualMachineAvailable.remove(vmURI);
 				this.disconnectVirtualMachine(vmData);
 			}
 			else
 			{
+				this.virtualMachineInAction.remove(vmURI);
 				this.virtualMachineWaitingForDisconnection.add(vmURI);
 			}
 		}
@@ -545,28 +536,25 @@ implements
 		
 		Double average = null;
 		
-		synchronized(this.listLock)
+		double averageTime = 0.0;
+		boolean oneRequestFound = false;
+		
+		for(VirtualMachineData vmData: this.requestVirtalMachineDataMap.values())
 		{
-			double averageTime = 0.0;
-			boolean oneRequestFound = false;
-			
-			for(VirtualMachineData vmData: this.virtualMachineDataList)
+			vmData.calculateAverageTime();
+			Double averageVM = vmData.getAverageTime();
+			if(averageVM!=null)
 			{
-				vmData.calculateAverageTime();
-				Double averageVM = vmData.getAverageTime();
-				if(averageVM!=null)
-				{
-					averageTime+=averageVM;
-					oneRequestFound=true;
-				}
-				virtualMachineExecutionAverageTime.put(vmData.getVmURI(),vmData.getAverageTime());
-				virtualMachineDynamicStates.put(vmData.getVmURI(), vmData.getAvmiovp().getDynamicState());
+				averageTime+=averageVM;
+				oneRequestFound=true;
 			}
-			
-			if(oneRequestFound)
-			{
-				average = averageTime/this.virtualMachineDataList.size();
-			}
+			virtualMachineExecutionAverageTime.put(vmData.getVmURI(),vmData.getAverageTime());
+			virtualMachineDynamicStates.put(vmData.getVmURI(), vmData.getAvmiovp().getDynamicState());
+		}
+		
+		if(oneRequestFound)
+		{
+			average = averageTime/this.requestVirtalMachineDataMap.size();
 		}
 		
 		return new RequestDispatcherDynamicState(this.rdURI,average,virtualMachineExecutionAverageTime,virtualMachineDynamicStates,this.nbRequestReceived,this.nbRequestTerminated) ;
@@ -705,8 +693,9 @@ implements
 	public void disconnectController() throws Exception 
 	{
 		inDisconnectionState = true;
-		while(!this.virtualMachineDataList.isEmpty()) {
-			this.askVirtualMachineDisconnection(this.virtualMachineDataList.get(0).getVmURI());
+		Iterator<Entry<String, VirtualMachineData>> it = this.requestVirtalMachineDataMap.entrySet().iterator();
+		while(it.hasNext()) {
+			this.askVirtualMachineDisconnection(it.next().getKey());
 		}
 	}
 
