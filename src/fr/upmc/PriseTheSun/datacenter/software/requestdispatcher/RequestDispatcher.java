@@ -445,7 +445,6 @@ implements
 
 	protected void disconnectVirtualMachine(VirtualMachineData vmData) throws Exception
 	{
-		System.err.println("coucou issou la chancla :" + vmData.getVmURI());
 		
 		try {
 		
@@ -468,7 +467,6 @@ implements
 
 		if(inDisconnectionState && this.requestVirtualMachineDataMap.isEmpty() && this.virtualMachineWaitingForDisconnection.isEmpty())
 		{			
-			System.err.println("JAMBON FC");
 			
 			if(this.vmnobp.connected())
 			{				

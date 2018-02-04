@@ -122,7 +122,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 	private String appURI; 	
 	private Writter w;
-	private Object o = new Object();
 
 	private Map<String, List<Mesure>> statistique;
 	
@@ -336,7 +335,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		try {
 			if((waitDecision % REQUEST_MIN) == 0) {
-				//reserveCore(1);
+				reserveCore(1);
 			}
 			waitDecision++;
 			if(currentDynamicState.getAvgExecutionTime() == null) {
@@ -359,7 +358,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			if((waitDecision % REQUEST_MIN) == 0) {
 				processControl(currentDynamicState);
 				//On redonne les VMs au prochain controller.
-				synchronized (o) {
+				synchronized (vmReserved) {
 					while(!vmReserved.isEmpty()) {
 						freeApplicationVM.add(vmReserved.remove(0));
 					}
@@ -475,14 +474,14 @@ implements 	RequestDispatcherStateDataConsumerI,
 		}
 		
 		//Release les cores
-		//releaseCore(vms);
+		releaseCore(vms);
 		w.write(Arrays.asList("DO :", ""+average, ""+myVMs.size(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms),  ""+currentDynamicState.getNbRequestReceived(), ""+currentDynamicState.getNbRequestTerminated()));
 	}
 
 	/**
-	 * 
-	 * @param vms
-	 * @return
+	 * Renvoie le nombre de cores alloués de toutes les VM allouées à un dispatcher.
+	 * @param vms Les Vms.
+	 * @return Le nombre total de coeur.
 	 */
 	private int getNumberOfCoresAllocatedFrom(Map<String, ApplicationVMDynamicStateI> vms) {
 		int number = 0;
@@ -518,7 +517,13 @@ implements 	RequestDispatcherStateDataConsumerI,
 			System.err.println("je passe par lower mdr");
 	
 			//Ajoute les cores
-			//this.addCores(vms);
+			
+			synchronized(myVMs) {
+				for (int i = 0; i < this.myVMs.size(); i++)
+				{
+					this.addCores(myVMs.get(i).getApplicationVM());
+				}			
+			}
 			}catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -534,7 +539,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	 */
 	private void tooFastCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		try {
-			synchronized (this) {
+			synchronized (myVMs) {
 				boolean canRemoveVM = myVMs.size() > 1;
 				if(canRemoveVM) {
 					//this.rddsdop.stopPushing();
@@ -544,20 +549,24 @@ implements 	RequestDispatcherStateDataConsumerI,
 					this.rdmop.askVirtualMachineDisconnection(randomVM.getApplicationVM());
 				}
 			}
+		
+			synchronized(myVMs) {
+				for (int i = 0; i < this.myVMs.size(); i++)
+				{
+					if(vms.get(myVMs.get(i).getApplicationVM()).getAllocatedCoresNumber().length > StaticData.MIN_ALLOCATED_CORE) {
+						this.avms.get(myVMs.get(i).getApplicationVM()).desallocateCores(1);
+						this.logMessage("Desaloc");
+					}else {
+						this.logMessage("Etrange - " );
+						if((vms.get(myVMs.get(i).getApplicationVM()).getAllocatedCoresNumber().length > StaticData.MIN_ALLOCATED_CORE)) {
+							throw new Exception("Pas sync? ");
+						}
+					}
+				}			
+			}
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
-	
-
-		
-	/*	for (Entry<String, ApplicationVMDynamicStateI> entry : vms.entrySet())
-		{
-			if(entry.getValue().getAllocatedCoresNumber().length > StaticData.MIN_ALLOCATED_CORE) {
-				this.avms.get(entry.getKey()).desallocateCores(1);
-			}
-		}*/
-
-		System.err.println("je passe par faster mdr");		
 	}
 	
 /*	private int setCoreFrequency(CoreAsk ask, ApplicationVMDynamicStateI vm){
@@ -583,7 +592,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	@Override
 	public void acceptRingNetworkDynamicData(String controllerDataRingOutboundPortURI, RingNetworkDynamicStateI currentDynamicState)
 			throws Exception {
-		synchronized(o){
+		synchronized(vmReserved){
 			ApplicationVMInfo vm =  currentDynamicState.getApplicationVMInfo();
 			//System.out.println(vm + controllerDataRingOutboundPortURI);
 
@@ -702,7 +711,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 	public RingDynamicState getDynamicState() throws UnknownHostException {
 		ApplicationVMInfo removed = null;
-		synchronized(o){
+		synchronized(freeApplicationVM){
 			if(!this.freeApplicationVM.isEmpty()) {
 				removed = this.freeApplicationVM.remove(0);
 			}
@@ -872,7 +881,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.startUnlimitedPushing(RingDynamicState.RING_INTERVAL_TIME);
 	}
 
-	/*
+	
 	private void reserveCore(int nbToAllocate) {
 		assert nbToAllocate > 0;		
 		for(int i = 0; i < this.myVMs.size(); i++) {
@@ -916,21 +925,29 @@ implements 	RequestDispatcherStateDataConsumerI,
 	}
 
 	
-	private void addCores(String vmURI) throws Exception {
+	private int addCores(String vmURI) throws Exception {
 		ApplicationVMManagementOutboundPort avm = this.avms.get(vmURI);
 		try {
 			if(avm == null || !avm.connected()) {
 				this.logMessage("AVM " + vmURI +"not found..");
-				return;
+				return 0;
 			}
 			AllocatedCore cores[] = this.cmops.get(vmURI).addCores(vmURI);
-			if(cores != null && cores.length > 0)
+
+			if(cores != null && cores.length > 0) {
+				this.logMessage("Allocation of " + cores.length );
 				avm.allocateCores(cores);
+				return cores.length;
+			}else {
+				this.logMessage("No allocation this time !" );
+				
+			}
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
+		return 0;
 	}
-*/
+
 	@Override
 	public void doDisconnectionInboundPort() throws Exception {
 		if(this.rdsdip.connected()) {
