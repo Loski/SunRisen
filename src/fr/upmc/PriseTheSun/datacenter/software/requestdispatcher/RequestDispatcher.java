@@ -252,7 +252,7 @@ implements
 				String uri = this.virtualMachineAvailable.peek();
 				VirtualMachineData vm = this.requestVirtualMachineDataMap.get(uri);
 				
-				if(vm.getAvmiovp().getNumberOfCores()<=vm.getRequestInQueue().size()+1)
+				if(vm.getAvmiovp().getNumberOfCores()<vm.getRequestInQueue().size())
 				{					
 					this.virtualMachineAvailable.remove();
 					this.virtualMachineNotAvailable.add(vm.getVmURI());
