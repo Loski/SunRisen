@@ -19,8 +19,8 @@ import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamic
  * invariant	true
  * </pre>
  * 
- * @author Loïc Lafontaine
- * @version	$Name$ -- $Revision$ -- $Date$
+ * @author	Loïc Lafontaine
+ * @author	Maxime Lavaste
  */
 
 public interface RequestDispatcherDynamicStateI 
