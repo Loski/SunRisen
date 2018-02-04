@@ -98,9 +98,11 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 	@Override
 	public void releaseCore(String vmUri) throws Exception {
 		assert vmUri != null;
-
-		ArrayList<Point> cores =  reservedCore.remove(vmUri);
-		csop.releaseCore(cores);
+		System.err.println("je rentre " + vmUri);
+		ArrayList<Point> cores =  reservedCore.remove(vmUri);		
+		if(cores != null) {
+			csop.releaseCore(cores);
+		}
 	}
 	
 	/**
