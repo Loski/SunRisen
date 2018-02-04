@@ -476,7 +476,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		//Release les cores
 		//releaseCore(vms);
-		w.write(Arrays.asList("DO :", ""+average, ((Integer)vms.size()).toString(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms),  ""+currentDynamicState.getNbRequestReceived(), ""+currentDynamicState.getNbRequestTerminated()));
+		w.write(Arrays.asList("DO :", ""+average, ""+myVMs.size(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms),  ""+currentDynamicState.getNbRequestReceived(), ""+currentDynamicState.getNbRequestTerminated()));
 	}
 
 	/**
@@ -503,8 +503,12 @@ implements 	RequestDispatcherStateDataConsumerI,
 	private void tooSlowCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		try {
 			//Add a vm
-			if(!vmReserved.isEmpty())
-				this.addVm(vmReserved.remove(0));
+			
+			synchronized (this) {
+				if(!vmReserved.isEmpty())
+					this.addVm(vmReserved.remove(0));
+			}
+			
 			
 			ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
 			
@@ -534,6 +538,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 				boolean canRemoveVM = myVMs.size() > 1;
 				if(canRemoveVM) {
 					//this.rddsdop.stopPushing();
+					w.write(Arrays.asList("ask to remove a vm"));
+
 					ApplicationVMInfo randomVM = this.myVMs.remove(0);
 					this.rdmop.askVirtualMachineDisconnection(randomVM.getApplicationVM());
 				}
@@ -710,6 +716,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		// Create a mock up port to manage the AVM component (allocate cores).
 		ApplicationVMManagementOutboundPort avmPort;
 		int id = ++idVm;
+		w.write(Arrays.asList("ask to add a vm"));
 
 		try {
 			avmPort = new ApplicationVMManagementOutboundPort(
@@ -747,6 +754,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 			synchronized (this) {
 				this.myVMs.add(vm);
 			}
+			w.write(Arrays.asList("VM add"));
+
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -759,7 +768,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		assert vmURI != null;
 		try {
 			this.logMessage(this.controllerURI + " receive a signal to disconnect "+vmURI);
-			w.write(Arrays.asList("disconnected ISSOU!!"));
 	
 			ApplicationVMManagementOutboundPort avm = this.avms.remove(vmURI);
 			avm.doDisconnection();
@@ -767,7 +775,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		//	ccmop.releaseCore(vmURI);
 			//avm.disconnectWithRequestSubmissioner();
 			//this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
-			w.write(Arrays.asList("disconnected 2!!"));
+			w.write(Arrays.asList("vm removed!"));
 
 		}catch (Exception e) {
 			e.printStackTrace();
