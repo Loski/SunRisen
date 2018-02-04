@@ -420,9 +420,6 @@ implements
 		
 		assert !inDisconnectionState;
 		assert !this.requestVirtualMachineDataMap.containsKey(vmURI);
-		
-		/*if(this.requestSubmissionOutboundPortList.get(indexVM)!=null && this.requestSubmissionOutboundPortList.get(indexVM).getPortURI().equals(RequestSubmissionOutboundPortURI))
-			throw new Exception("VM déjà connecté sur ce port");*/
 
 		RequestSubmissionOutboundPort rsobp = new RequestSubmissionOutboundPort( rdURI+"-rsbop-"+vmURI, this );
 		ApplicationVMIntrospectionOutboundPort avmiovp = new ApplicationVMIntrospectionOutboundPort( vmURI+"-introObp", this );
@@ -462,38 +459,33 @@ implements
 
 	protected void disconnectVirtualMachine(VirtualMachineData vmData) throws Exception
 	{
-		
-		try {
-		
-		RequestSubmissionOutboundPort port = vmData.getRsobp();
-		if(port!=null && port.connected())
-		{
-			port.doDisconnection();
-			port.destroyPort();
-		}
-		
-		ApplicationVMIntrospectionOutboundPort portIntrospection = vmData.getAvmiovp();
-		if(portIntrospection!=null && portIntrospection.connected())
-		{
-			portIntrospection.doDisconnection();
-			portIntrospection.destroyPort();
+		synchronized (this.listLock) {
+			RequestSubmissionOutboundPort port = vmData.getRsobp();
+			if(port!=null && port.connected())
+			{
+				port.doDisconnection();
+				port.destroyPort();
+			}
+			
+			ApplicationVMIntrospectionOutboundPort portIntrospection = vmData.getAvmiovp();
+			if(portIntrospection!=null && portIntrospection.connected())
+			{
+				portIntrospection.doDisconnection();
+				portIntrospection.destroyPort();
+			}
+			
+			this.virtualMachineWaitingForDisconnection.remove(vmData.getVmURI());
 		}
 		
 		this.vmnobp.receiveVMDisconnectionNotification(vmData.getVmURI());
-		this.virtualMachineWaitingForDisconnection.remove(vmData.getVmURI());
 
 		if(inDisconnectionState && this.requestVirtualMachineDataMap.isEmpty() && this.virtualMachineWaitingForDisconnection.isEmpty())
 		{			
-			
 			if(this.vmnobp.connected())
 			{				
 				this.vmnobp.disconnectController();
 				this.vmnobp.doDisconnection();
 			}
-		}
-	}
-		catch (Exception e) {
-			e.printStackTrace();
 		}
 	}	
 	
