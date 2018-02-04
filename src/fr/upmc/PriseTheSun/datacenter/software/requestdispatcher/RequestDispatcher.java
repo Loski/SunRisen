@@ -450,6 +450,8 @@ implements
 	{
 		System.err.println("coucou" + vmData.getVmURI());
 		
+		try {
+		
 		RequestSubmissionOutboundPort port = vmData.getRsobp();
 		if(port!=null && port.connected())
 		{
@@ -463,11 +465,10 @@ implements
 			portIntrospection.doDisconnection();
 			portIntrospection.destroyPort();
 		}
-		try {
-			this.vmnobp.receiveVMDisconnectionNotification(vmData.getVmURI());
-		}catch (Exception e) {
-			e.printStackTrace();
-		}
+		
+		this.vmnobp.receiveVMDisconnectionNotification(vmData.getVmURI());
+		this.virtualMachineWaitingForDisconnection.remove(vmData.getVmURI());
+
 		if(inDisconnectionState && this.requestVirtualMachineDataMap.isEmpty() && this.virtualMachineWaitingForDisconnection.isEmpty())
 		{			
 			if(this.vmnobp.connected())
@@ -475,6 +476,10 @@ implements
 				this.vmnobp.disconnectController();
 				this.vmnobp.doDisconnection();
 			}
+		}
+	}
+		catch (Exception e) {
+			e.printStackTrace();
 		}
 	}	
 	
