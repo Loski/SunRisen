@@ -255,27 +255,20 @@ implements
 		
 		this.nbRequestReceived++;
 		
-		if(this.queue.isEmpty())
-		{	
-			VirtualMachineData vm = findAvaibleVM();
-			
-			if(vm==null)
-			{
-				this.queue.add(r);
-			}
-			else
-			{
-				vm.addRequest(r.getRequestURI(),timeData);
-				
-				RequestSubmissionOutboundPort port = vm.getRsobp();
-				port.submitRequestAndNotify(r);
-
-				this.taskExecutedBy.put(r.getRequestURI(),vm);
-			}
+		VirtualMachineData vm = findAvaibleVM();
+		
+		if(vm==null)
+		{
+			this.queue.add(r);
 		}
 		else
 		{
-			this.queue.add(r);
+			vm.addRequest(r.getRequestURI(),timeData);
+			
+			RequestSubmissionOutboundPort port = vm.getRsobp();
+			port.submitRequestAndNotify(r);
+
+			this.taskExecutedBy.put(r.getRequestURI(),vm);
 		}
 	}
 
@@ -290,31 +283,25 @@ implements
 
 		this.nbRequestReceived++;
 		
-		if(this.queue.isEmpty())
-		{	
-			VirtualMachineData vm = findAvaibleVM();
-			
-			if(vm==null)
-			{
-				this.queue.add(r);
-			}
-			else
-			{
-				vm.addRequest(r.getRequestURI(),timeData);
-				
-				RequestSubmissionOutboundPort port = vm.getRsobp();
-				port.submitRequestAndNotify(r);
-				
-				if (RequestGenerator.DEBUG_LEVEL >= 1) 
-					this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,r.getRequestURI(),vm.getVmURI(),port.getPortURI()));
-				
-				this.taskExecutedBy.put(r.getRequestURI(),vm);
-			}
-		}
-		else
+		VirtualMachineData vm = findAvaibleVM();
+		
+		if(vm==null)
 		{
 			this.queue.add(r);
 		}
+		else
+		{
+			vm.addRequest(r.getRequestURI(),timeData);
+			
+			RequestSubmissionOutboundPort port = vm.getRsobp();
+			port.submitRequestAndNotify(r);
+			
+			if (RequestGenerator.DEBUG_LEVEL >= 1) 
+				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,r.getRequestURI(),vm.getVmURI(),port.getPortURI()));
+			
+			this.taskExecutedBy.put(r.getRequestURI(),vm);
+		}
+		
 		}catch(Exception e)
 		{
 			e.printStackTrace();
