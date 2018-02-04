@@ -1,11 +1,9 @@
 package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
@@ -28,7 +26,6 @@ import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.TimeManagement;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
 import fr.upmc.datacenter.interfaces.PushModeControllingI;
-import fr.upmc.datacenter.software.applicationvm.ApplicationVM.ApplicationVMPortTypes;
 import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMIntrospectionConnector;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamicStateI;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMIntrospectionI;
@@ -59,7 +56,6 @@ import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
  * </pre>
  * 
  * @author	Loïc Lafontaine
- * @version	$Name$ -- $Revision$ -- $Date$
  */
 public class RequestDispatcher 
 extends		AbstractComponent
@@ -123,6 +119,7 @@ implements
 	/** outbound port to notify the controller that a vm can be disconnected.						*/
 	protected VMDisconnectionNotificationHandlerOutboundPort vmnobp;
 	
+	/** dummy object to lock critical segment that implies an action on one of the object containing virtual machine information */
 	protected Object listLock;
 	
 	/** */
@@ -137,7 +134,7 @@ implements
 	/** a temporary queue if there is no vm available to handle the requests */
 	protected Queue<RequestI> queue;
 	
-	/** a map containing information about the time the request needed to be ended */
+	/** a temporary map containing information about the time the request needed to be ended (contains same amount of elements as the queue) */
 	protected HashMap<String,RequestTimeData> timeDataMap;
 	
 	// ------------------------------------------------------------------------
@@ -316,7 +313,7 @@ implements
 		
 		this.nbRequestReceived++;
 		
-		VirtualMachineData vm = findAvaibleVM();
+		VirtualMachineData vm = findAvailableVM();
 		
 		if(vm==null)
 		{
@@ -347,7 +344,7 @@ implements
 
 		this.nbRequestReceived++;
 		
-		VirtualMachineData vm = findAvaibleVM();
+		VirtualMachineData vm = findAvailableVM();
 		
 		if(vm==null)
 		{
@@ -450,7 +447,7 @@ implements
 	 * @return	a VirtualMachineData reference or null.
 	 * @throws Exception
 	 */
-	protected VirtualMachineData findAvaibleVM() throws Exception
+	protected VirtualMachineData findAvailableVM() throws Exception
 	{		
 		synchronized(this.listLock)
 		{			
@@ -514,7 +511,19 @@ implements
 			this.virtualMachineNotAvailable.add(executor.getVmURI());
 	}
 	
-
+	/**
+	 * disconnect a virtual machine
+	 * 
+	 * <p><strong>Contract</strong></p>
+	 * 
+	 * <pre>
+	 * pre	true			// no precondition.
+	 * post	true			// no postcondition.
+	 * </pre>
+	 *
+	 * @param vmData		the virtual machine to disconnect.
+	 * @throws Exception
+	 */
 	protected void disconnectVirtualMachine(VirtualMachineData vmData) throws Exception
 	{
 		synchronized (this.listLock) {

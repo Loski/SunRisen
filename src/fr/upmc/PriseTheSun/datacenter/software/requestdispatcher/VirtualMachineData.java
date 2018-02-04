@@ -3,11 +3,20 @@ package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ListIterator;
 
-import fr.upmc.datacenter.TimeManagement;
 import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMIntrospectionOutboundPort;
 import fr.upmc.datacenter.software.ports.RequestSubmissionOutboundPort;
+
+/**
+ * 
+ * <p><strong>Invariant</strong></p>
+ * 
+ * <pre>
+ * invariant	true
+ * </pre>
+ * 
+ * @author	Loïc Lafontaine
+ */
 
 public class VirtualMachineData {
 

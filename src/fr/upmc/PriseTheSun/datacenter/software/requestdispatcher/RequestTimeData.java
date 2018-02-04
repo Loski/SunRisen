@@ -2,6 +2,17 @@ package fr.upmc.PriseTheSun.datacenter.software.requestdispatcher;
 
 import fr.upmc.datacenter.TimeManagement;
 
+/**
+ * 
+ * <p><strong>Invariant</strong></p>
+ * 
+ * <pre>
+ * invariant	true
+ * </pre>
+ * 
+ * @author	Loïc Lafontaine
+ */
+
 public class RequestTimeData {
 
 	private long startedAt;

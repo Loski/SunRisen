@@ -8,6 +8,23 @@ import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.Requ
 import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherStaticStateI;
 import fr.upmc.components.connectors.AbstractConnector;
 
+/**
+ * The class <code>RequestDispatcherIntrospectionConnector</code> defines a
+ * connector associated with the interface
+ * <code>RequestDispatcherIntrospectionI</code>.
+ *
+ * <p><strong>Description</strong></p>
+ * 
+ * <p><strong>Invariant</strong></p>
+ * 
+ * <pre>
+ * invariant	true
+ * </pre>
+ * 
+ * @author	Loïc Lafontaine
+ * @author	Maxime Lavaste
+ */
+
 public class RequestDispatcherIntrospectionConnector 
 extends		AbstractConnector
 implements	RequestDispatcherIntrospectionI{

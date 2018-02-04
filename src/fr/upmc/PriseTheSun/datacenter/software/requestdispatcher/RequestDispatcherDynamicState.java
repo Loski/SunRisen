@@ -25,7 +25,6 @@ import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamic
  * <p>Created on : April 23, 2015</p>
  * 
  * @author	Loïc Lafontaine
- * @version	$Name$ -- $Revision$ -- $Date$
  */
 
 public class RequestDispatcherDynamicState implements RequestDispatcherDynamicStateI{
@@ -40,11 +39,13 @@ public class RequestDispatcherDynamicState implements RequestDispatcherDynamicSt
 	protected final String		rdURI ;
     /** the average request execution time */
     protected final Double executionTimeAvg;
-    
+    /** map of the average request execution time of each virtual machine */
     protected final Map<String,Double> virtualMachineExecutionAverageTime;
+    /** map of the dynamic state of each virtual machine */
     protected final Map<String,ApplicationVMDynamicStateI> virtualMachineDynamicStates;
-    
+    /** number of request received by the dispatcher */
     protected final int nbRequestReceived;
+    /** number of request terminated */
     protected final int nbRequestTerminated;
     
 	

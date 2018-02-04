@@ -4,10 +4,19 @@ import fr.upmc.components.interfaces.OfferedI;
 import fr.upmc.components.interfaces.RequiredI;
 
 /**
- *  * The interface <code>RequestDispatcherManagementI</code> defines the management
- * actions provided by the request dispatcher component.
- * @author maxime Lavaste
+ * The interface <code>RequestDispatcherManagementI</code> defines the methods
+ * to manage a dispatcher component.
  *
+ * <p><strong>Description</strong></p>
+ * 
+ * <p><strong>Invariant</strong></p>
+ * 
+ * <pre>
+ * invariant		true
+ * </pre>
+ * 
+ * @author	Loïc Lafontaine
+ * @author	Maxime Lavaste
  */
 public interface			RequestDispatcherManagementI
 extends		OfferedI,
