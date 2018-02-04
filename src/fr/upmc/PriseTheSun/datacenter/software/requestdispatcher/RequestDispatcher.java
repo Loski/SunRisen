@@ -83,7 +83,7 @@ implements
 	/** InboundPort to receive VM notification */
 	protected RequestNotificationInboundPort  requestNotificationInboundPort;
 	
-	protected HashMap<String,VirtualMachineData> requestVirtalMachineDataMap;
+	protected HashMap<String,VirtualMachineData> requestVirtualMachineDataMap;
 	/** */
 	protected HashSet<String> virtualMachineWaitingForDisconnection;
 	
@@ -202,7 +202,7 @@ implements
 				this.addPort(this.requestDispatcherDynamicStateDataInboundPort) ;
 				this.requestDispatcherDynamicStateDataInboundPort.publishPort() ;
 				
-				this.requestVirtalMachineDataMap = new HashMap<>();
+				this.requestVirtualMachineDataMap = new HashMap<>();
 				
 				this.listLock = new Object();
 				
@@ -240,7 +240,7 @@ implements
 			{
 				String uri = this.virtualMachineAvailable.remove();
 				this.virtualMachineInAction.add(uri);
-				return this.requestVirtalMachineDataMap.get(uri);
+				return this.requestVirtualMachineDataMap.get(uri);
 			}
 		}
 	}
@@ -368,7 +368,7 @@ implements
 	            if ( this.requestNotificationOutboundPort.connected() ) {
 	                this.requestNotificationOutboundPort.doDisconnection();
 	            }
-	            for (VirtualMachineData data : this.requestVirtalMachineDataMap.values())
+	            for (VirtualMachineData data : this.requestVirtualMachineDataMap.values())
 	            {
 	            	RequestSubmissionOutboundPort port = data.getRsobp();
 	            	
@@ -392,7 +392,7 @@ implements
 	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception {
 		
 		assert !inDisconnectionState;
-		assert !this.requestVirtalMachineDataMap.containsKey(vmURI);
+		assert !this.requestVirtualMachineDataMap.containsKey(vmURI);
 		
 		/*if(this.requestSubmissionOutboundPortList.get(indexVM)!=null && this.requestSubmissionOutboundPortList.get(indexVM).getPortURI().equals(RequestSubmissionOutboundPortURI))
 			throw new Exception("VM déjà connecté sur ce port");*/
@@ -421,7 +421,7 @@ implements
 		if (RequestGenerator.DEBUG_LEVEL >= 2)
 			this.logMessage(String.format("[%s] Connecting %s with %s using %s -> %s",getConnectorSimpleName(),this.rdURI,vmURI,rsobp.getPortURI(),requestSubmissionInboundPortURI));
 	
-		this.requestVirtalMachineDataMap.put(vmURI, vm);
+		this.requestVirtualMachineDataMap.put(vmURI, vm);
 		
 		if(!this.queue.isEmpty())
 		{
@@ -468,7 +468,7 @@ implements
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
-		if(inDisconnectionState && this.requestVirtalMachineDataMap.isEmpty() && this.virtualMachineWaitingForDisconnection.isEmpty())
+		if(inDisconnectionState && this.requestVirtualMachineDataMap.isEmpty() && this.virtualMachineWaitingForDisconnection.isEmpty())
 		{			
 			if(this.vmnobp.connected())
 			{				
@@ -483,7 +483,7 @@ implements
 		
 		synchronized(this.listLock)
 		{			
-			VirtualMachineData vmData = this.requestVirtalMachineDataMap.remove(vmURI);
+			VirtualMachineData vmData = this.requestVirtualMachineDataMap.remove(vmURI);
 			
 			if(vmData.getRequestInQueue().isEmpty())
 			{
@@ -539,7 +539,7 @@ implements
 		double averageTime = 0.0;
 		boolean oneRequestFound = false;
 		
-		for(VirtualMachineData vmData: this.requestVirtalMachineDataMap.values())
+		for(VirtualMachineData vmData: this.requestVirtualMachineDataMap.values())
 		{
 			vmData.calculateAverageTime();
 			Double averageVM = vmData.getAverageTime();
@@ -554,7 +554,7 @@ implements
 		
 		if(oneRequestFound)
 		{
-			average = averageTime/this.requestVirtalMachineDataMap.size();
+			average = averageTime/this.requestVirtualMachineDataMap.size();
 		}
 		
 		return new RequestDispatcherDynamicState(this.rdURI,average,virtualMachineExecutionAverageTime,virtualMachineDynamicStates,this.nbRequestReceived,this.nbRequestTerminated) ;
@@ -652,7 +652,7 @@ implements
 		if (this.pushingFuture != null &&
 				!(this.pushingFuture.isCancelled() ||
 									this.pushingFuture.isDone())) {
-			this.pushingFuture.cancel(false) ;
+			this.pushingFuture.cancel(true) ;
 		}
 	}
 	
@@ -693,7 +693,7 @@ implements
 	public void disconnectController() throws Exception 
 	{
 		inDisconnectionState = true;
-		Iterator<Entry<String, VirtualMachineData>> it = this.requestVirtalMachineDataMap.entrySet().iterator();
+		Iterator<Entry<String, VirtualMachineData>> it = this.requestVirtualMachineDataMap.entrySet().iterator();
 		while(it.hasNext()) {
 			this.askVirtualMachineDisconnection(it.next().getKey());
 		}
