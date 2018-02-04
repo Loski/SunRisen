@@ -615,7 +615,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			//System.out.println(vm + controllerDataRingOutboundPortURI);
 
 			if(vm != null) {
-				if(vmReserved.size() < 0 /*&& (waitDecision % REQUEST_MIN == 1)*/) {
+				if(vmReserved.size() < 2 /*&& (waitDecision % REQUEST_MIN == 1)*/) {
 					vmReserved.add(vm);
 				}
 				else {
@@ -804,7 +804,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			avm.doDisconnection();
 			ComputerControllerManagementOutboutPort ccmop = this.cmops.remove(vmURI);
 			ccmop.releaseCore(vmURI);
-			Thread.sleep(150);
+			//Thread.sleep(150);
 			//reallocation
 			int number = ccmop.tryReserveCore(vmURI, 2);
 			
@@ -818,6 +818,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			}
 			w.write(Arrays.asList("vm removed!"));
 			synchronized (this.freeApplicationVM) {
+				this.logMessage("Vm add");
 				this.freeApplicationVM.add(vm);
 			}
 			System.err.println("VM readd");
