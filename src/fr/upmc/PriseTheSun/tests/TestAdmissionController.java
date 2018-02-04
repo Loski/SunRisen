@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.AdmissionControllerDynamic;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.connector.AdmissionControllerManagementConnector;
@@ -65,7 +66,9 @@ extends		AbstractCVM
 		super();
 	}
 
-	
+	/**
+	 * Wrapper pour enregistrer un ordinateur pour respecter le start().
+	 */
 	public class ComputerWrapper {
 		String uri;
 		String csip;
@@ -100,10 +103,11 @@ extends		AbstractCVM
 	public static final String applicationSubmissionOutboundPortURI = "asop";
 	public static final String applicationManagementInboundPort = " amip";
 
-	// ------------------------------------------------------------------------
-	// Component virtual machine methods
-	// ------------------------------------------------------------------------
 	
+	/**
+	 * Créer un admissionController en modèle CVM
+	 * @throws Exception
+	 */
 	private void createAdmissionController() throws Exception {
 
 		this.ac = new AdmissionControllerDynamic("AdmController", applicationSubmissionInboundPortURI, AdmissionControllerManagementInboundPortURI, "");
@@ -124,6 +128,10 @@ extends		AbstractCVM
         
         String csop[] = new String[NB_COMPUTER], csip[] = new String[NB_COMPUTER], cssdip[] = new String[NB_COMPUTER], computer[] = new String[NB_COMPUTER], cdsdip[] = new String[NB_COMPUTER];
         for (int i = 0; i < NB_COMPUTER; ++i) {
+        	
+        	numberOfProcessors = ThreadLocalRandom.current().nextInt(1, 4 + 1);
+        	numberOfCores = ThreadLocalRandom.current().nextInt(5, 15 + 1);
+
         	csop[i] = "csop"+i;
             csip[i] = "csip"+i;
             computer[i] = "computer"+i;
@@ -137,7 +145,11 @@ extends		AbstractCVM
         }
 	}
 	
-	
+	/**
+	 * Créer nbApplication application dans un modèle CVM
+	 * @param nbApplication
+	 * @throws Exception
+	 */
 	private void createApplication(int nbApplication) throws Exception {
 		this.ap = new ApplicationProvider[nbApplication];
 		this.apmop = new ApplicationProviderManagementOutboundPort[nbApplication];

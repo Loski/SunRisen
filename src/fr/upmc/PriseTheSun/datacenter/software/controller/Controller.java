@@ -133,12 +133,15 @@ implements 	RequestDispatcherStateDataConsumerI,
 	private VMDisconnectionNotificationHandlerInboundPort vmnibp;
 	private String nextRingDynamicStateDataInboundPort;
 	
-	public final static int PUSH_INTERVAL = 400;
+	public final static int PUSH_INTERVAL = 1000;
 	public final static int REQUEST_MIN = PUSH_INTERVAL/100;
 	
 	public static int vmaskdeco = 0;
 	public static int vm_deco = 0;
 	public static int vm_add = 0;
+	
+	public int coreReserved = 0;
+	
 	static class StaticData {
 		public static final double AVERAGE_TARGET=5E9D;
 		
@@ -479,15 +482,18 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 		try {
 			switch(th){
+			case VERY_SLOWER:
+				tooSlowCase(vms, 5);
 			case SLOWER :
-				tooSlowCase(vms);
-				//this.acmop.addCores(null, randomVM.getApplicationVMURI(), 1);
+				tooSlowCase(vms, 2);
 				break;
 			case FASTER :
-				tooFastCase(vms);
+				tooFastCase(vms, 2);
+				break;
+			case VERY_FASTER:
+				tooFastCase(vms, 5);
 				break;
 			case GOOD :
-			//	System.err.println("WAS GOOD MY FRIEND");
 				break;
 			default:
 				break;
@@ -518,40 +524,39 @@ implements 	RequestDispatcherStateDataConsumerI,
 	/**
 	 * Cas où les machines virtuelles sont trop lente.
 	 * Nous devons donc augmenter la puissance du système responsable de la résolution de requêtes.
-	 * 
+	 * Le but est d'allouée un minimum de <code>objectif</code> à notre système.
+	 * En cas d'echec, nous allouons une nouvelle VM
 	 * @param vms
 	 * @throws Exception 
 	 */
-	private void tooSlowCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
+	private void tooSlowCase(Map<String, ApplicationVMDynamicStateI > vms,  int objectif) throws Exception {
 		try {
-			//Add a vm
-			ApplicationVMInfo vm = null;
-			synchronized (this.vmReserved) {
-				int tailleVm = this.myVMs.size();
-				if(tailleVm < StaticData.MAX_VM && !vmReserved.isEmpty()) {
-					vm = vmReserved.remove(0);
-					vm_add++;
-				}
-			}
 			
-			if(vm != null) {
-				this.addVm(vm);
-			}
-
-			ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
-			
-
 			//Try to up frequency
 			//int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.HIGHER, randomVM);
 			//System.err.println("je passe par lower mdr");
 	
 			//Ajoute les cores
-			
 			synchronized(myVMs) {
-				for (int i = 0; i < this.myVMs.size(); i++)
+				for (int i = 0; i < this.myVMs.size() && objectif > 0; i++)
 				{
-					this.addCores(myVMs.get(i).getApplicationVM());
+					objectif -= this.addCores(myVMs.get(i).getApplicationVM());
 				}			
+			}
+			
+			if(objectif > 0) {
+				//Add a vm
+				ApplicationVMInfo vm = null;
+				synchronized (this.vmReserved) {
+					int tailleVm = this.myVMs.size();
+					if(tailleVm < StaticData.MAX_VM && !vmReserved.isEmpty()) {
+						vm = vmReserved.remove(0);
+					}
+				}
+				
+				if(vm != null) {
+					this.addVm(vm);
+				}
 			}
 			}catch (Exception e) {
 				e.printStackTrace();
@@ -566,32 +571,37 @@ implements 	RequestDispatcherStateDataConsumerI,
 	 * @param vms
 	 * @throws Exception 
 	 */
-	private void tooFastCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
+	private void tooFastCase(Map<String, ApplicationVMDynamicStateI > vms, int objectif) throws Exception {
 		try {
-			synchronized (myVMs) {
-				boolean canRemoveVM = myVMs.size() > 1;
-				if(canRemoveVM) {
-					w.write(Arrays.asList("ask to remove a vm"));
-					vmaskdeco++;
-					ApplicationVMInfo randomVM = this.myVMs.remove(0);
-					this.logMessage("Demande de déconnexion de " + randomVM.getApplicationVM());
-
-					this.VMsToBeKilled.put(randomVM.getApplicationVM(), randomVM);
-					this.rdmop.askVirtualMachineDisconnection(randomVM.getApplicationVM());
-				}
-			}
-		
+			
 			synchronized(myVMs) {
 				for (int i = 0; i < this.myVMs.size(); i++)
 				{
 					if(vms.get(myVMs.get(i).getApplicationVM()).getAllocatedCoresNumber().length > StaticData.MIN_ALLOCATED_CORE) {
 						this.avms.get(myVMs.get(i).getApplicationVM()).desallocateCores(1);
-						this.logMessage("Desaloc");
+						objectif--;
 					}else {
-						this.logMessage("Etrange - " );
+						
 					}
 				}			
 			}
+			if(objectif > 0) {
+
+				synchronized (myVMs) {
+					boolean canRemoveVM = myVMs.size() > 1 ;
+					if(canRemoveVM) {
+						w.write(Arrays.asList("ask to remove a vm"));
+						vmaskdeco++;
+						ApplicationVMInfo randomVM = this.myVMs.remove(0);
+						this.logMessage("Demande de déconnexion de " + randomVM.getApplicationVM());
+	
+						this.VMsToBeKilled.put(randomVM.getApplicationVM(), randomVM);
+						this.rdmop.askVirtualMachineDisconnection(randomVM.getApplicationVM());
+					}
+				}
+			}
+		
+
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
