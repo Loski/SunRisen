@@ -88,7 +88,7 @@ implements
 	protected HashSet<String> virtualMachineWaitingForDisconnection;
 	
 	protected Queue<String> virtualMachineAvailable;
-	protected Queue<String> virtualMachineInAction;
+	protected Queue<String> virtualMachineNotAvailable;
 	
 	/** map associating the uri of a Request with the VirtualMachineData*/
 	protected HashMap<String,VirtualMachineData> taskExecutedBy;
@@ -192,7 +192,7 @@ implements
 				this.requestNotificationOutboundPort.publishPort() ;
 				
 				this.virtualMachineAvailable = new LinkedList<String>();
-				this.virtualMachineInAction = new LinkedList<String>();
+				this.virtualMachineNotAvailable = new LinkedList<String>();
 				this.addRequiredInterface( RequestSubmissionI.class );
 				this.addRequiredInterface(ApplicationVMIntrospectionI.class );
 				
@@ -230,7 +230,16 @@ implements
 				this.nbRequestTerminated=0;
 	}
 	
-	protected VirtualMachineData findAvaibleVM()
+	protected void testVMAvailable(VirtualMachineData vm) throws Exception
+	{
+		if(vm.getAvmiovp().getNumberOfCores()-1>vm.getRequestInQueue().size())
+		{
+			this.virtualMachineAvailable.remove(vm.getVmURI());
+			this.virtualMachineNotAvailable.add(vm.getVmURI());
+		}
+	}
+	
+	protected VirtualMachineData findAvaibleVM() throws Exception
 	{		
 		synchronized(this.listLock)
 		{			
@@ -240,9 +249,16 @@ implements
 			}
 			else 
 			{
-				String uri = this.virtualMachineAvailable.remove();
-				this.virtualMachineInAction.add(uri);
-				return this.requestVirtualMachineDataMap.get(uri);
+				String uri = this.virtualMachineAvailable.peek();
+				VirtualMachineData vm = this.requestVirtualMachineDataMap.get(uri);
+				
+				if(vm.getAvmiovp().getNumberOfCores()-1>vm.getRequestInQueue().size())
+				{
+					this.virtualMachineAvailable.remove();
+					this.virtualMachineNotAvailable.add(vm.getVmURI());
+				}
+				
+				return vm;
 			}
 		}
 	}
@@ -263,7 +279,8 @@ implements
 				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),executor.getVmURI(),port.getPortURI()));
 			
 			this.taskExecutedBy.put(req.getRequestURI(),executor);
-			this.virtualMachineInAction.add(executor.getVmURI());
+			
+			testVMAvailable(executor);
 		}
 	}
 	
@@ -355,7 +372,7 @@ implements
 		{
 			synchronized(this.listLock)
 			{
-				this.virtualMachineInAction.remove(vm.getVmURI());
+				this.virtualMachineNotAvailable.remove(vm.getVmURI());
 				this.virtualMachineAvailable.add(vm.getVmURI());
 			}
 		}
@@ -486,15 +503,15 @@ implements
 		synchronized(this.listLock)
 		{
 			VirtualMachineData vmData = this.requestVirtualMachineDataMap.remove(vmURI);
+			this.virtualMachineAvailable.remove(vmURI);
+			this.virtualMachineNotAvailable.remove(vmURI);
 			
 			if(vmData.getRequestInQueue().isEmpty())
 			{
-				this.virtualMachineAvailable.remove(vmURI);
 				this.disconnectVirtualMachine(vmData);
 			}
 			else
 			{
-				this.virtualMachineInAction.remove(vmURI);
 				this.virtualMachineWaitingForDisconnection.add(vmURI);
 			}
 		}

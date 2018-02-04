@@ -97,4 +97,9 @@ implements	ApplicationVMIntrospectionI
 	{
 		return ((ApplicationVMIntrospectionI)this.offering).getDynamicState() ;
 	}
+
+	@Override
+	public int getNumberOfCores() throws Exception {
+		return ((ApplicationVMIntrospectionI)this.offering).getNumberOfCores() ;
+	}
 }

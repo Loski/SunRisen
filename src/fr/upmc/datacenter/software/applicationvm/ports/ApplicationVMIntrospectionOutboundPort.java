@@ -116,4 +116,11 @@ implements	ApplicationVMIntrospectionI
 	{
 		return ((ApplicationVMIntrospectionI)this.connector).getDynamicState() ;
 	}
+
+	@Override
+	public int getNumberOfCores() throws Exception {
+		return ((ApplicationVMIntrospectionI)this.connector).getNumberOfCores() ;
+	}
+	
+	
 }

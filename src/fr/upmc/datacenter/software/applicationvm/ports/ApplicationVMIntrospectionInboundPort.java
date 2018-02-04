@@ -152,4 +152,18 @@ implements	ApplicationVMIntrospectionI
 						}
 					}) ;
 	}
+
+	@Override
+	public int getNumberOfCores() throws Exception {
+		final ApplicationVM avm = (ApplicationVM) this.owner ;
+		return this.owner.handleRequestSync(
+				new ComponentI.ComponentService<Integer>() {
+						@Override
+						public Integer call()
+						throws Exception
+						{
+							return avm.getNumberOfCores() ;
+						}
+					}) ;
+	}
 }
