@@ -423,26 +423,29 @@ implements
 	
 		this.requestVirtualMachineDataMap.put(vmURI, vm);
 		
-		if(!this.queue.isEmpty())
+		synchronized(this.listLock)
 		{
-			RequestI req = this.queue.remove();
-			
-			RequestTimeData timeData = this.timeDataMap.remove(req.getRequestURI());
-			
-			vm.addRequest(req.getRequestURI(),timeData);
-			
-			RequestSubmissionOutboundPort port = vm.getRsobp();
-			port.submitRequestAndNotify(req);
-			
-			if (RequestGenerator.DEBUG_LEVEL >= 1) 
-				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),vm.getVmURI(),port.getPortURI()));
-			
-			this.taskExecutedBy.put(req.getRequestURI(),vm);
-			this.virtualMachineInAction.add(vmURI);
-		}
-		else
-		{
-			this.virtualMachineAvailable.add(vmURI);
+			if(!this.queue.isEmpty())
+			{
+				RequestI req = this.queue.remove();
+				
+				RequestTimeData timeData = this.timeDataMap.remove(req.getRequestURI());
+				
+				vm.addRequest(req.getRequestURI(),timeData);
+				
+				RequestSubmissionOutboundPort port = vm.getRsobp();
+				port.submitRequestAndNotify(req);
+				
+				if (RequestGenerator.DEBUG_LEVEL >= 1) 
+					this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),vm.getVmURI(),port.getPortURI()));
+				
+				this.taskExecutedBy.put(req.getRequestURI(),vm);
+				this.virtualMachineInAction.add(vmURI);
+			}
+			else
+			{
+				this.virtualMachineAvailable.add(vmURI);
+			}
 		}
 	}
 
