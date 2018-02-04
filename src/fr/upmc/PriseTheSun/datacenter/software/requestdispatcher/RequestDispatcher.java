@@ -124,7 +124,6 @@ implements
 	protected VMDisconnectionNotificationHandlerOutboundPort vmnobp;
 	
 	protected Object listLock;
-	protected Object queueLock;
 	
 	/** */
 	protected boolean inDisconnectionState = false;
@@ -208,7 +207,6 @@ implements
 		this.queue = new LinkedList<RequestI>();
 		
 		this.listLock = new Object();
-		this.queueLock = new Object();
 		
 		// Interfaces and ports
 		this.addOfferedInterface(RequestDispatcherManagementI.class) ;
@@ -315,7 +313,6 @@ implements
 		assert r != null;
 		
 		RequestTimeData timeData = new RequestTimeData();
-		this.timeDataMap.put(r.getRequestURI(),timeData);
 		
 		this.nbRequestReceived++;
 		
@@ -323,6 +320,7 @@ implements
 		
 		if(vm==null)
 		{
+			this.timeDataMap.put(r.getRequestURI(),timeData);
 			this.queue.add(r);
 		}
 		else
@@ -346,7 +344,6 @@ implements
 		
 		try {
 		RequestTimeData timeData = new RequestTimeData();
-		this.timeDataMap.put(r.getRequestURI(),timeData);
 
 		this.nbRequestReceived++;
 		
@@ -354,6 +351,7 @@ implements
 		
 		if(vm==null)
 		{
+			this.timeDataMap.put(r.getRequestURI(),timeData);
 			this.queue.add(r);
 		}
 		else
@@ -399,23 +397,28 @@ implements
 		try {
 		VirtualMachineData vm = this.requestExecutedBy.remove(r.getRequestURI());
 		vm.endRequest(r.getRequestURI());
-		if(!this.virtualMachineWaitingForDisconnection.isEmpty() && this.virtualMachineWaitingForDisconnection.contains(vm.getVmURI()))
+		
+		synchronized(this.listLock)
 		{
-			if(vm.getRequestInQueue().isEmpty())
+			if(!this.virtualMachineWaitingForDisconnection.isEmpty() && this.virtualMachineWaitingForDisconnection.contains(vm.getVmURI()))
 			{
-				this.disconnectVirtualMachine(vm);
+				if(vm.getRequestInQueue().isEmpty())
+				{
+					this.disconnectVirtualMachine(vm);
+				}
 			}
-		}
-		else if(!this.queue.isEmpty())
-		{	
-			executeRequestInQueue(vm);
-		}
-		else
-		{
-			synchronized(this.listLock)
+			else
 			{
-				if(this.virtualMachineNotAvailable.remove(vm.getVmURI()))
-					this.virtualMachineAvailable.add(vm.getVmURI());
+				synchronized(this.queue)
+				{
+					if(!this.queue.isEmpty())
+						executeRequestInQueue(vm);
+					else
+					{
+						if(this.virtualMachineNotAvailable.remove(vm.getVmURI()))
+							this.virtualMachineAvailable.add(vm.getVmURI());
+					}
+				}
 			}
 		}
 		
@@ -493,28 +496,22 @@ implements
 	 * @throws Exception
 	 */
 	protected void executeRequestInQueue(VirtualMachineData executor) throws Exception {
-		synchronized(this.queueLock)
-		{
-			RequestI req = this.queue.remove();
-			
-			RequestTimeData timeData = this.timeDataMap.remove(req.getRequestURI());
-			
-			executor.addRequest(req.getRequestURI(),timeData);
-			
-			RequestSubmissionOutboundPort port = executor.getRsobp();
-			port.submitRequestAndNotify(req);
-			
-			if (RequestGenerator.DEBUG_LEVEL >= 1)
-				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),executor.getVmURI(),port.getPortURI()));
-			
-			this.requestExecutedBy.put(req.getRequestURI(),executor);
-			
-			synchronized(this.listLock)
-			{
-				this.virtualMachineAvailable.remove(executor.getVmURI());
-				this.virtualMachineNotAvailable.add(executor.getVmURI());
-			}
-		}
+		RequestI req = this.queue.remove();
+		
+		RequestTimeData timeData = this.timeDataMap.remove(req.getRequestURI());
+		
+		executor.addRequest(req.getRequestURI(),timeData);
+		
+		RequestSubmissionOutboundPort port = executor.getRsobp();
+		port.submitRequestAndNotify(req);
+		
+		if (RequestGenerator.DEBUG_LEVEL >= 1)
+			this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),executor.getVmURI(),port.getPortURI()));
+		
+		this.requestExecutedBy.put(req.getRequestURI(),executor);
+		
+		if(this.virtualMachineAvailable.remove(executor.getVmURI()))
+			this.virtualMachineNotAvailable.add(executor.getVmURI());
 	}
 	
 
@@ -801,16 +798,18 @@ implements
 		if (RequestGenerator.DEBUG_LEVEL >= 2)
 			this.logMessage(String.format("[%s] Connecting %s with %s using %s -> %s",RequestSubmissionConnector.class.getSimpleName(),this.rdURI,vmURI,rsobp.getPortURI(),requestSubmissionInboundPortURI));
 	
-		this.requestVirtualMachineDataMap.put(vmURI, vm);
-		
-		if(!this.queue.isEmpty())
+		synchronized(this.listLock)
 		{
-			executeRequestInQueue(vm);
-		}
-		else
-		{
+			this.requestVirtualMachineDataMap.put(vmURI, vm);
 			this.virtualMachineAvailable.add(vmURI);
-		}	
+			synchronized(this.queue)
+			{
+				if(!this.queue.isEmpty())
+				{
+					executeRequestInQueue(vm);
+				}
+			}
+		}
 	}
 
 }
