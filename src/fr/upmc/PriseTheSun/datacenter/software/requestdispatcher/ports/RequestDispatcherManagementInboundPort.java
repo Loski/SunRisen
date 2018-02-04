@@ -40,7 +40,7 @@ implements	RequestDispatcherManagementI
 		
 		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
 		
-		this.owner.handleRequestSync(
+		this.owner.handleRequestAsync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
@@ -55,7 +55,7 @@ implements	RequestDispatcherManagementI
 		
 		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
 		
-		this.owner.handleRequestSync(
+		this.owner.handleRequestAsync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
@@ -70,7 +70,7 @@ implements	RequestDispatcherManagementI
 
 		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
 		
-		this.owner.handleRequestSync(
+		this.owner.handleRequestAsync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
@@ -85,7 +85,7 @@ implements	RequestDispatcherManagementI
 
 		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
 		
-		this.owner.handleRequestSync(
+		this.owner.handleRequestAsync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
@@ -99,7 +99,7 @@ implements	RequestDispatcherManagementI
 	public void connectController(final String controllerURI, final String VMDisconnectionHandlerInboundPortURI) throws Exception {
 		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
 		
-		this.owner.handleRequestSync(
+		this.owner.handleRequestAsync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
@@ -113,7 +113,7 @@ implements	RequestDispatcherManagementI
 	public void disconnectController() throws Exception {
 		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
 		
-		this.owner.handleRequestSync(
+		this.owner.handleRequestAsync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {

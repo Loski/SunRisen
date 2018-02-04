@@ -28,7 +28,7 @@ public class VMDisconnectionNotificationHandlerInboundPort extends AbstractInbou
 	public void receiveVMDisconnectionNotification(final String vmURI) throws Exception {
 		final VMDisconnectionNotificationHandlerI handler = ( VMDisconnectionNotificationHandlerI ) this.owner;
 		
-		 this.owner.handleRequestSync(
+		 this.owner.handleRequestAsync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
@@ -42,7 +42,7 @@ public class VMDisconnectionNotificationHandlerInboundPort extends AbstractInbou
 	public void disconnectController() throws Exception {
 		final VMDisconnectionNotificationHandlerI handler = ( VMDisconnectionNotificationHandlerI ) this.owner;
 		
-		 this.owner.handleRequestSync(
+		 this.owner.handleRequestAsync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {

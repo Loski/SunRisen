@@ -43,7 +43,7 @@ public class NodeManagementInboundPort extends AbstractInboundPort implements No
 	public void bindSendingDataUri(final String DataInboundPortUri) throws Exception {
 		final NodeRingManagementI cm = ( NodeRingManagementI ) this.owner;
 		
-		 this.owner.handleRequestSync(
+		 this.owner.handleRequestAsync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
@@ -57,7 +57,7 @@ public class NodeManagementInboundPort extends AbstractInboundPort implements No
 	public void setNextManagementInboundPort(final String managementInboundPort) throws Exception {
 		final NodeRingManagementI cm = ( NodeRingManagementI ) this.owner;
 		
-		 this.owner.handleRequestSync(
+		 this.owner.handleRequestAsync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
@@ -71,7 +71,7 @@ public class NodeManagementInboundPort extends AbstractInboundPort implements No
 	public void setPreviousManagementInboundPort(final String managementInboundPort) throws Exception {
 		final NodeRingManagementI cm = ( NodeRingManagementI ) this.owner;
 		
-		 this.owner.handleRequestSync(
+		 this.owner.handleRequestAsync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {
