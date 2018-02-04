@@ -18,8 +18,6 @@ public class VirtualMachineData {
 	/**  */
 	private HashMap<String,RequestTimeData> requestInQueue;
 	private List<RequestTimeData> requestTerminated;
-	
-	private Object lock;
 
 	public VirtualMachineData(String uri, RequestSubmissionOutboundPort rsobp, ApplicationVMIntrospectionOutboundPort avmiovp)
 	{
@@ -29,7 +27,6 @@ public class VirtualMachineData {
 		this.averageTime=null;
 		this.requestInQueue = new  HashMap<String,RequestTimeData>();
 		this.requestTerminated = new  ArrayList<RequestTimeData>();
-		this.lock = new Object();
 	}
 	
 	public String getVmURI() {
@@ -47,10 +44,7 @@ public class VirtualMachineData {
 	}
 	
 	public List<RequestTimeData> getRequestTerminated() {
-		synchronized(this.lock)
-		{
-			return this.requestTerminated;
-		}
+		return this.requestTerminated;
 	}
 	
 	public void addRequest(String requestURI,RequestTimeData reqTimeData)
@@ -62,7 +56,7 @@ public class VirtualMachineData {
 	{
 		RequestTimeData req = this.requestInQueue.remove(requestURI);
 		req.terminate();
-		synchronized(this.lock)
+		synchronized(this.requestTerminated)
 		{
 			this.requestTerminated.add(req);
 			
@@ -83,7 +77,7 @@ public class VirtualMachineData {
 				this.averageTime = res/this.requestTerminated.size();
 			}
 			
-			synchronized(this.lock)
+			synchronized(this.requestTerminated)
 			{
 				this.requestTerminated.clear();
 			}

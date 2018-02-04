@@ -28,6 +28,7 @@ import fr.upmc.components.exceptions.ComponentShutdownException;
 import fr.upmc.datacenter.TimeManagement;
 import fr.upmc.datacenter.interfaces.ControlledDataOfferedI;
 import fr.upmc.datacenter.interfaces.PushModeControllingI;
+import fr.upmc.datacenter.software.applicationvm.ApplicationVM.ApplicationVMPortTypes;
 import fr.upmc.datacenter.software.applicationvm.connectors.ApplicationVMIntrospectionConnector;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamicStateI;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMIntrospectionI;
@@ -50,8 +51,16 @@ import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
  * The class <code>RequestDispatcher</code> is a component receiving request submissions from
  * a given application, and dispatching these requests to the different virtual machines
  * allocated for this application by the admissionController.
- * */
-
+ * 
+ * <p><strong>Invariant</strong></p>
+ * 
+ * <pre>
+ * invariant	true
+ * </pre>
+ * 
+ * @author	Loïc Lafontaine
+ * @version	$Name$ -- $Revision$ -- $Date$
+ */
 public class RequestDispatcher 
 extends		AbstractComponent
 implements	
@@ -66,37 +75,41 @@ implements
 		REQUEST_SUBMISSION, REQUEST_NOTIFICATION, MANAGEMENT, INTROSPECTION, STATIC_STATE,
 		DYNAMIC_STATE
 	}
-	
-	//public static int NB_REQUEST_MAX_IN_QUEUE = 10;
 
 	public static int	DEBUG_LEVEL = -10 ;
 	
-	/** URI of this request dispatcher */
+	// -------------------------------------------------------------------------
+	// Constants and instance variables
+	// -------------------------------------------------------------------------
+	
+	/** uri of this request dispatcher */
 	protected String rdURI;
 	
-	/** InboundPort to receive submission*/
+	/** inboundPort to receive submission*/
 	protected RequestSubmissionInboundPort requestSubmissionInboundPort;
 	
-	/** OutboundPort to send notification*/
+	/** outboundPort to send notification*/
 	protected RequestNotificationOutboundPort requestNotificationOutboundPort;
 	
-	/** InboundPort to receive VM notification */
+	/** inboundPort to receive VM notification */
 	protected RequestNotificationInboundPort  requestNotificationInboundPort;
 	
+	/** map assiociating the uri of a VirtualMachine with the bean containing information about the vm*/
 	protected HashMap<String,VirtualMachineData> requestVirtualMachineDataMap;
-	/** */
+	
+	/** set containing the uris of VirtualMachines still executing Task and need to be disconnected after*/
 	protected HashSet<String> virtualMachineWaitingForDisconnection;
 	
+	/** queue containing the virtualMachines that can execute request (it's mean that the vm have at least one idle core)*/
 	protected Queue<String> virtualMachineAvailable;
+	
+	/** queue containing the virtualMachines in execution (the dispatcher doesn't send request to them)*/
 	protected Queue<String> virtualMachineNotAvailable;
 	
-	/** map associating the uri of a Request with the VirtualMachineData*/
-	protected HashMap<String,VirtualMachineData> taskExecutedBy;
+	/** map associating the uri of a Request with its VirtualMachineData*/
+	protected HashMap<String,VirtualMachineData> requestExecutedBy;
 	
-	/** index of the VM in the requestSubmissionOutboundPortList which will receive the next request*/
-	protected int currentVM;
-	
-	/** Inbound port offering the management interface.						*/
+	/** inbound port offering the management interface.						*/
 	protected RequestDispatcherManagementInboundPort requestDispatcherManagementInboundPort ;
 	
 	/** dispatcher data inbound port through which it pushes its dynamic data.	*/
@@ -107,200 +120,201 @@ implements
 	/** future of the task scheduled to push dynamic data.					*/
 	protected ScheduledFuture<?>			pushingFuture ;
 	
-	/** 					*/
-	//protected ScheduledFuture<?>			resetFuture ;
-	
+	/** outbound port to notify the controller that a vm can be disconnected.						*/
 	protected VMDisconnectionNotificationHandlerOutboundPort vmnobp;
 	
 	protected Object listLock;
 	protected Object queueLock;
+	
+	/** */
 	protected boolean inDisconnectionState = false;
 	
-	protected int nbRequestTerminated = 0;
+	/** the number of request which was received */
 	protected int nbRequestReceived = 0;
 	
+	/** the number of request which was resolved */
+	protected int nbRequestTerminated = 0;
+
+	/** a temporary queue if there is no vm available to handle the requests */
 	protected Queue<RequestI> queue;
+	
+	/** a map containing information about the time the request needed to be ended */
 	protected HashMap<String,RequestTimeData> timeDataMap;
+	
+	// ------------------------------------------------------------------------
+	// Component constructor
+	// ------------------------------------------------------------------------
 	
 	/**
 	 * Construct a <code>RequestDispatcher</code>.
+	 * 
+	 * <p><strong>Contract</strong></p>
+	 * 
+	 * <pre>
+	 * pre	requestDispatcherURI != null
+	 * pre	requestDispatcherManagementInboundPortURI != null
+	 * pre	requestSubmissionInboundPortURI != null
+	 * pre	requestNotificationOutboundPortURI != null
+	 * pre	requestNotificationInboundPortURI != null
+	 * pre	requestDispatcherDynamicStateDataInboundPortURI != null
+	 * pre	VMDisconnectionNotificationHandlerOutboundPortURI != null
+	 * post	true			// no postcondition.
+	 * </pre>
+	 * 
 	 * @param requestDispatcherURI the request dispatcher URI.
 	 * @param requestDispatcherManagementInboundPortURI the request dispatcher management inbound port URI.
-	 * @param requestSubmissionInboundPortURI the request submission inbound port URI.
-	 * @param requestNotificationInboundPortURI the request notification inbound port URI.
-	 * @param requestNotificationOutboundPortURI the request notification outbound port URI.
+	 * @param requestSubmissionInboundPortURI the request submission inbound port URI (to cummunicate with the request generator).
+	 * @param requestNotificationOutboundPortURI the request notification outbound port URI (to cummunicate with the request generator).
+	 * @param requestNotificationInboundPortURI the request notification inbound port URI (to cummunicate with the virtual machines).
+	 * @param requestDispatcherDynamicStateDataInboundPortURI the dynamic state data inbound port URI.
+	 * @param VMDisconnectionNotificationHandlerOutboundPortURI the outbound port URI to notify vm disconnection.
 	 * @throws Exception
 	 */
-	public RequestDispatcher(
-			String requestDispatcherURI, 
-			String requestDispatcherManagementInboundPortURI, 
-			String requestSubmissionInboundPortURI, 
-			String requestNotificationOutboundPortURI,
-			String requestNotificationInboundPortURI,
-			String requestDispatcherDynamicStateDataInboundPortURI,
-			String VMDisconnectionNotificationHandlerOutboundPortURI
-			) throws Exception 
+	public 			RequestDispatcher(
+		String requestDispatcherURI, 
+		String requestDispatcherManagementInboundPortURI, 
+		String requestSubmissionInboundPortURI, 
+		String requestNotificationOutboundPortURI,
+		String requestNotificationInboundPortURI,
+		String requestDispatcherDynamicStateDataInboundPortURI,
+		String VMDisconnectionNotificationHandlerOutboundPortURI
+		) throws Exception 
 	{
 		
-				super(requestDispatcherURI,1,1);
+		super(requestDispatcherURI,1,1);
+
+		// Preconditions
+		assert	requestDispatcherURI != null ;
+		assert	requestDispatcherManagementInboundPortURI != null ;
+		assert	requestSubmissionInboundPortURI != null ;
+		assert	requestNotificationOutboundPortURI != null ;
+		assert	requestNotificationInboundPortURI != null;
+		assert	requestDispatcherDynamicStateDataInboundPortURI != null;
+		assert	VMDisconnectionNotificationHandlerOutboundPortURI != null;
 		
-				// Preconditions
-				assert	requestDispatcherURI != null ;
-				assert	requestDispatcherManagementInboundPortURI != null ;
-				assert	requestSubmissionInboundPortURI != null ;
-				assert	requestNotificationOutboundPortURI != null ;
-				assert	requestNotificationInboundPortURI != null;
-				//assert	requestSubmissionOutboundPortList != null;
-				
-				this.rdURI=requestDispatcherURI;
-				
-				System.err.println("Dispatcher " + this.rdURI);
-				// Interfaces and ports
-
-				this.addOfferedInterface(RequestDispatcherManagementI.class) ;
-				this.requestDispatcherManagementInboundPort =
-						new RequestDispatcherManagementInboundPort(
-								requestDispatcherManagementInboundPortURI,
-								this) ;
-				this.addPort(this.requestDispatcherManagementInboundPort) ;
-				this.requestDispatcherManagementInboundPort.publishPort() ;
-				
-					//To communicate with the sender of the request
-				
-				this.addOfferedInterface( RequestNotificationI.class );
-				this.requestNotificationInboundPort = 
-								new RequestNotificationInboundPort( 
-												requestNotificationInboundPortURI, this);
-				this.addPort( this.requestNotificationInboundPort );
-				this.requestNotificationInboundPort.publishPort();
-				
-				this.addOfferedInterface(RequestSubmissionI.class) ;
-				this.requestSubmissionInboundPort =
-								new RequestSubmissionInboundPort(
-												requestSubmissionInboundPortURI, this) ;
-				this.addPort(this.requestSubmissionInboundPort) ;
-				this.requestSubmissionInboundPort.publishPort() ;
-				
-					//To communicate with the VMs
-
-				this.addRequiredInterface(RequestNotificationI.class) ;
-				this.requestNotificationOutboundPort =
-					new RequestNotificationOutboundPort(
-											requestNotificationOutboundPortURI,
-											this) ;
-				this.addPort(this.requestNotificationOutboundPort) ;
-				this.requestNotificationOutboundPort.publishPort() ;
-				
-				this.virtualMachineAvailable = new LinkedList<String>();
-				this.virtualMachineNotAvailable = new LinkedList<String>();
-				this.addRequiredInterface( RequestSubmissionI.class );
-				this.addRequiredInterface(ApplicationVMIntrospectionI.class );
-				
-				this.addOfferedInterface(ControlledDataOfferedI.ControlledPullI.class) ;
-				this.requestDispatcherDynamicStateDataInboundPort =
-						new RequestDispatcherDynamicStateDataInboundPort(
-								requestDispatcherDynamicStateDataInboundPortURI, this) ;
-				this.addPort(this.requestDispatcherDynamicStateDataInboundPort) ;
-				this.requestDispatcherDynamicStateDataInboundPort.publishPort() ;
-				
-				this.requestVirtualMachineDataMap = new HashMap<>();
-				
-				this.listLock = new Object();
-				this.queueLock = new Object();
-				
-				this.addOfferedInterface(RequestDispatcherIntrospectionI.class) ;
-				this.rdIntrospectionInboundPort =
-					new RequestDispatcherIntrospectionInboundPort(
-											rdURI + "-intro",
-											this) ;
-				this.addPort(this.rdIntrospectionInboundPort) ;
-				this.rdIntrospectionInboundPort.publishPort() ;
-				
-				this.addRequiredInterface(VMDisconnectionNotificationHandlerI.class) ;
-				this.vmnobp = new VMDisconnectionNotificationHandlerOutboundPort(VMDisconnectionNotificationHandlerOutboundPortURI,this);
-				this.addPort(this.vmnobp) ;
-				this.vmnobp.publishPort() ;
-				
-				this.virtualMachineWaitingForDisconnection = new HashSet<String>();
-				this.taskExecutedBy = new HashMap<String,VirtualMachineData>();
-				this.queue = new LinkedList<RequestI>();
-				this.timeDataMap = new HashMap<>();
-				
-				this.nbRequestReceived=0;
-				this.nbRequestTerminated=0;
+		this.rdURI=requestDispatcherURI;
+		
+		this.requestVirtualMachineDataMap = new HashMap<>();
+		this.virtualMachineWaitingForDisconnection = new HashSet<String>();
+		this.requestExecutedBy = new HashMap<String,VirtualMachineData>();
+		this.virtualMachineAvailable = new LinkedList<String>();
+		this.virtualMachineNotAvailable = new LinkedList<String>();
+		
+		this.timeDataMap = new HashMap<>();
+		
+		this.nbRequestReceived=0;
+		this.nbRequestTerminated=0;
+		
+		this.queue = new LinkedList<RequestI>();
+		
+		this.listLock = new Object();
+		this.queueLock = new Object();
+		
+		// Interfaces and ports
+		this.addOfferedInterface(RequestDispatcherManagementI.class) ;
+		this.requestDispatcherManagementInboundPort =
+				new RequestDispatcherManagementInboundPort(
+						requestDispatcherManagementInboundPortURI,
+						this) ;
+		this.addPort(this.requestDispatcherManagementInboundPort) ;
+		this.requestDispatcherManagementInboundPort.publishPort() ;
+		
+		this.addOfferedInterface(RequestDispatcherIntrospectionI.class) ;
+		this.rdIntrospectionInboundPort =
+			new RequestDispatcherIntrospectionInboundPort(
+									rdURI + "-intro",
+									this) ;
+		this.addPort(this.rdIntrospectionInboundPort) ;
+		this.rdIntrospectionInboundPort.publishPort() ;
+		
+		this.addRequiredInterface(VMDisconnectionNotificationHandlerI.class) ;
+		this.vmnobp = new VMDisconnectionNotificationHandlerOutboundPort(VMDisconnectionNotificationHandlerOutboundPortURI,this);
+		this.addPort(this.vmnobp) ;
+		this.vmnobp.publishPort() ;
+		
+			//To communicate with the sender of the request
+		this.addOfferedInterface( RequestNotificationI.class );
+		this.requestNotificationInboundPort = 
+						new RequestNotificationInboundPort( 
+										requestNotificationInboundPortURI, this);
+		this.addPort( this.requestNotificationInboundPort );
+		this.requestNotificationInboundPort.publishPort();
+		
+		this.addOfferedInterface(RequestSubmissionI.class) ;
+		this.requestSubmissionInboundPort =
+						new RequestSubmissionInboundPort(
+										requestSubmissionInboundPortURI, this) ;
+		this.addPort(this.requestSubmissionInboundPort) ;
+		this.requestSubmissionInboundPort.publishPort() ;
+		
+			//To communicate with the VMs
+		this.addRequiredInterface(RequestNotificationI.class) ;
+		this.requestNotificationOutboundPort =
+			new RequestNotificationOutboundPort(
+									requestNotificationOutboundPortURI,
+									this) ;
+		this.addPort(this.requestNotificationOutboundPort) ;
+		this.requestNotificationOutboundPort.publishPort() ;
+		
+		this.addOfferedInterface(ControlledDataOfferedI.ControlledPullI.class) ;
+		this.requestDispatcherDynamicStateDataInboundPort =
+				new RequestDispatcherDynamicStateDataInboundPort(
+						requestDispatcherDynamicStateDataInboundPortURI, this) ;
+		this.addPort(this.requestDispatcherDynamicStateDataInboundPort) ;
+		this.requestDispatcherDynamicStateDataInboundPort.publishPort() ;
+		
+			//Interface Required for future connexion with a vm
+		this.addRequiredInterface( RequestSubmissionI.class );
+		this.addRequiredInterface(ApplicationVMIntrospectionI.class );
 	}
 	
-	protected void testVMAvailable(VirtualMachineData vm) throws Exception
-	{
-		synchronized(this.listLock)
-		{		
-			if(vm.getAvmiovp().getNumberOfCores()-1>vm.getRequestInQueue().size())
-			{
-				this.virtualMachineAvailable.remove(vm.getVmURI());
-				this.virtualMachineNotAvailable.add(vm.getVmURI());
-			}
-		}
-	}
+	// ------------------------------------------------------------------------
+	// Component life-cycle
+	// ------------------------------------------------------------------------
 	
-	protected VirtualMachineData findAvaibleVM() throws Exception
-	{		
-		synchronized(this.listLock)
-		{			
-			if(this.virtualMachineAvailable.isEmpty())
-			{
-				return null;
-			}
-			else 
-			{
-				try {
-				String uri = this.virtualMachineAvailable.peek();
-				VirtualMachineData vm = this.requestVirtualMachineDataMap.get(uri);
-				
-				if(vm.getAvmiovp().getNumberOfCores()<vm.getRequestInQueue().size())
-				{					
-					this.virtualMachineAvailable.remove();
-					this.virtualMachineNotAvailable.add(vm.getVmURI());
+	/**
+	 * @see fr.upmc.components.AbstractComponent#shutdown()
+	 */
+	@Override
+	public void shutdown() throws ComponentShutdownException {
+		
+	        try {
+	            if ( this.requestNotificationOutboundPort.connected() ) {
+	                this.requestNotificationOutboundPort.doDisconnection();
+	            }
+	            for (VirtualMachineData data : this.requestVirtualMachineDataMap.values())
+	            {
+	            	RequestSubmissionOutboundPort port = data.getRsobp();
+	            	
+	            	if (port.connected() ) {
+	            		port.doDisconnection();
+	     	       }
+	            }
+	            if (this.requestDispatcherDynamicStateDataInboundPort.connected()) {
+					this.requestDispatcherDynamicStateDataInboundPort.doDisconnection() ;
 				}
-				
-				return vm;
-				}catch(Exception e)
-				{
-					e.printStackTrace();
-					System.out.println("AAAYA "+this.virtualMachineAvailable.peek());
-					System.out.println(this.requestVirtualMachineDataMap);
-					return null;
-				}
-			}
-		}
+	               
+	        }
+	        catch ( Exception e ) {
+	            throw new ComponentShutdownException( e );
+	        }
+
+	        super.shutdown();
 	}
 	
-	protected void executeRequestInQueue(VirtualMachineData executor) throws Exception {
-		synchronized(this.queueLock)
-		{
-			RequestI req = this.queue.remove();
-			
-			RequestTimeData timeData = this.timeDataMap.remove(req.getRequestURI());
-			
-			executor.addRequest(req.getRequestURI(),timeData);
-			
-			RequestSubmissionOutboundPort port = executor.getRsobp();
-			port.submitRequestAndNotify(req);
-			
-			if (RequestGenerator.DEBUG_LEVEL >= 1)
-				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),executor.getVmURI(),port.getPortURI()));
-			
-			this.taskExecutedBy.put(req.getRequestURI(),executor);
-			
-			testVMAvailable(executor);
-		}
-	}
+	// ------------------------------------------------------------------------
+	// Component services
+	// ------------------------------------------------------------------------
 	
+	/**
+	 * @see fr.upmc.datacenter.software.interfaces.RequestSubmissionHandlerI#acceptRequestSubmission(fr.upmc.datacenter.software.interfaces.RequestI)
+	 */
 	@Override
 	public void acceptRequestSubmission(RequestI r) throws Exception {
 
 		assert r != null;
 		
-		RequestTimeData timeData = new RequestTimeData(this.rdURI,null, r.getRequestURI());
+		RequestTimeData timeData = new RequestTimeData();
 		this.timeDataMap.put(r.getRequestURI(),timeData);
 		
 		this.nbRequestReceived++;
@@ -318,17 +332,20 @@ implements
 			RequestSubmissionOutboundPort port = vm.getRsobp();
 			port.submitRequestAndNotify(r);
 
-			this.taskExecutedBy.put(r.getRequestURI(),vm);
+			this.requestExecutedBy.put(r.getRequestURI(),vm);
 		}
 	}
-
+	
+	/**
+	 * @see fr.upmc.datacenter.software.interfaces.RequestSubmissionHandlerI#acceptRequestSubmissionAndNotify(fr.upmc.datacenter.software.interfaces.RequestI)
+	 */
 	@Override
 	public void acceptRequestSubmissionAndNotify(RequestI r) throws Exception {
 		
 		assert r != null;
 		
 		try {
-		RequestTimeData timeData = new RequestTimeData(this.rdURI,null, r.getRequestURI());
+		RequestTimeData timeData = new RequestTimeData();
 		this.timeDataMap.put(r.getRequestURI(),timeData);
 
 		this.nbRequestReceived++;
@@ -349,7 +366,7 @@ implements
 			if (RequestGenerator.DEBUG_LEVEL >= 1) 
 				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,r.getRequestURI(),vm.getVmURI(),port.getPortURI()));
 			
-			this.taskExecutedBy.put(r.getRequestURI(),vm);
+			this.requestExecutedBy.put(r.getRequestURI(),vm);
 		}
 		
 		}catch(Exception e)
@@ -358,6 +375,20 @@ implements
 		}
 	}
 
+	/**
+	 * process an end of execution notification for a request r previously
+	 * submitted. 
+	 * 
+	 * <p><strong>Contract</strong></p>
+	 * 
+	 * <pre>
+	 * pre	r != null
+	 * post	true			// no postcondition.
+	 * </pre>
+	 *
+	 * @param r	request that just terminated.
+	 * @throws Exception
+	 */
 	@Override
 	public void acceptRequestTerminationNotification(RequestI r) throws Exception {
 
@@ -366,7 +397,7 @@ implements
 		this.nbRequestTerminated++;
 		
 		try {
-		VirtualMachineData vm = this.taskExecutedBy.remove(r.getRequestURI());
+		VirtualMachineData vm = this.requestExecutedBy.remove(r.getRequestURI());
 		vm.endRequest(r.getRequestURI());
 		if(!this.virtualMachineWaitingForDisconnection.isEmpty() && this.virtualMachineWaitingForDisconnection.contains(vm.getVmURI()))
 		{
@@ -399,74 +430,93 @@ implements
 			this.logMessage(String.format("RequestDispatcher [%s] notifies end of request %s",this.rdURI,r.getRequestURI()));
 	}
 	
-	@Override
-	public void shutdown() throws ComponentShutdownException {
-		
-	        try {
-	            if ( this.requestNotificationOutboundPort.connected() ) {
-	                this.requestNotificationOutboundPort.doDisconnection();
-	            }
-	            for (VirtualMachineData data : this.requestVirtualMachineDataMap.values())
-	            {
-	            	RequestSubmissionOutboundPort port = data.getRsobp();
-	            	
-	            	if (port.connected() ) {
-	            		port.doDisconnection();
-	     	       }
-	            }
-	            if (this.requestDispatcherDynamicStateDataInboundPort.connected()) {
-					this.requestDispatcherDynamicStateDataInboundPort.doDisconnection() ;
-				}
-	               
-	        }
-	        catch ( Exception e ) {
-	            throw new ComponentShutdownException( e );
-	        }
-
-	        super.shutdown();
-	}
-
-	@Override
-	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception {
-		
-		assert !inDisconnectionState;
-		assert !this.requestVirtualMachineDataMap.containsKey(vmURI);
-
-		RequestSubmissionOutboundPort rsobp = new RequestSubmissionOutboundPort( rdURI+"-rsbop-"+vmURI, this );
-		ApplicationVMIntrospectionOutboundPort avmiovp = new ApplicationVMIntrospectionOutboundPort( vmURI+"-introObp", this );
-		
-		VirtualMachineData vm = new VirtualMachineData(vmURI, rsobp,avmiovp);
-
-		this.addPort( rsobp );
-		rsobp.publishPort();
-		
-		this.doPortConnection(
-				rsobp.getPortURI(),
-				requestSubmissionInboundPortURI,
-				RequestSubmissionConnector.class.getCanonicalName());
-		
-		this.addPort( avmiovp );
-		avmiovp.publishPort();
-		
-		this.doPortConnection(
-				avmiovp.getPortURI(),
-				vmURI+"-intro",
-				ApplicationVMIntrospectionConnector.class.getCanonicalName());
-		
-		if (RequestGenerator.DEBUG_LEVEL >= 2)
-			this.logMessage(String.format("[%s] Connecting %s with %s using %s -> %s",getConnectorSimpleName(),this.rdURI,vmURI,rsobp.getPortURI(),requestSubmissionInboundPortURI));
+	// ------------------------------------------------------------------------
+	// Component internal services
+	// ------------------------------------------------------------------------
 	
-		this.requestVirtualMachineDataMap.put(vmURI, vm);
-		
-		if(!this.queue.isEmpty())
-		{
-			executeRequestInQueue(vm);
+	/**
+	 * find a virtual machine which executes a request (at least one core is idle)
+	 * 
+	 * <p><strong>Contract</strong></p>
+	 * 
+	 * <pre>
+	 * pre	true			// no precondition.
+	 * post	true			// no postcondition.
+	 * </pre>
+	 *
+	 * @return	a VirtualMachineData reference or null.
+	 * @throws Exception
+	 */
+	protected VirtualMachineData findAvaibleVM() throws Exception
+	{		
+		synchronized(this.listLock)
+		{			
+			if(this.virtualMachineAvailable.isEmpty())
+			{
+				return null;
+			}
+			else 
+			{
+				try {
+				String uri = this.virtualMachineAvailable.peek();
+				VirtualMachineData vm = this.requestVirtualMachineDataMap.get(uri);
+				
+				if(vm.getAvmiovp().getNumberOfCores()<vm.getRequestInQueue().size())
+				{					
+					this.virtualMachineAvailable.remove();
+					this.virtualMachineNotAvailable.add(vm.getVmURI());
+				}
+				
+				return vm;
+				}catch(Exception e)
+				{
+					e.printStackTrace();
+					System.out.println("AAAYA "+this.virtualMachineAvailable.peek());
+					System.out.println(this.requestVirtualMachineDataMap);
+					return null;
+				}
+			}
 		}
-		else
-		{
-			this.virtualMachineAvailable.add(vmURI);
-		}	
 	}
+	
+	/**
+	 * remove the first request in the dispatcher queue and execute it
+	 * 
+	 * <p><strong>Contract</strong></p>
+	 * 
+	 * <pre>
+	 * pre	true			// no precondition.
+	 * post	true			// no postcondition.
+	 * </pre>
+	 *
+	 * @param executor		the virtual machine which will execute the request.
+	 * @throws Exception
+	 */
+	protected void executeRequestInQueue(VirtualMachineData executor) throws Exception {
+		synchronized(this.queueLock)
+		{
+			RequestI req = this.queue.remove();
+			
+			RequestTimeData timeData = this.timeDataMap.remove(req.getRequestURI());
+			
+			executor.addRequest(req.getRequestURI(),timeData);
+			
+			RequestSubmissionOutboundPort port = executor.getRsobp();
+			port.submitRequestAndNotify(req);
+			
+			if (RequestGenerator.DEBUG_LEVEL >= 1)
+				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),executor.getVmURI(),port.getPortURI()));
+			
+			this.requestExecutedBy.put(req.getRequestURI(),executor);
+			
+			synchronized(this.listLock)
+			{
+				this.virtualMachineAvailable.remove(executor.getVmURI());
+				this.virtualMachineNotAvailable.add(executor.getVmURI());
+			}
+		}
+	}
+	
 
 	protected void disconnectVirtualMachine(VirtualMachineData vmData) throws Exception
 	{
@@ -502,56 +552,9 @@ implements
 		}
 	}	
 	
-	@Override
-	public void askVirtualMachineDisconnection(String vmURI) throws Exception {
-		
-		synchronized(this.listLock)
-		{
-			VirtualMachineData vmData = this.requestVirtualMachineDataMap.remove(vmURI);
-			this.virtualMachineAvailable.remove(vmURI);
-			this.virtualMachineNotAvailable.remove(vmURI);
-			
-			if(vmData.getRequestInQueue().isEmpty())
-			{
-				this.disconnectVirtualMachine(vmData);
-			}
-			else
-			{
-				this.virtualMachineWaitingForDisconnection.add(vmURI);
-			}
-		}
-	}
-	
-	public String getConnectorClassName()
-	{
-		return RequestSubmissionConnector.class.getCanonicalName();
-	}
-	
-	public String getConnectorSimpleName()
-	{
-		return RequestSubmissionConnector.class.getSimpleName();
-	}
-
-	@Override
-	public void connectWithRequestGenerator(String rgURI, String requestNotificationInboundPortURI) throws Exception {
-		
-		this.doPortConnection(
-				this.requestNotificationOutboundPort.getPortURI(),
-				requestNotificationInboundPortURI,
-				RequestNotificationConnector.class.getCanonicalName()
-				);
-		
-		if (RequestGenerator.DEBUG_LEVEL >= 2)
-			this.logMessage(String.format("[RequestNotificationConnector] Connecting %s with %s using %s -> %s", this.rdURI,rgURI,this.requestNotificationOutboundPort.getPortURI(),requestNotificationInboundPortURI));
-	}
-
-	@Override
-	public void disconnectRequestGenerator() throws Exception {
-		if(this.requestNotificationOutboundPort.connected())
-		{
-			this.requestNotificationOutboundPort.doDisconnection();
-		}
-	}
+	// ------------------------------------------------------------------------
+	// Component introspection services
+	// ------------------------------------------------------------------------
 	
 	public RequestDispatcherDynamicStateI	getDynamicState() throws Exception
 	{
@@ -703,6 +706,31 @@ implements
 		return null;
 	}
 
+	// ------------------------------------------------------------------------
+	// Component management services
+	// ------------------------------------------------------------------------
+	
+	@Override
+	public void connectWithRequestGenerator(String rgURI, String requestNotificationInboundPortURI) throws Exception {
+		
+		this.doPortConnection(
+				this.requestNotificationOutboundPort.getPortURI(),
+				requestNotificationInboundPortURI,
+				RequestNotificationConnector.class.getCanonicalName()
+				);
+		
+		if (RequestGenerator.DEBUG_LEVEL >= 2)
+			this.logMessage(String.format("[RequestNotificationConnector] Connecting %s with %s using %s -> %s", this.rdURI,rgURI,this.requestNotificationOutboundPort.getPortURI(),requestNotificationInboundPortURI));
+	}
+
+	@Override
+	public void disconnectRequestGenerator() throws Exception {
+		if(this.requestNotificationOutboundPort.connected())
+		{
+			this.requestNotificationOutboundPort.doDisconnection();
+		}
+	}
+
 	@Override
 	public void connectController(String controllerURI, String VMDisconnectionHandlerInboundPortURI) throws Exception {
 
@@ -721,6 +749,68 @@ implements
 		while(it.hasNext()) {
 			this.askVirtualMachineDisconnection(it.next().getKey());
 		}
+	}
+	
+	@Override
+	public void askVirtualMachineDisconnection(String vmURI) throws Exception {
+		
+		synchronized(this.listLock)
+		{
+			VirtualMachineData vmData = this.requestVirtualMachineDataMap.remove(vmURI);
+			this.virtualMachineAvailable.remove(vmURI);
+			this.virtualMachineNotAvailable.remove(vmURI);
+			
+			if(vmData.getRequestInQueue().isEmpty())
+			{
+				this.disconnectVirtualMachine(vmData);
+			}
+			else
+			{
+				this.virtualMachineWaitingForDisconnection.add(vmURI);
+			}
+		}
+	}
+	
+	@Override
+	public void connectVirtualMachine(String vmURI, String requestSubmissionInboundPortURI) throws Exception {
+		
+		assert !inDisconnectionState;
+		assert !this.requestVirtualMachineDataMap.containsKey(vmURI);
+
+		RequestSubmissionOutboundPort rsobp = new RequestSubmissionOutboundPort( rdURI+"-rsbop-"+vmURI, this );
+		ApplicationVMIntrospectionOutboundPort avmiovp = new ApplicationVMIntrospectionOutboundPort( vmURI+"-introObp", this );
+		
+		VirtualMachineData vm = new VirtualMachineData(vmURI, rsobp,avmiovp);
+
+		this.addPort( rsobp );
+		rsobp.publishPort();
+		
+		this.doPortConnection(
+				rsobp.getPortURI(),
+				requestSubmissionInboundPortURI,
+				RequestSubmissionConnector.class.getCanonicalName());
+		
+		this.addPort( avmiovp );
+		avmiovp.publishPort();
+		
+		this.doPortConnection(
+				avmiovp.getPortURI(),
+				vmURI+"-intro",
+				ApplicationVMIntrospectionConnector.class.getCanonicalName());
+		
+		if (RequestGenerator.DEBUG_LEVEL >= 2)
+			this.logMessage(String.format("[%s] Connecting %s with %s using %s -> %s",RequestSubmissionConnector.class.getSimpleName(),this.rdURI,vmURI,rsobp.getPortURI(),requestSubmissionInboundPortURI));
+	
+		this.requestVirtualMachineDataMap.put(vmURI, vm);
+		
+		if(!this.queue.isEmpty())
+		{
+			executeRequestInQueue(vm);
+		}
+		else
+		{
+			this.virtualMachineAvailable.add(vmURI);
+		}	
 	}
 
 }

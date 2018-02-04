@@ -6,41 +6,29 @@ public class RequestTimeData {
 
 	private long startedAt;
 	private long endedAt;
-	private String operatedBy;
-	private String handledBy;
+	private String virtualMachineURI;
+	private String dispatcherURI;
 	private String request;
 	private boolean finished;
 	/** timestamp in Unix time format, local time of the timestamper. stored when the average time is calculated*/
 	protected  long		timestamp ;
 	
-	public RequestTimeData(String dispatcherURI,String vmURI,String requestURI)
+	public RequestTimeData()
 	{
-		this.handledBy=dispatcherURI;
-		this.operatedBy=vmURI;
 		this.finished=false;
-		this.request=requestURI;
-		
 		this.begin();
 	}
 	
-	public String getOperatedBy() {
-		return operatedBy;
+	public RequestTimeData(String dispatcherURI,String vmURI,String requestURI)
+	{
+		this();
+		this.dispatcherURI=dispatcherURI;
+		this.virtualMachineURI=vmURI;
 	}
 	
 	public void begin()
 	{
 		this.startedAt=System.nanoTime();
-	}
-	
-	public long getDuration()
-	{
-		//System.err.println(this.request+""+handledBy+" "+operatedBy+" "+endedAt+" "+startedAt+" "+(endedAt - startedAt)/1000000/1000);
-		
-		return endedAt - startedAt;
-	}
-
-	public String getHandledBy() {
-		return handledBy;
 	}
 	
 	public void terminate()
@@ -59,4 +47,22 @@ public class RequestTimeData {
 	{
 		return this.timestamp;
 	}
+	
+	public long getDuration()
+	{
+		return endedAt - startedAt;
+	}
+	
+	public String getVirtualMachineURI() {
+		return virtualMachineURI;
+	}
+	
+	public String getRequest() {
+		return request;
+	}
+	
+	public String getDispatcherURI() {
+		return dispatcherURI;
+	}
+	
 }

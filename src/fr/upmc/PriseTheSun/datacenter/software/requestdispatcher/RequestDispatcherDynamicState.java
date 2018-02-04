@@ -7,6 +7,26 @@ import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.Requ
 import fr.upmc.datacenter.TimeManagement;
 import fr.upmc.datacenter.software.applicationvm.interfaces.ApplicationVMDynamicStateI;
 
+/**
+ * The class <code>RequestDispatcherDynamicState</code> implements objects representing
+ * a snapshot of the dynamic state of a dispatcher component to be pulled or
+ * pushed through the dynamic state data interface.
+ *
+ * <p><strong>Description</strong></p>
+ * 
+ * <p><strong>Invariant</strong></p>
+ * 
+ * <pre>
+ * invariant		timestamp >= 0 && timestamperIP != null
+ * invariant		rdURI != null
+ * invariant		nbRequestTerminated <= nbRequestReceived
+ * </pre>
+ * 
+ * <p>Created on : April 23, 2015</p>
+ * 
+ * @author	Loïc Lafontaine
+ * @version	$Name$ -- $Revision$ -- $Date$
+ */
 
 public class RequestDispatcherDynamicState implements RequestDispatcherDynamicStateI{
 
