@@ -232,10 +232,13 @@ implements
 	
 	protected void testVMAvailable(VirtualMachineData vm) throws Exception
 	{
-		if(vm.getAvmiovp().getNumberOfCores()-1>vm.getRequestInQueue().size())
-		{
-			this.virtualMachineAvailable.remove(vm.getVmURI());
-			this.virtualMachineNotAvailable.add(vm.getVmURI());
+		synchronized(this.listLock)
+		{		
+			if(vm.getAvmiovp().getNumberOfCores()-1>vm.getRequestInQueue().size())
+			{
+				this.virtualMachineAvailable.remove(vm.getVmURI());
+				this.virtualMachineNotAvailable.add(vm.getVmURI());
+			}
 		}
 	}
 	
@@ -249,6 +252,7 @@ implements
 			}
 			else 
 			{
+				try {
 				String uri = this.virtualMachineAvailable.peek();
 				VirtualMachineData vm = this.requestVirtualMachineDataMap.get(uri);
 				
@@ -259,6 +263,13 @@ implements
 				}
 				
 				return vm;
+				}catch(Exception e)
+				{
+					e.printStackTrace();
+					System.out.println("AAAYA "+this.virtualMachineAvailable.peek());
+					System.out.println(this.requestVirtualMachineDataMap);
+					return null;
+				}
 			}
 		}
 	}
@@ -372,8 +383,8 @@ implements
 		{
 			synchronized(this.listLock)
 			{
-				this.virtualMachineNotAvailable.remove(vm.getVmURI());
-				this.virtualMachineAvailable.add(vm.getVmURI());
+				if(this.virtualMachineNotAvailable.remove(vm.getVmURI()))
+					this.virtualMachineAvailable.add(vm.getVmURI());
 			}
 		}
 		
@@ -460,6 +471,7 @@ implements
 	protected void disconnectVirtualMachine(VirtualMachineData vmData) throws Exception
 	{
 		synchronized (this.listLock) {
+			
 			RequestSubmissionOutboundPort port = vmData.getRsobp();
 			if(port!=null && port.connected())
 			{
@@ -478,6 +490,7 @@ implements
 		}
 		
 		this.vmnobp.receiveVMDisconnectionNotification(vmData.getVmURI());
+		
 
 		if(inDisconnectionState && this.requestVirtualMachineDataMap.isEmpty() && this.virtualMachineWaitingForDisconnection.isEmpty())
 		{			
