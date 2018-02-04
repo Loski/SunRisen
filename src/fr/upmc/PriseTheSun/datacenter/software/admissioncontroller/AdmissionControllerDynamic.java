@@ -143,7 +143,7 @@ implements 	ApplicationSubmissionI,
 	//Map Between a vm and his computer
 	protected List<ApplicationVMInfo> freeApplicationVM;
 
-	Object o=new Object();
+
 	
 	Object lockController = new Object();
 	protected static final int NB_CORES = 2;
@@ -493,7 +493,7 @@ implements 	ApplicationSubmissionI,
 		
 		// 3 retry
 		for(int i = 0; i < 3 && failedToCreated; i++) {
-			synchronized(o){
+			synchronized(VMforNewApplication){
 				if(!this.VMforNewApplication.isEmpty()) {
 					vm = VMforNewApplication.remove(0);
 					failedToCreated = false;
@@ -506,6 +506,7 @@ implements 	ApplicationSubmissionI,
 		}
 		
 		if(failedToCreated) {
+			
 			return null;
 		}
 
@@ -526,7 +527,7 @@ implements 	ApplicationSubmissionI,
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
 		ApplicationVMInfo vm;
 		
-		synchronized(o){
+		synchronized(VMforNewApplication){
 			if(!this.VMforNewApplication.isEmpty()) {
 				vm = VMforNewApplication.remove(0);
 			}else {
@@ -654,11 +655,13 @@ implements 	ApplicationSubmissionI,
 		}
 		ApplicationVMInfo vm = new ApplicationVMInfo(applicationVM[0], applicationVM[1], applicationVM[2], computerManagementInboundPortURI);
 
-		synchronized (o) {
+		synchronized (VMforNewApplication) {
 			if(this.VMforNewApplication.size() < MIN_VM) {
 				this.VMforNewApplication.add(vm);
 			}else {
-				this.freeApplicationVM.add(vm);
+				synchronized (freeApplicationVM) {
+					this.freeApplicationVM.add(vm);
+				}
 			}
 		}
 		return applicationVM[0];
@@ -670,25 +673,29 @@ implements 	ApplicationSubmissionI,
 	@Override
 	public void acceptRingNetworkDynamicData(String controllerDataRingOutboundPortURI, RingNetworkDynamicStateI currentDynamicState)
 			throws Exception {
-		synchronized(o){
 			ApplicationVMInfo vm = currentDynamicState.getApplicationVMInfo();
 			if(vm != null) {
-				if(this.vmURis.contains(vm.getApplicationVM())) {
-					int numberVmInRing = this.vmURis.size();
-					w.write(Arrays.asList("Nombre de vm " + numberVmInRing));
-					this.vmURis.clear();
-				}else {
-					this.vmURis.add(vm.getApplicationVM());
+				synchronized (vmURis) {
+					if(this.vmURis.contains(vm.getApplicationVM())) {
+						int numberVmInRing = this.vmURis.size();
+						w.write(Arrays.asList("Nombre de vm " + numberVmInRing));
+						this.vmURis.clear();
+					}else {				
+						this.vmURis.add(vm.getApplicationVM());
+					}
 				}
 				if(this.VMforNewApplication.size() < MIN_VM) {
-					this.VMforNewApplication.add(currentDynamicState.getApplicationVMInfo());
+					synchronized (VMforNewApplication) {
+						this.VMforNewApplication.add(currentDynamicState.getApplicationVMInfo());
+					}
 				}else {
-					freeApplicationVM.add(currentDynamicState.getApplicationVMInfo());
+					synchronized(freeApplicationVM){
+						freeApplicationVM.add(currentDynamicState.getApplicationVMInfo());
+					}
 				}
 			}
-		}
 
-	}
+		}
 
 	public void	sendDynamicState() throws Exception
 	{
@@ -723,12 +730,14 @@ implements 	ApplicationSubmissionI,
 	
 	public RingDynamicState getDynamicState() throws UnknownHostException {
 		ApplicationVMInfo removed = null;
-		synchronized(o){
-			while(!freeApplicationVM.isEmpty() && this.VMforNewApplication.size() < 5) {
-				VMforNewApplication.add(freeApplicationVM.remove(0));
-			}
-			if(!this.freeApplicationVM.isEmpty()) {
-				removed = this.freeApplicationVM.remove(0);
+		synchronized(VMforNewApplication){
+			synchronized (freeApplicationVM) {
+				while(!freeApplicationVM.isEmpty() && this.VMforNewApplication.size() < 5) {
+					VMforNewApplication.add(freeApplicationVM.remove(0));
+				}
+				if(!this.freeApplicationVM.isEmpty()) {
+					removed = this.freeApplicationVM.remove(0);
+				}
 			}
 		}
 		return new RingDynamicState(removed);
