@@ -381,7 +381,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 					}
 				}
 				
-				System.err.println(waitDecision);
+				//System.err.println(waitDecision);
 			}
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -481,7 +481,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 				tooFastCase(vms);
 				break;
 			case GOOD :
-				System.err.println("WAS GOOD MY FRIEND");
+			//	System.err.println("WAS GOOD MY FRIEND");
 				break;
 			default:
 				break;
@@ -531,7 +531,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 			//Try to up frequency
 			//int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.HIGHER, randomVM);
-			System.err.println("je passe par lower mdr");
+			//System.err.println("je passe par lower mdr");
 	
 			//Ajoute les cores
 			
@@ -559,10 +559,11 @@ implements 	RequestDispatcherStateDataConsumerI,
 			synchronized (myVMs) {
 				boolean canRemoveVM = myVMs.size() > 1;
 				if(canRemoveVM) {
-					//this.rddsdop.stopPushing();
 					w.write(Arrays.asList("ask to remove a vm"));
 
 					ApplicationVMInfo randomVM = this.myVMs.remove(0);
+					this.logMessage("Demande de déconnexion de " + randomVM.getApplicationVM());
+
 					this.VMsToBeKilled.put(randomVM.getApplicationVM(), randomVM);
 					this.rdmop.askVirtualMachineDisconnection(randomVM.getApplicationVM());
 				}
@@ -576,9 +577,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 						this.logMessage("Desaloc");
 					}else {
 						this.logMessage("Etrange - " );
-						if((vms.get(myVMs.get(i).getApplicationVM()).getAllocatedCoresNumber().length > StaticData.MIN_ALLOCATED_CORE)) {
-							throw new Exception("Pas sync? ");
-						}
 					}
 				}			
 			}
@@ -610,18 +608,19 @@ implements 	RequestDispatcherStateDataConsumerI,
 	@Override
 	public void acceptRingNetworkDynamicData(String controllerDataRingOutboundPortURI, RingNetworkDynamicStateI currentDynamicState)
 			throws Exception {
-		synchronized(vmReserved){
-			ApplicationVMInfo vm =  currentDynamicState.getApplicationVMInfo();
-			//System.out.println(vm + controllerDataRingOutboundPortURI);
+		
+		ApplicationVMInfo vm =  currentDynamicState.getApplicationVMInfo();
+		//System.out.println(vm + controllerDataRingOutboundPortURI);
 
-			if(vm != null) {
+		if(vm != null) {
 				if(vmReserved.size() < 2 /*&& (waitDecision % REQUEST_MIN == 1)*/) {
-					vmReserved.add(vm);
+					synchronized(vmReserved){
+						vmReserved.add(vm);
+					}
 				}
 				else {
 					synchronized (freeApplicationVM) {
 						freeApplicationVM.add(vm);
-					}
 				}
 			}
 		}
@@ -753,9 +752,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			avmPort.publishPort() ;
 			avmPort.doConnection(vm.getAvmInbound(),
 						ApplicationVMManagementConnector.class.getCanonicalName());
-			
 
-			
 			ComputerControllerManagementOutboutPort ccmop = cmops.get(vm.getApplicationVM());
 			if(ccmop == null) {
 				ccmop = new ComputerControllerManagementOutboutPort(this.controllerURI  + "computerControllerManagementOutboutPort" + cmops.size(), this);
@@ -799,15 +796,27 @@ implements 	RequestDispatcherStateDataConsumerI,
 			this.logMessage(this.controllerURI + " receive a signal to disconnect "+vmURI);
 	
 			ApplicationVMManagementOutboundPort avm = this.avms.remove(vmURI);
+			System.out.println("1");
+
 			avm.disconnectWithRequestSubmissioner();
+			System.out.println("2");
+
 			avm.desallocateAllCores();
+			
+			System.out.println("3");
+
 			avm.doDisconnection();
+			System.out.println("4");
+
 			ComputerControllerManagementOutboutPort ccmop = this.cmops.remove(vmURI);
 			ccmop.releaseCore(vmURI);
+			
+			System.out.println("5");
+
 			//Thread.sleep(150);
 			//reallocation
 			int number = ccmop.tryReserveCore(vmURI, 2);
-			
+			System.out.println("6");
 			if(number == 0 ) {
 				throw new Exception("CHAUD");
 			}
