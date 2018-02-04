@@ -60,6 +60,22 @@ public interface			ApplicationVMIntrospectionI
 extends		OfferedI,
 			RequiredI
 {
+	
+	/**
+	 * return the number of cores of the application VM 
+	 * 
+	 * <p><strong>Contract</strong></p>
+	 * 
+	 * <pre>
+	 * pre	true			// no precondition.
+	 * post	return != null
+	 * </pre>
+	 *
+	 * @return	the number of cores of the application VM
+	 * @throws Exception
+	 */
+	public int	getNumberOfCores() throws Exception ;
+	
 	/**
 	 * return a map of the application VM port URI by their types.
 	 * 
@@ -106,4 +122,5 @@ extends		OfferedI,
 	 * @throws Exception
 	 */
 	public ApplicationVMDynamicStateI	getDynamicState() throws Exception ;
+	
 }

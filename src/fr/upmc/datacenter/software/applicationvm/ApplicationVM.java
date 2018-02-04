@@ -772,4 +772,9 @@ implements	ProcessorServicesNotificationConsumerI,
 			this.allocatedCoresIdleStatus.remove(ac);
 		}
 	}
+	
+	public int getNumberOfCores()
+	{
+		return this.allocatedCoresIdleStatus.size();
+	}
 }
