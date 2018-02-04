@@ -226,7 +226,7 @@ implements 	ApplicationSubmissionI,
 		this.AdmissionControllerDataRingInboundUri = this.admissionControllerURI +"-"+ControllerDataRingInboundPortURI;
 		this.AdmissionControllerDataRingOutboundUri = this.admissionControllerURI +"-"+ControllerDataRingOutboundPortURI;
 		
-		rdsdop = new RingNetworkDynamicStateDataOutboundPort(this,  this.AdmissionControllerDataRingOutboundUri);
+		rdsdop = new RingNetworkDynamicStateDataOutboundPort(this.AdmissionControllerDataRingOutboundUri,this,this.admissionControllerURI);
 		this.addPort(rdsdop);
 		this.rdsdop.publishPort();
 
