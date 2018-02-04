@@ -94,13 +94,17 @@ implements 	RequestDispatcherStateDataConsumerI,
 	
 	int idVm = 0;
 	int waitDecision = 0;
-	
+	/**Max de mauvaises information du capteur de vélocité de requêtage*/
+	private int compteur_null = 0;
 	/** VMs réservées au prochain tour d'allocation */
 	private List<ApplicationVMInfo> vmReserved;
 	/** Vms a propagées au prochain node **/ 
 	private List<ApplicationVMInfo> freeApplicationVM;
 	 /** VMs connectées au dispatcher pour résoudre les requêtes **/
 	private List<ApplicationVMInfo> myVMs;
+	
+	/** VMs en attentes de déconnexion **/
+	private HashMap<String, ApplicationVMInfo> VMsToBeKilled;
 		
 	/** Ring network outbound port **/
 	private RingNetworkDynamicStateDataOutboundPort rdsdop;
@@ -145,6 +149,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 		public static final double TARGET_VERY_FAST = AVERAGE_TARGET * VERY_FAST_PERCENT_LIMIT;
 		public static final long minute = 60000l;
 		public static final int NB_VM_RESERVED = 2;
+
+		public static final int MAX_NULL = 60;
 		//Max core
 		public static int MAX_ALLOCATION=25;
 		
@@ -253,7 +259,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 		this.freeApplicationVM = new ArrayList<ApplicationVMInfo>();
 		this.vmReserved = new ArrayList<ApplicationVMInfo>();
-		this.myVMs =  new ArrayList<ApplicationVMInfo>();
+		this.myVMs = new ArrayList<ApplicationVMInfo>();
+		this.VMsToBeKilled = new HashMap<String, ApplicationVMInfo>();
 		this.cmops = new HashMap<String, ComputerControllerManagementOutboutPort>();
 		this.avms = new HashMap<String, ApplicationVMManagementOutboundPort>();
 		
@@ -334,12 +341,20 @@ implements 	RequestDispatcherStateDataConsumerI,
 		//this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
 		
 		try {
+			if(compteur_null == StaticData.MAX_NULL) {
+				compteur_null =  Integer.MIN_VALUE;
+
+				throw new Exception("IT'S DANGEROUS TO GO ALONE" + this.appURI);
+			}
 			if((waitDecision % REQUEST_MIN) == 0) {
 				reserveCore(1);
 			}
 			waitDecision++;
 			if(currentDynamicState.getAvgExecutionTime() == null) {
+				compteur_null++;
 				return;
+			}else {
+				compteur_null = 0;
 			}
 			
 			long timestamp = currentDynamicState.getTimeStamp();
@@ -546,6 +561,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 					w.write(Arrays.asList("ask to remove a vm"));
 
 					ApplicationVMInfo randomVM = this.myVMs.remove(0);
+					this.VMsToBeKilled.put(randomVM.getApplicationVM(), randomVM);
 					this.rdmop.askVirtualMachineDisconnection(randomVM.getApplicationVM());
 				}
 			}
@@ -779,13 +795,25 @@ implements 	RequestDispatcherStateDataConsumerI,
 			this.logMessage(this.controllerURI + " receive a signal to disconnect "+vmURI);
 	
 			ApplicationVMManagementOutboundPort avm = this.avms.remove(vmURI);
+			avm.disconnectWithRequestSubmissioner();
+			avm.desallocateAllCores();
 			avm.doDisconnection();
-			//ComputerControllerManagementOutboutPort ccmop = this.cmops.remove(vmURI);
-		//	ccmop.releaseCore(vmURI);
-			//avm.disconnectWithRequestSubmissioner();
+			ComputerControllerManagementOutboutPort ccmop = this.cmops.remove(vmURI);
+			ccmop.releaseCore(vmURI);
+			Thread.sleep(150);
+			//reallocation
+			int number = ccmop.tryReserveCore(vmURI, 2);
+			
+			if(number == 0 ) {
+				throw new Exception("CHAUD");
+			}
 			//this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
+			ApplicationVMInfo vm = VMsToBeKilled.remove(vmURI);
+			if(vm == null) {
+				throw new Exception("No vm found for this URI");
+			}
 			w.write(Arrays.asList("vm removed!"));
-
+			this.freeApplicationVM.add(vm);
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -883,9 +911,11 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 	
 	private void reserveCore(int nbToAllocate) {
-		assert nbToAllocate > 0;		
-		for(int i = 0; i < this.myVMs.size(); i++) {
-			this.reserveCore(this.myVMs.get(i).getApplicationVM(), nbToAllocate);
+		assert nbToAllocate > 0;
+		synchronized (myVMs) {
+			for(int i = 0; i < this.myVMs.size(); i++) {
+				//this.tryReserveCore(this.myVMs.get(i).getApplicationVM(), nbToAllocate);
+			}
 		}
 	}
 	
@@ -904,8 +934,13 @@ implements 	RequestDispatcherStateDataConsumerI,
 		     this.addCores(entry.getKey());
 		}
 	}
-	
-	private int reserveCore(String vmURI, int nbToReserve) {
+	/**
+	 * Demande de réservation de <code>nbToReserve</code> coeurs pour la machine virtuelle
+	 * @param vmURI  Uri de la AVM
+	 * @param nbToReserve Nombre de coeurs à réserver
+	 * @return Nombre de coeur réserver
+	 */
+	private int tryReserveCore(String vmURI, int nbToReserve) {
 		try {
 			return this.cmops.get(vmURI).tryReserveCore(vmURI, nbToReserve);
 		}catch (Exception e) {

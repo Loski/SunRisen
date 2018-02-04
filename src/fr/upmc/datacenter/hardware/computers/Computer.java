@@ -1154,6 +1154,7 @@ implements	ProcessorStateDataConsumerI,
 	}
 	
 	public void releaseCore(ArrayList<Point> cores) {
+		assert cores != null;
 		while(!cores.isEmpty()) {
 			Point pt = cores.remove(0);
 			this.releaseCore((int) pt.getX(), (int) pt.getY());
