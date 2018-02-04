@@ -18,6 +18,7 @@ import fr.upmc.PriseTheSun.datacenter.hardware.processors.ProcessorsController.C
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.connector.ProcessorControllerManagementConnector;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.interfaces.ProcessorsControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.hardware.processors.ports.ProcessorsControllerManagementOutboundPort;
+import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.AdmissionControllerDynamic;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.connector.AdmissionControllerManagementConnector;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.interfaces.AdmissionControllerManagementI;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementOutboundPort;
@@ -352,7 +353,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 				throw new Exception("IT'S DANGEROUS TO GO ALONE, TAKE A DATA PLEASE" + this.appURI);
 			}
 			if((waitDecision % REQUEST_MIN) == 0) {
-				reserveCore(1);
+				reserveCore(1, currentDynamicState.getVirtualMachineDynamicStates());
 			}
 			waitDecision++;
 			if(currentDynamicState.getAvgExecutionTime() == null) {
@@ -807,42 +808,27 @@ implements 	RequestDispatcherStateDataConsumerI,
 			this.logMessage(this.controllerURI + " receive a signal to disconnect "+vmURI);
 	
 			ApplicationVMManagementOutboundPort avm = this.avms.remove(vmURI);
-			System.out.println("1");
-
 			avm.disconnectWithRequestSubmissioner();
-			System.out.println("2");
-
 			avm.desallocateAllCores();
-			
-			System.out.println("3");
-
 			avm.doDisconnection();
-			System.out.println("4");
 
 			ComputerControllerManagementOutboutPort ccmop = this.cmops.remove(vmURI);
 			ccmop.releaseCore(vmURI);
 			
-			System.out.println("5");
-
-			//Thread.sleep(150);
 			//reallocation
-			int number = ccmop.tryReserveCore(vmURI, 2);
-			System.out.println("6");
+			int number = ccmop.tryReserveCore(vmURI, AdmissionControllerDynamic.NB_CORES, 0);
 			if(number == 0 ) {
-				throw new Exception("CHAUD");
+				throw new Exception("Impossible de rendre la VM au data ring.. Ordinateur plein..");
 			}
 			//this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
 			ApplicationVMInfo vm = VMsToBeKilled.remove(vmURI);
 			if(vm == null) {
 				throw new Exception("No vm found for this URI");
 			}
-			w.write(Arrays.asList("vm removed!"));
 			synchronized (this.freeApplicationVM) {
-				this.logMessage("Vm add");
 				this.freeApplicationVM.add(vm);
 			}
-			vm_deco++;
-			System.err.println("VM readd");
+
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -859,9 +845,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 	public void disconnectController() throws Exception {
 		System.err.println("tentative de déconnexion..");
 		try {
-
-		throw new Exception("issou");
-		/*
 		NodeManagementOutboundPort cmopPrevious = new NodeManagementOutboundPort("cmop-previous-"+this.controllerURI, this);
 		this.addPort(cmopPrevious);
 		cmopPrevious.publishPort();
@@ -914,7 +897,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 		w.write(Arrays.asList("disconnected !!"));
 		System.err.println("Disconnect " + this.controllerURI + " of the ring" );
-*/
+
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -943,11 +926,11 @@ implements 	RequestDispatcherStateDataConsumerI,
 	}
 
 	
-	private void reserveCore(int nbToAllocate) {
+	private void reserveCore(int nbToAllocate, Map<String, ApplicationVMDynamicStateI> vms) {
 		assert nbToAllocate > 0;
 		synchronized (myVMs) {
 			for(int i = 0; i < this.myVMs.size(); i++) {
-				//this.tryReserveCore(this.myVMs.get(i).getApplicationVM(), nbToAllocate);
+				this.tryReserveCore(this.myVMs.get(i).getApplicationVM(), nbToAllocate, vms.get(myVMs.get(i).getApplicationVM()).getAllocatedCoresNumber().length);
 			}
 		}
 	}
@@ -973,9 +956,9 @@ implements 	RequestDispatcherStateDataConsumerI,
 	 * @param nbToReserve Nombre de coeurs à réserver
 	 * @return Nombre de coeur réserver
 	 */
-	private int tryReserveCore(String vmURI, int nbToReserve) {
+	private int tryReserveCore(String vmURI, int nbToReserve, int coreAllocated) {
 		try {
-			return this.cmops.get(vmURI).tryReserveCore(vmURI, nbToReserve);
+			return this.cmops.get(vmURI).tryReserveCore(vmURI, nbToReserve, coreAllocated);
 		}catch (Exception e) {
 			e.printStackTrace();
 			System.err.println(vmURI + "is null?");

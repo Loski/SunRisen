@@ -36,13 +36,23 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 	private static final String ProcessorDynamicStateDataOutboundPortURI = "pds";
 	private static final String ProcessorManagementOutboundPortURI = "pmop";
 	
+
+
 	private ComputerServicesOutboundPort csop;
 	private Map<String, ArrayList<Point>> reservedCore;
 	private ComputerControllerManagementInboundPort ccmip;
-	private int nbProc;
-	private int nbCore;
-	private Set<Integer> possibleFrequencies;
 	
+	private static final int  NUMBER_MAX_CORES = 10;
+	
+	/**
+	 * Controller d'un ordinateur. Ce composant s'assure de la bonne coopération et interdit un comportement trop avide d'une VM
+	 * qui volerait tous les coeurs d'un ordinateur.
+	 * @param ComputerControllerUri
+	 * @param ComputerServicesInboundPortURI
+	 * @param ComputerControllerManagementInboundPort
+	 * @param ComputerStaticStateDataInboundPortURI
+	 * @throws Exception
+	 */
 	public ComputerController(final String ComputerControllerUri, final String ComputerServicesInboundPortURI, final String ComputerControllerManagementInboundPort, String ComputerStaticStateDataInboundPortURI) throws Exception {
 		super(ComputerControllerUri, 1, 1);
 		
@@ -74,11 +84,7 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 				ControlledDataConnector.class.getCanonicalName());
 		
 		ComputerStaticStateI staticState= (ComputerStaticStateI) cssdop.request();
-		this.nbCore = staticState.getNumberOfCoresPerProcessor();
-		this.nbProc = staticState.getNumberOfProcessors();
-		
         cssdop.doDisconnection();
-
 	}
 
 	/**
@@ -106,19 +112,33 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 	}
 	
 	/**
-	 * @see fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagementI#tryReserveCore(java.lang.String, int)
+	 * @see fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagementI#tryReserveCore(java.lang.String, int, int)
 	 */
 	@Override
-	public int tryReserveCore(String vmUri, int nbToReserve) throws Exception {
+	public int tryReserveCore(String vmUri, int nbToReserve, int numberAllocated) throws Exception {
 		assert vmUri != null;
 		assert nbToReserve > 0;
 		
+		//Interdit plus de Max Core allouées à une seule VM si plusieurs VM.
+		if(notAlone()) {
+			nbToReserve =   NUMBER_MAX_CORES - numberAllocated;
+			if(nbToReserve <= 0)
+				return 0;
+		}
 		ArrayList<Point> cores =  csop.reserveCores(nbToReserve);
 		reservedCore.put(vmUri, cores);
 
 		return cores.size();
 	}
 
+	/**
+	 * Informe si une VM est seule sur l'ordinateur
+	 * @return compteurVM() > 1
+	 * @throws Exception 
+	 */
+	private boolean notAlone() throws Exception {
+		return compteurVM() > 1;
+	}
 
 	/**
 	 * @see fr.upmc.PriseTheSun.datacenter.hardware.computer.interfaces.ComputerControllerManagementI#allocateCores(int)
@@ -211,6 +231,11 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 	public int compteurVM() throws Exception {
 		return reservedCore.size();
 	}
+
+	@Override
+	public int compteurCoreReserved(String Vmrui) throws Exception {
+		return reservedCore.get(Vmrui).size();
+	}
 	
-	
+
 }

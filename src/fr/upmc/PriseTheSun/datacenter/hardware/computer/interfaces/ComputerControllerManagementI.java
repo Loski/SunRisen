@@ -6,13 +6,14 @@ import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
 
 public interface ComputerControllerManagementI extends OfferedI, RequiredI {
 	/**
-	 * Réserve nbToReserve coeurs dans le computer pour l'uri de la vm passé en paramètre.
+	 * Réserve nbToReserve coeurs dans le computer pour l'uri de la vm passée en paramètre.
 	 * @param vmURI
 	 * @param nbToReserve Nombre de coeurs à réserver
+	 * @param numberAllocated Nombre de coeurs déjà allouées pour cette VM
 	 * @return Le nombre de coeurs réservés
 	 * @throws Exception
 	 */
-	public int tryReserveCore(String vmURI, int nbToReserve) throws Exception;
+	public int tryReserveCore(String vmURI, int nbToReserve, int numberAllocated) throws Exception;
 	
 	/**
 	 * Libère tous les coeurs réservés de la VM
@@ -30,8 +31,26 @@ public interface ComputerControllerManagementI extends OfferedI, RequiredI {
 	 */
 	public AllocatedCore[] addCores(String vmURI) throws Exception;
 	
+	/**
+	 * Demande l'allocation de numberToAllocated à la VM.
+	 * @param numberToAllocated Nombre de VM a alloué
+	 * @return coeurs alloués
+	 * @throws Exception
+	 */
+	public AllocatedCore[] allocateCores(int numberToAllocated) throws Exception;
 	
-	public AllocatedCore[] allocateCores(int i) throws Exception;
-	
+	/**
+	 * Retoune le nombre de VM enregistré dans le controller de cet ordinateur.
+	 * @return le nombre de vm
+	 * @throws Exception
+	 */
 	public int compteurVM() throws Exception;
+	
+	/**
+	 * Retourne le nombre de coeurs réservés à la VM
+	 * @param Vmrui URI de la VM
+	 * @return nombre de coeurs réservés
+	 * @throws Exception
+	 */
+	public int compteurCoreReserved(String Vmrui) throws Exception;
 }

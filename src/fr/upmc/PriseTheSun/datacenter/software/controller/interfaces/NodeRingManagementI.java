@@ -24,8 +24,9 @@ public interface NodeRingManagementI extends OfferedI,RequiredI{
 	 * @throws Exception
 	 */
 	public void setNextManagementInboundPort(String managementInboundPort ) throws Exception;
+	
 	/**
-	 * 
+	 * Change the previous management inbound port uri
 	 * @param managementInboundPort new uri
 	 * @throws Exception
 	 */
