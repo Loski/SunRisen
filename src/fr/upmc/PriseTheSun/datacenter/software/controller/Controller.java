@@ -448,7 +448,7 @@ implements 	RequestDispatcherStateDataConsumerI,
     
 	/**
 	 * 
-	 *
+	 * Seuil
 	 */
     public enum Threeshold{
     	SLOWER, FASTER, GOOD, VERY_SLOW, VERY_FAST
@@ -458,11 +458,11 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		double speed = time.doubleValue();
 		
-		if(speed>StaticData.TARGET_VERY_SLOW) {
-			if(speed>StaticData.TARGET_SLOW) {
-				return Threeshold.SLOWER;
+		if(speed>StaticData.TARGET_SLOW) {
+			if(speed>StaticData.TARGET_VERY_SLOW) {
+				return Threeshold.VERY_SLOW;
 			}
-			return Threeshold.VERY_SLOW;
+			return Threeshold.SLOWER;
 		}
 		
 		else if(speed<StaticData.TARGET_SLOW && speed>StaticData.TARGET_FAST)
