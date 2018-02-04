@@ -113,6 +113,7 @@ implements
 	protected VMDisconnectionNotificationHandlerOutboundPort vmnobp;
 	
 	protected Object listLock;
+	protected Object queueLock;
 	protected boolean inDisconnectionState = false;
 	
 	protected int nbRequestTerminated = 0;
@@ -205,6 +206,7 @@ implements
 				this.requestVirtualMachineDataMap = new HashMap<>();
 				
 				this.listLock = new Object();
+				this.queueLock = new Object();
 				
 				this.addOfferedInterface(RequestDispatcherIntrospectionI.class) ;
 				this.rdIntrospectionInboundPort =
@@ -242,6 +244,26 @@ implements
 				this.virtualMachineInAction.add(uri);
 				return this.requestVirtualMachineDataMap.get(uri);
 			}
+		}
+	}
+	
+	protected void executeRequestInQueue(VirtualMachineData executor) throws Exception {
+		synchronized(this.queueLock)
+		{
+			RequestI req = this.queue.remove();
+			
+			RequestTimeData timeData = this.timeDataMap.remove(req.getRequestURI());
+			
+			executor.addRequest(req.getRequestURI(),timeData);
+			
+			RequestSubmissionOutboundPort port = executor.getRsobp();
+			port.submitRequestAndNotify(req);
+			
+			if (RequestGenerator.DEBUG_LEVEL >= 1)
+				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),executor.getVmURI(),port.getPortURI()));
+			
+			this.taskExecutedBy.put(req.getRequestURI(),executor);
+			this.virtualMachineInAction.add(executor.getVmURI());
 		}
 	}
 	
@@ -328,19 +350,7 @@ implements
 		}
 		else if(!this.queue.isEmpty())
 		{	
-			RequestI req = this.queue.remove();
-			
-			RequestTimeData timeData = this.timeDataMap.remove(req.getRequestURI());
-			
-			vm.addRequest(req.getRequestURI(),timeData);
-			
-			RequestSubmissionOutboundPort port = vm.getRsobp();
-			port.submitRequestAndNotify(req);
-			
-			if (RequestGenerator.DEBUG_LEVEL >= 1)
-				this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),vm.getVmURI(),port.getPortURI()));
-			
-			this.taskExecutedBy.put(req.getRequestURI(),vm);
+			executeRequestInQueue(vm);
 		}
 		else
 		{
@@ -352,6 +362,7 @@ implements
 		}
 		
 		this.requestNotificationOutboundPort.notifyRequestTermination( r );
+		
 		}catch(Exception e)
 		{
 			e.printStackTrace();
@@ -423,30 +434,14 @@ implements
 	
 		this.requestVirtualMachineDataMap.put(vmURI, vm);
 		
-		synchronized(this.listLock)
+		if(!this.queue.isEmpty())
 		{
-			if(!this.queue.isEmpty())
-			{
-				RequestI req = this.queue.remove();
-				
-				RequestTimeData timeData = this.timeDataMap.remove(req.getRequestURI());
-				
-				vm.addRequest(req.getRequestURI(),timeData);
-				
-				RequestSubmissionOutboundPort port = vm.getRsobp();
-				port.submitRequestAndNotify(req);
-				
-				if (RequestGenerator.DEBUG_LEVEL >= 1) 
-					this.logMessage(String.format("%s transfers %s to %s using %s",this.rdURI,req.getRequestURI(),vm.getVmURI(),port.getPortURI()));
-				
-				this.taskExecutedBy.put(req.getRequestURI(),vm);
-				this.virtualMachineInAction.add(vmURI);
-			}
-			else
-			{
-				this.virtualMachineAvailable.add(vmURI);
-			}
+			executeRequestInQueue(vm);
 		}
+		else
+		{
+			this.virtualMachineAvailable.add(vmURI);
+		}	
 	}
 
 	protected void disconnectVirtualMachine(VirtualMachineData vmData) throws Exception
