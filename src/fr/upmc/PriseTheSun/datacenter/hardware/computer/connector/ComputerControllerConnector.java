@@ -7,8 +7,8 @@ import fr.upmc.datacenter.hardware.computers.Computer.AllocatedCore;
 public class ComputerControllerConnector extends AbstractConnector implements ComputerControllerManagementI {
 
 	@Override
-	public int tryReserveCore(String vmUri, int nbToReserve) throws Exception {
-		return ((ComputerControllerManagementI)this.offering).tryReserveCore(vmUri, nbToReserve);
+	public int tryReserveCore(String vmUri, int nbToReserve, int numberAllocated) throws Exception {
+		return ((ComputerControllerManagementI)this.offering).tryReserveCore(vmUri, nbToReserve, numberAllocated);
 	}
 
 	@Override

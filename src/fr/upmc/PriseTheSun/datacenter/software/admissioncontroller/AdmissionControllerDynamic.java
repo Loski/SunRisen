@@ -147,8 +147,8 @@ implements 	ApplicationSubmissionI,
 	
 	Object lockController = new Object();
 	
-	/**?ombre de coeurs alloués par défaut à une VM */
-	protected static final int NB_CORES = 5;
+	/**nombre de coeurs alloués par défaut à une VM */
+	public static final int NB_CORES = 5;
 	
 	/**Min vm dans l'arrayLMist pour accepter des applications **/
 	private static final int MIN_VM_FOR_SUB_APPLICATION = 15;
@@ -184,6 +184,8 @@ implements 	ApplicationSubmissionI,
 	
 	private HashMap<String,Class<?>> submissionInterfaces;
 
+	
+	
 	/*protected static final String RequestDispatcher_JVM_URI = "controller" ;
 	protected static final String Application_VM_JVM_URI = "controller";*/
 	/**
@@ -261,6 +263,7 @@ implements 	ApplicationSubmissionI,
 		this.submissionInterfaces = new HashMap<>();
 		askToBeDestroy = 0;
 		w = new Writter(this.admissionControllerURI+ ".csv");
+		w.write(Arrays.asList("Nombre de VMs", "A détruire", "A ajouter"));
 	}
 
 	/**
@@ -639,7 +642,7 @@ implements 	ApplicationSubmissionI,
 			applicationVM[3] = ccmopUri +"rnobpVM-"+nbVM;
 			applicationVM[4] = ccmopUri + "avmobp-"+nbVM;
 			
-			int core = this.cmops.get(ccmopUri).tryReserveCore(applicationVM[0], 5);
+			int core = this.cmops.get(ccmopUri).tryReserveCore(applicationVM[0], 5, 0);
 			if(core == 0) {
 				throw new Exception("Computer can't reserve a new VM");
 			}
@@ -686,13 +689,15 @@ implements 	ApplicationSubmissionI,
 				}else {
 				synchronized (vmURis) {
 					if(this.vmURis.contains(vm.getApplicationVM())) {
+						int tocreate = 0;
 						int numberVmInRing = this.vmURis.size();
 						if(numberVmInRing < NUMBER_MIN_VM) {
-							addFreeVM(Integer.min(NUMBER_MIN_VM - numberVmInRing + 4, NUMBER_MAX_VM));
+							tocreate = Integer.min(NUMBER_MIN_VM - numberVmInRing + 4, NUMBER_MAX_VM);
+							addFreeVM(tocreate);
 						}else if(numberVmInRing > NUMBER_MAX_VM){
 							askToBeDestroy = numberVmInRing - NUMBER_MAX_VM;
 						}
-						w.write(Arrays.asList("Nombre de vm " + numberVmInRing, "A détruire : " + askToBeDestroy));
+						w.write(Arrays.asList(""+numberVmInRing, ""+askToBeDestroy, ""+tocreate));
 
 						this.vmURis.clear();
 					}else {				

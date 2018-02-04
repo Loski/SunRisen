@@ -5,6 +5,10 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 
+/**
+ * Utilitaire de création de fichier CVS
+ *
+ */
 public class CVSUtils {
 
     private static final char DEFAULT_SEPARATOR = ';';

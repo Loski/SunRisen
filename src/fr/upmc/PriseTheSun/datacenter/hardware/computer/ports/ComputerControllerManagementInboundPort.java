@@ -28,14 +28,14 @@ public class ComputerControllerManagementInboundPort extends AbstractInboundPort
 		}
 
 	@Override
-	public int tryReserveCore(final String vmUri, final int nbToReserve) throws Exception {
+	public int tryReserveCore(final String vmUri, final int nbToReserve, int numberAllocated) throws Exception {
 		final ComputerControllerManagementI ccm = ( ComputerControllerManagementI ) this.owner;
 
 		 return this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Integer>() {
 					@Override
 					public Integer call() throws Exception {
-						return ccm.tryReserveCore(vmUri, nbToReserve);
+						return ccm.tryReserveCore(vmUri, nbToReserve, numberAllocated);
 					}
 				}
 		);

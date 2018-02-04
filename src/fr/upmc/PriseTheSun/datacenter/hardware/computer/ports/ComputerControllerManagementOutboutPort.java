@@ -24,8 +24,8 @@ public class ComputerControllerManagementOutboutPort extends AbstractOutboundPor
 		}
 
 	@Override
-	public int tryReserveCore(String vmUri, int nbToReserve) throws Exception {
-		return ((ComputerControllerManagementI)this.connector).tryReserveCore(vmUri, nbToReserve);
+	public int tryReserveCore(String vmUri, int nbToReserve, int numberAllocated) throws Exception {
+		return ((ComputerControllerManagementI)this.connector).tryReserveCore(vmUri, nbToReserve, numberAllocated);
 	}
 
 	@Override
