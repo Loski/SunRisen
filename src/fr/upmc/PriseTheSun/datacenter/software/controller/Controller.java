@@ -446,25 +446,36 @@ implements 	RequestDispatcherStateDataConsumerI,
         super.shutdown();
     }
     
+	/**
+	 * 
+	 *
+	 */
     public enum Threeshold{
-    	SLOWER, FASTER, GOOD, VERY_SLOWER, VERY_FASTER
+    	SLOWER, FASTER, GOOD, VERY_SLOW, VERY_FAST
     }
     
 	public Threeshold getThreeshold(Double time){
 		
 		double speed = time.doubleValue();
 		
-		if(speed>StaticData.TARGET_SLOW)
-			return Threeshold.SLOWER;
+		if(speed>StaticData.TARGET_VERY_SLOW) {
+			if(speed>StaticData.TARGET_SLOW) {
+				return Threeshold.SLOWER;
+			}
+			return Threeshold.VERY_SLOW;
+		}
+		
 		else if(speed<StaticData.TARGET_SLOW && speed>StaticData.TARGET_FAST)
 		{
 			return Threeshold.GOOD;
 		}
-		else if(speed<StaticData.TARGET_FAST) {
-			return Threeshold.FASTER;
-		}else {
-			return null;
+		else if(speed < StaticData.TARGET_FAST ) {
+			if(speed < StaticData.TARGET_VERY_FAST){
+				return Threeshold.VERY_FAST;
+			}
+			return Threeshold.VERY_FAST;
 		}
+			return null;
 	}
 
 	
@@ -482,7 +493,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 		try {
 			switch(th){
-			case VERY_SLOWER:
+			case VERY_SLOW:
 				tooSlowCase(vms, 5);
 			case SLOWER :
 				tooSlowCase(vms, 2);
@@ -490,7 +501,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			case FASTER :
 				tooFastCase(vms, 2);
 				break;
-			case VERY_FASTER:
+			case VERY_FAST:
 				tooFastCase(vms, 5);
 				break;
 			case GOOD :
@@ -967,11 +978,10 @@ implements 	RequestDispatcherStateDataConsumerI,
 	 * @return Nombre de coeur réserver
 	 */
 	private int tryReserveCore(String vmURI, int nbToReserve, int coreAllocated) {
+		assert vmURI != null;
 		try {
 			return this.cmops.get(vmURI).tryReserveCore(vmURI, nbToReserve, coreAllocated);
 		}catch (Exception e) {
-			e.printStackTrace();
-			System.err.println(vmURI + "is null?");
 			return 0;
 		}
 	}
