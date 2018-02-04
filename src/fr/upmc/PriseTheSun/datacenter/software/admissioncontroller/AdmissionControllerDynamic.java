@@ -190,7 +190,7 @@ implements 	ApplicationSubmissionI,
 	
 	private HashMap<String,Class<?>> submissionInterfaces;
 
-	
+	private String portTControllerJVMURI;	
 	
 	/*protected static final String RequestDispatcher_JVM_URI = "controller" ;
 	protected static final String Application_VM_JVM_URI = "controller";*/
@@ -238,10 +238,8 @@ implements 	ApplicationSubmissionI,
 		this.portTControllerJVM = new DynamicComponentCreationOutboundPort(this);
 		this.portTControllerJVM.publishPort();
 		this.addPort(this.portTControllerJVM);
-		
-		this.portTControllerJVM.doConnection(					
-				Controller_JVM_URI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
-				DynamicComponentCreationConnector.class.getCanonicalName());
+	
+		this.portTControllerJVMURI = Controller_JVM_URI;
 		
 		this.AdmissionControllerDataRingInboundUri = this.admissionControllerURI +"-"+ControllerDataRingInboundPortURI;
 		this.AdmissionControllerDataRingOutboundUri = this.admissionControllerURI +"-"+ControllerDataRingOutboundPortURI;
@@ -278,6 +276,14 @@ implements 	ApplicationSubmissionI,
 	@Override
 	public void start() throws ComponentStartException {
 		super.start();
+		try {
+			this.portTControllerJVM.doConnection(					
+					this.portTControllerJVMURI + AbstractCVM.DCC_INBOUNDPORT_URI_SUFFIX,
+					DynamicComponentCreationConnector.class.getCanonicalName());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	 
 

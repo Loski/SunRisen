@@ -78,16 +78,14 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
      * @throws Exception
      */
 	public ApplicationProvider(String apURI,  String applicationSubmissionInboundPortURI, String applicationSubmissionOutboundPortURI, String applicationManagementInboundPort)  throws Exception{
+		
 		super(apURI,1, 1);
-        
 		
 		rgmipUri = apURI + "-rgmip";
         rsopUri = apURI + "-rsop";
         rnipUri = apURI + "-rnip";
 		rgUri = apURI + "-rg";
         rgmopUri = apURI + "-rgmop";
-        
-        
 
         //Send a application to the controller.
         this.apURI = apURI;
@@ -95,13 +93,12 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
         this.asop = new ApplicationSubmissionOutboundPort( applicationSubmissionOutboundPortURI , this );
         this.addPort( asop );
         this.asop.publishPort();
-
         
         //send HERE
         this.addOfferedInterface( ApplicationProviderManagementI.class );
         this.apmip = new ApplicationProviderManagementInboundPort(applicationManagementInboundPort, ApplicationProviderManagementI.class, this);
         this.addPort( this.apmip );
-        this.apmip.localPublishPort();
+        this.apmip.publishPort();
         this.asop.doConnection(applicationSubmissionInboundPortURI, ApplicationSubmissionConnector.class.getCanonicalName());    
 	}
 	
