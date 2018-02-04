@@ -60,8 +60,14 @@ import fr.upmc.datacenter.software.applicationvm.ports.ApplicationVMManagementOu
 
 
 /**
+ * Un <code>Controller</code> est responsable de vérifier si les requêtes sont effectués dans un temps normal indiqué dans un temps convenable
+ * indiqué dans <code>StaticData</code> selon différent seuil. 
  * 
+ * Le <code>Controller</code> observe les données de <code>RequestDispatcher</code>. Il prends une action toutes les <code>REQUEST_MIN</code>.
+ * Enfin, il lisse les données de deux manières : lissage exponentielle et suppression des données périmées aka fait depuis <code>StaticData.minute</code>.
+ *De plus, il implémente l'interface <code>NodeRingManagementI</code> pour implémenter le comportement d'un node d'un data ring network.
  * @author Maxime Lavaste
+ * 
  *
  */
 public class Controller extends AbstractComponent 
@@ -95,15 +101,15 @@ implements 	RequestDispatcherStateDataConsumerI,
 	private List<ApplicationVMInfo> freeApplicationVM;
 	 /** VMs connectées au dispatcher pour résoudre les requêtes **/
 	private List<ApplicationVMInfo> myVMs;
-	
-	
-	
-	/** Ring network port **/
+		
+	/** Ring network outbound port **/
 	private RingNetworkDynamicStateDataOutboundPort rdsdop;
+	/** Ring network inbound port **/
 	private RingNetworkDynamicStateDataInboundPort rdsdip;
 	
-	/** Ring Network Management port of previous and next nodes**/
+	/** Ring Network Management port of next node**/
 	private String controllerManagementNextInboundPort;
+	/** Ring Network Management port of previous node**/
 	private String controllerManagementPreviousInboundPort;
 
 
@@ -123,7 +129,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	private VMDisconnectionNotificationHandlerInboundPort vmnibp;
 	private String nextRingDynamicStateDataInboundPort;
 	
-	public final static int PUSH_INTERVAL = 500;
+	public final static int PUSH_INTERVAL = 100;
 	public final static int REQUEST_MIN = PUSH_INTERVAL/100;
 	
 	static class StaticData {
@@ -139,7 +145,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		public static final double TARGET_FAST = AVERAGE_TARGET * FASTER_PERCENT_LIMIT;
 		public static final double TARGET_VERY_FAST = AVERAGE_TARGET * VERY_FAST_PERCENT_LIMIT;
 		public static final long minute = 60000l;
-		public static int DISPATCHER_PUSH_INTERVAL=5000;
 		public static final int NB_VM_RESERVED = 2;
 		//Max core
 		public static int MAX_ALLOCATION=25;
@@ -331,7 +336,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		try {
 			if((waitDecision % REQUEST_MIN) == 0) {
-				reserveCore(1);
+				//reserveCore(1);
 			}
 			waitDecision++;
 			if(currentDynamicState.getAvgExecutionTime() == null) {
@@ -356,7 +361,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 				//On redonne les VMs au prochain controller.
 				synchronized (o) {
 					while(!vmReserved.isEmpty()) {
-							freeApplicationVM.add(vmReserved.remove(0));
+						freeApplicationVM.add(vmReserved.remove(0));
 					}
 				}
 			}
@@ -415,7 +420,7 @@ implements 	RequestDispatcherStateDataConsumerI,
     }
     
     public enum Threeshold{
-    	SLOWER, FASTER, GOOD
+    	SLOWER, FASTER, GOOD, VERY_SLOWER, VERY_FASTER
     }
     
 	public Threeshold getThreeshold(Double time){
@@ -449,7 +454,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		try {
 			switch(th){
 			case SLOWER :
-
 				tooSlowCase(vms);
 				//this.acmop.addCores(null, randomVM.getApplicationVMURI(), 1);
 				break;
@@ -493,24 +497,24 @@ implements 	RequestDispatcherStateDataConsumerI,
 	 * @throws Exception 
 	 */
 	private void tooSlowCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
-		
-		//Add a vm
-		/*if(!vmReserved.isEmpty())
-			this.addVM(vmReserved.remove(0));
-		*/
-		ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
-		
-		if(!vmReserved.isEmpty()) {
-			this.addVm(vmReserved.remove(0));
-		}
-		//Try to up frequency
-		//int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.HIGHER, randomVM);
-		System.err.println("je passe par lower mdr");
+		try {
+			//Add a vm
+			if(!vmReserved.isEmpty())
+				this.addVm(vmReserved.remove(0));
+			
+			ApplicationVMDynamicStateI randomVM = vms.get(vms.keySet().iterator().next());
+			
 
-		//Ajoute les cores
-		this.addCores(vms);
-		
-		//System.err.println("!!!!!!!!! " +this.cmops.get(randomVM.getApplicationVMURI()).reserveCore(randomVM.getApplicationVMURI()));
+			//Try to up frequency
+			//int nbCoreFrequencyChange = setCoreFrequency(CoreAsk.HIGHER, randomVM);
+			System.err.println("je passe par lower mdr");
+	
+			//Ajoute les cores
+			//this.addCores(vms);
+			}catch (Exception e) {
+				e.printStackTrace();
+			}
+			//System.err.println("!!!!!!!!! " +this.cmops.get(randomVM.getApplicationVMURI()).reserveCore(randomVM.getApplicationVMURI()));
 	}
 
 	/**
@@ -521,19 +525,27 @@ implements 	RequestDispatcherStateDataConsumerI,
 	 * @throws Exception 
 	 */
 	private void tooFastCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
-		
-		boolean canRemoveVM = vms.size() > 1;
-		if(canRemoveVM) {
-			ApplicationVMInfo randomVM = this.myVMs.remove(0);
-			this.rdmop.askVirtualMachineDisconnection(randomVM.getApplicationVM());
+		try {
+			synchronized (o) {
+				boolean canRemoveVM = myVMs.size() > 1;
+				if(canRemoveVM) {
+					this.rddsdop.stopPushing();
+					ApplicationVMInfo randomVM = this.myVMs.remove(0);
+					this.rdmop.askVirtualMachineDisconnection(randomVM.getApplicationVM());
+				}
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
 		}
+	
+
 		
-		for (Entry<String, ApplicationVMDynamicStateI> entry : vms.entrySet())
+	/*	for (Entry<String, ApplicationVMDynamicStateI> entry : vms.entrySet())
 		{
 			if(entry.getValue().getAllocatedCoresNumber().length > StaticData.MIN_ALLOCATED_CORE) {
 				this.avms.get(entry.getKey()).desallocateCores(1);
 			}
-		}
+		}*/
 
 		System.err.println("je passe par faster mdr");		
 	}
@@ -703,7 +715,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 						ApplicationVMManagementConnector.class.getCanonicalName());
 			rdmop.connectVirtualMachine(vm.getApplicationVM(), vm.getSubmissionInboundPortUri());
 			avmPort.connectWithRequestSubmissioner(rdUri, requestDispatcherNotificationInboundPort);
-			this.myVMs.add(vm);
 			
 			ComputerControllerManagementOutboutPort ccmop = cmops.get(vm.getApplicationVM());
 			if(ccmop == null) {
@@ -714,6 +725,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 							vm.getComputerManagementInboundPortURI(),
 							ComputerControllerConnector.class.getCanonicalName());
 			}
+
 			AllocatedCore[] cores = ccmop.addCores(vm.getApplicationVM());
 			if(cores == null || cores.length == 0) {
 				throw new Exception("No cores found..");
@@ -721,6 +733,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 			avmPort.allocateCores(cores);
 			this.cmops.put(vm.getApplicationVM(), ccmop);
 			this.avms.put(vm.getApplicationVM(), avmPort);
+			this.myVMs.add(vm);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -732,22 +746,16 @@ implements 	RequestDispatcherStateDataConsumerI,
 		assert vmURI != null;
 		this.logMessage(this.controllerURI + " receive a signal to disconnect "+vmURI);
 		ApplicationVMManagementOutboundPort avm = this.avms.remove(vmURI);
-		ComputerControllerManagementOutboutPort ccmop = this.cmops.remove(vmURI);
-		ccmop.releaseCore(vmURI);
+		//ComputerControllerManagementOutboutPort ccmop = this.cmops.remove(vmURI);
+	//	ccmop.releaseCore(vmURI);
 		avm.disconnectWithRequestSubmissioner();
-		avm.desallocateAllCores();
+		this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
+	//	avm.desallocateAllCores();
 	//	freeApplicationVM.add(vm);		
 	}
 	
 	
-	private int findVm(String vmURI) {
-		for(int i = 0; i < this.myVMs.size(); i++) {
-			if(myVMs.get(i).getApplicationVM().equals(vmURI)) {
-				return i;
-			}
-		}
-		return -1;
-	}
+
 
 	/**
 	 * @see fr.upmc.PriseTheSun.datacenter.software.controller.interfaces.VMDisconnectionNotificationHandlerI#disconnectController()
@@ -772,8 +780,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		// On raccorde les ports de managements
 		cmopPrevious.setNextManagementInboundPort(controllerManagementNextInboundPort);
 
-		
-		
 		NodeManagementOutboundPort cmopNext = new NodeManagementOutboundPort("cmop-next-"+this.controllerURI, this);
 		this.addPort(cmopNext);
 		cmopNext.publishPort();
@@ -786,9 +792,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		cmopPrevious.bindSendingDataUri(this.nextRingDynamicStateDataInboundPort);
 		cmopPrevious.startPushing();
-		
-		
-
 		
 		if(cmopNext.connected()) {
 			cmopNext.doDisconnection();
@@ -839,7 +842,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		this.startUnlimitedPushing(RingDynamicState.RING_INTERVAL_TIME);
 	}
 
-	
+	/*
 	private void reserveCore(int nbToAllocate) {
 		assert nbToAllocate > 0;		
 		for(int i = 0; i < this.myVMs.size(); i++) {
@@ -897,7 +900,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			e.printStackTrace();
 		}
 	}
-
+*/
 	@Override
 	public void doDisconnectionInboundPort() throws Exception {
 		if(this.rdsdip.connected()) {
