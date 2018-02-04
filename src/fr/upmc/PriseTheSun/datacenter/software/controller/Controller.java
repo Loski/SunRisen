@@ -364,6 +364,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 						freeApplicationVM.add(vmReserved.remove(0));
 					}
 				}
+				
+				System.err.println(waitDecision);
 			}
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -451,6 +453,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 		}
 
 		Threeshold th = getThreeshold(average);
+		w.write(Arrays.asList("ASK", ""+average, ((Integer)vms.size()).toString(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms),  ""+currentDynamicState.getNbRequestReceived(), ""+currentDynamicState.getNbRequestTerminated()));
+
 		try {
 			switch(th){
 			case SLOWER :
@@ -472,7 +476,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		//Release les cores
 		//releaseCore(vms);
-		w.write(Arrays.asList(""+average, ((Integer)vms.size()).toString(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms),  ""+currentDynamicState.getNbRequestReceived(), ""+currentDynamicState.getNbRequestTerminated()));
+		w.write(Arrays.asList("DO :", ""+average, ((Integer)vms.size()).toString(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms),  ""+currentDynamicState.getNbRequestReceived(), ""+currentDynamicState.getNbRequestTerminated()));
 	}
 
 	/**
@@ -526,10 +530,10 @@ implements 	RequestDispatcherStateDataConsumerI,
 	 */
 	private void tooFastCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		try {
-			synchronized (o) {
+			synchronized (this) {
 				boolean canRemoveVM = myVMs.size() > 1;
 				if(canRemoveVM) {
-					this.rddsdop.stopPushing();
+					//this.rddsdop.stopPushing();
 					ApplicationVMInfo randomVM = this.myVMs.remove(0);
 					this.rdmop.askVirtualMachineDisconnection(randomVM.getApplicationVM());
 				}
@@ -740,7 +744,9 @@ implements 	RequestDispatcherStateDataConsumerI,
 			
 			this.cmops.put(vm.getApplicationVM(), ccmop);
 			this.avms.put(vm.getApplicationVM(), avmPort);
-			this.myVMs.add(vm);
+			synchronized (this) {
+				this.myVMs.add(vm);
+			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -752,12 +758,17 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		assert vmURI != null;
 		try {
-		this.logMessage(this.controllerURI + " receive a signal to disconnect "+vmURI);
-		ApplicationVMManagementOutboundPort avm = this.avms.remove(vmURI);
-		//ComputerControllerManagementOutboutPort ccmop = this.cmops.remove(vmURI);
-	//	ccmop.releaseCore(vmURI);
-		//avm.disconnectWithRequestSubmissioner();
-	//	this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
+			this.logMessage(this.controllerURI + " receive a signal to disconnect "+vmURI);
+			w.write(Arrays.asList("disconnected ISSOU!!"));
+	
+			ApplicationVMManagementOutboundPort avm = this.avms.remove(vmURI);
+			avm.doDisconnection();
+			//ComputerControllerManagementOutboutPort ccmop = this.cmops.remove(vmURI);
+		//	ccmop.releaseCore(vmURI);
+			//avm.disconnectWithRequestSubmissioner();
+			//this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
+			w.write(Arrays.asList("disconnected 2!!"));
+
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
