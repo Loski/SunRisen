@@ -313,7 +313,7 @@ implements
 		
 		this.nbRequestReceived++;
 		
-		VirtualMachineData vm = findAvaibleVM();
+		VirtualMachineData vm = findAvailableVM();
 		
 		if(vm==null)
 		{
@@ -344,7 +344,7 @@ implements
 
 		this.nbRequestReceived++;
 		
-		VirtualMachineData vm = findAvaibleVM();
+		VirtualMachineData vm = findAvailableVM();
 		
 		if(vm==null)
 		{
@@ -447,7 +447,7 @@ implements
 	 * @return	a VirtualMachineData reference or null.
 	 * @throws Exception
 	 */
-	protected VirtualMachineData findAvaibleVM() throws Exception
+	protected VirtualMachineData findAvailableVM() throws Exception
 	{		
 		synchronized(this.listLock)
 		{			
@@ -511,7 +511,19 @@ implements
 			this.virtualMachineNotAvailable.add(executor.getVmURI());
 	}
 	
-
+	/**
+	 * disconnect a virtual machine
+	 * 
+	 * <p><strong>Contract</strong></p>
+	 * 
+	 * <pre>
+	 * pre	true			// no precondition.
+	 * post	true			// no postcondition.
+	 * </pre>
+	 *
+	 * @param vmData		the virtual machine to disconnect.
+	 * @throws Exception
+	 */
 	protected void disconnectVirtualMachine(VirtualMachineData vmData) throws Exception
 	{
 		synchronized (this.listLock) {
