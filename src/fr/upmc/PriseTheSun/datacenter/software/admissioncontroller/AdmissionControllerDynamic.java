@@ -151,7 +151,11 @@ implements 	ApplicationSubmissionI,
 
 	private static final int MIN_VM = 15;
 
-	
+	private static final int NUMBER_MIN_VM = 10;
+	private static final int NUMBER_MAX_VM = 20;
+
+	/**Nombre de VM à détruire dans le network ring */
+	private int askToBeDestroy;
 
 	private DynamicComponentCreationOutboundPort portTControllerJVM;
 	
@@ -247,7 +251,7 @@ implements 	ApplicationSubmissionI,
 		this.VMforNewApplication = new ArrayList<>();
 		this.vmURis = new HashSet<>();
 		this.submissionInterfaces = new HashMap<>();
-		
+		askToBeDestroy = 0;
 		w = new Writter(this.admissionControllerURI+ ".csv");
 	}
 
@@ -675,10 +679,20 @@ implements 	ApplicationSubmissionI,
 			throws Exception {
 			ApplicationVMInfo vm = currentDynamicState.getApplicationVMInfo();
 			if(vm != null) {
+				if(askToBeDestroy > 0) {
+					askToBeDestroy--;
+					this.cmops.get(vm.getComputerManagementInboundPortURI()).releaseCore(vm.getApplicationVM());
+				}else {
 				synchronized (vmURis) {
 					if(this.vmURis.contains(vm.getApplicationVM())) {
 						int numberVmInRing = this.vmURis.size();
-						w.write(Arrays.asList("Nombre de vm " + numberVmInRing));
+						if(numberVmInRing < NUMBER_MIN_VM) {
+							addFreeVM();
+						}else if(numberVmInRing > NUMBER_MAX_VM){
+							askToBeDestroy = Integer.max(numberVmInRing - NUMBER_MAX_VM  - 5, NUMBER_MIN_VM);
+						}
+						w.write(Arrays.asList("Nombre de vm " + numberVmInRing, "A détruire : " + askToBeDestroy));
+
 						this.vmURis.clear();
 					}else {				
 						this.vmURis.add(vm.getApplicationVM());
@@ -694,8 +708,13 @@ implements 	ApplicationSubmissionI,
 					}
 				}
 			}
-
 		}
+	}
+
+	private void addFreeVM() {
+		// TODO Auto-generated method stub
+		
+	}
 
 	public void	sendDynamicState() throws Exception
 	{
