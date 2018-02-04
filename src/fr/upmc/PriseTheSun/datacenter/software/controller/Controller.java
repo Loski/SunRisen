@@ -151,6 +151,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 		public static final int NB_VM_RESERVED = 2;
 
 		public static final int MAX_NULL = 60;
+
+		public static final int MAX_VM = 8;
 		//Max core
 		public static int MAX_ALLOCATION=25;
 		
@@ -517,9 +519,9 @@ implements 	RequestDispatcherStateDataConsumerI,
 	private void tooSlowCase(Map<String, ApplicationVMDynamicStateI > vms) throws Exception {
 		try {
 			//Add a vm
-			
-			synchronized (this) {
-				if(!vmReserved.isEmpty())
+			int tailleVm = this.myVMs.size();
+			synchronized (this.vmReserved) {
+				if(tailleVm < StaticData.MAX_VM && !vmReserved.isEmpty())
 					this.addVm(vmReserved.remove(0));
 			}
 			
@@ -613,11 +615,13 @@ implements 	RequestDispatcherStateDataConsumerI,
 			//System.out.println(vm + controllerDataRingOutboundPortURI);
 
 			if(vm != null) {
-				if(vmReserved.size() < StaticData.NB_VM_RESERVED /*&& (waitDecision % REQUEST_MIN == 1)*/) {
+				if(vmReserved.size() < 0 /*&& (waitDecision % REQUEST_MIN == 1)*/) {
 					vmReserved.add(vm);
 				}
 				else {
-					freeApplicationVM.add(vm);
+					synchronized (freeApplicationVM) {
+						freeApplicationVM.add(vm);
+					}
 				}
 			}
 		}
@@ -813,7 +817,10 @@ implements 	RequestDispatcherStateDataConsumerI,
 				throw new Exception("No vm found for this URI");
 			}
 			w.write(Arrays.asList("vm removed!"));
-			this.freeApplicationVM.add(vm);
+			synchronized (this.freeApplicationVM) {
+				this.freeApplicationVM.add(vm);
+			}
+			System.err.println("VM readd");
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -840,10 +847,13 @@ implements 	RequestDispatcherStateDataConsumerI,
 		// On arrête le push 
 		cmopPrevious.stopPushing();
 
-		//On attends jusqu'a ce qu'il ne reste plus de vm.
-		while(!this.freeApplicationVM.isEmpty()) {
-			Thread.sleep(300);
+		synchronized (this.freeApplicationVM) {
+			while(!this.freeApplicationVM.isEmpty()) {
+				Thread.sleep(300);
+			}
 		}
+		//On attends jusqu'a ce qu'il ne reste plus de vm.
+		
 		// On raccorde les ports de managements
 		cmopPrevious.setNextManagementInboundPort(controllerManagementNextInboundPort);
 
