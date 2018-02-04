@@ -624,7 +624,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		//System.out.println(vm + controllerDataRingOutboundPortURI);
 
 		if(vm != null) {
-			System.out.println(vm);
 				if(vmReserved.size() < 2 /*&& (waitDecision % REQUEST_MIN == 1)*/) {
 					synchronized(vmReserved){
 						vmReserved.add(vm);

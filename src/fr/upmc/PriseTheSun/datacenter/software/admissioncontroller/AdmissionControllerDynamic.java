@@ -146,13 +146,22 @@ implements 	ApplicationSubmissionI,
 
 	
 	Object lockController = new Object();
-	protected static final int NB_CORES = 2;
 	
-
-	private static final int MIN_VM = 15;
-
+	/**?ombre de coeurs alloués par défaut à une VM */
+	protected static final int NB_CORES = 5;
+	
+	/**Min vm dans l'arrayLMist pour accepter des applications **/
+	private static final int MIN_VM_FOR_SUB_APPLICATION = 15;
+	
+	
+	/** Nombre minimum de VM dans le ring.. */
 	private static final int NUMBER_MIN_VM = 10;
+	
+	/** Nombre maximum de VM dans le ring */
 	private static final int NUMBER_MAX_VM = 20;
+	
+	/**Nombre de VM a ajouté lors des links d'ordinateur */
+	private int initialisation  = MIN_VM_FOR_SUB_APPLICATION + NUMBER_MIN_VM;
 
 	/**Nombre de VM à détruire dans le network ring */
 	private int askToBeDestroy;
@@ -175,7 +184,6 @@ implements 	ApplicationSubmissionI,
 	
 	private HashMap<String,Class<?>> submissionInterfaces;
 
-	
 	/*protected static final String RequestDispatcher_JVM_URI = "controller" ;
 	protected static final String Application_VM_JVM_URI = "controller";*/
 	/**
@@ -565,18 +573,7 @@ implements 	ApplicationSubmissionI,
 		String ComputerStaticStateDataInboundPortURI, String ComputerDynamicStateDataInboundPortURI)
 		throws Exception {
 	
-		String cssopUri = ComputerStaticStateDataOutboundPortURI + "_" +  this.cssdops.size();
-		ComputerStaticStateDataOutboundPort cssdop = new ComputerStaticStateDataOutboundPort(cssopUri, this, computerURI);
-		this.addPort(cssdop);
-		cssdop.publishPort();
-		cssdop.doConnection(
-				ComputerStaticStateDataInboundPortURI,
-				ControlledDataConnector.class.getCanonicalName());
-		
-		ComputerStaticStateI staticState= (ComputerStaticStateI) cssdop.request();
-		int nbCores = staticState.getNumberOfCoresPerProcessor();
-		int nbProc = staticState.getNumberOfProcessors();
-		this.cssdops.add(cssdop);
+
 
 	/*	ArrayList<String> processorsURIs = new ArrayList<String>();
         ArrayList<String> pmipURIs = new ArrayList<String>();
@@ -593,7 +590,6 @@ implements 	ApplicationSubmissionI,
             pssdURIs.add(pPortsList.get(Processor.ProcessorPortTypes.STATIC_STATE));
             pdsdURIs.add(pPortsList.get(Processor.ProcessorPortTypes.DYNAMIC_STATE));
         }*/
-        cssdop.doDisconnection();
         String computerController[] = new String[4];
         computerController[0] = ComputerControllerManagementUri + cmops.size();						
 		computerController[1] = ComputerServicesInboundPortURI;
@@ -613,18 +609,24 @@ implements 	ApplicationSubmissionI,
 				ComputerControllerConnector.class.getCanonicalName());
 		this.cmops.put(ccmopUri, ccmop);
 			
-		for(int i = 0; i < nbProc; i++) {
-			//this.processorController.bindProcessor(processorsURIs.get(i), "ACHANGER", pmipURIs.get(i), pssdURIs.get(i), pdsdURIs.get(i));
-			createVM(computerController[2], ccmopUri);
+		if(initialisation > 0) {
+			initialisation--;
+			createVM(ccmopUri);
 		}
-		
 	}
 	
-	private synchronized String createVM(String computerManagementInboundPortURI, String ccmopUri) throws Exception {
+	/**
+	 * Créé une AVM dynamiquement et l'enregistre dans la CVM.
+	 * On lui réserve ensuite 5 coeurs a allouée dans le futur. 
+	 * @param ccmopUri URI du controller de l'ordinateur.
+	 * @return
+	 * @throws Exception Lance une exception si l'ordinateur n'a pas pu réserver des coeurs pour la VM.
+	 */
+	private String createVM(String ccmopUri) throws Exception {
 		
 		String applicationVM[] = new String[5];
-		ComputerControllerManagementI cmop = this.cmops.get(ccmopUri);
-		
+		ComputerControllerManagementOutboutPort cmop = this.cmops.get(ccmopUri);
+		String computerManagementInboundPortURI;
 		synchronized (cmop) {
 			int nbVM = cmop.compteurVM();
 			
@@ -637,6 +639,11 @@ implements 	ApplicationSubmissionI,
 			applicationVM[3] = ccmopUri +"rnobpVM-"+nbVM;
 			applicationVM[4] = ccmopUri + "avmobp-"+nbVM;
 			
+			int core = this.cmops.get(ccmopUri).tryReserveCore(applicationVM[0], 5);
+			if(core == 0) {
+				throw new Exception("Computer can't reserve a new VM");
+			}
+			
 			this.portTControllerJVM.createComponent(
 					ApplicationVM.class.getCanonicalName(),
 					new Object[] {
@@ -646,21 +653,15 @@ implements 	ApplicationSubmissionI,
 							applicationVM[3]
 			});
 				
-				// Create a mock up port to manage the AVM component (allocate cores).
-				/*ApplicationVMManagementOutboundPort avmPort = new ApplicationVMManagementOutboundPort(
-						applicationVM[4], this) ;
-				avmPort.publishPort() ;
-				avmPort.doConnection(applicationVM[1],
-							ApplicationVMManagementConnector.class.getCanonicalName());
-				avmPort.allocateCores(ccmopUri);*/
-				this.cmops.get(ccmopUri).tryReserveCore(applicationVM[0], 5);
-				//this.avmOutPort.put(applicationVM[0], avmPort);
-	
+
+			//this.avmOutPort.put(applicationVM[0], avmPort);
+			computerManagementInboundPortURI =  cmop.getClientPortURI();
 		}
+		
 		ApplicationVMInfo vm = new ApplicationVMInfo(applicationVM[0], applicationVM[1], applicationVM[2], computerManagementInboundPortURI);
 
 		synchronized (VMforNewApplication) {
-			if(this.VMforNewApplication.size() < MIN_VM) {
+			if(this.VMforNewApplication.size() < MIN_VM_FOR_SUB_APPLICATION) {
 				this.VMforNewApplication.add(vm);
 			}else {
 				synchronized (freeApplicationVM) {
@@ -687,9 +688,9 @@ implements 	ApplicationSubmissionI,
 					if(this.vmURis.contains(vm.getApplicationVM())) {
 						int numberVmInRing = this.vmURis.size();
 						if(numberVmInRing < NUMBER_MIN_VM) {
-							addFreeVM();
+							addFreeVM(Integer.min(NUMBER_MIN_VM - numberVmInRing + 4, NUMBER_MAX_VM));
 						}else if(numberVmInRing > NUMBER_MAX_VM){
-							askToBeDestroy = Integer.max(numberVmInRing - NUMBER_MAX_VM  - 5, NUMBER_MIN_VM);
+							askToBeDestroy = numberVmInRing - NUMBER_MAX_VM;
 						}
 						w.write(Arrays.asList("Nombre de vm " + numberVmInRing, "A détruire : " + askToBeDestroy));
 
@@ -698,7 +699,7 @@ implements 	ApplicationSubmissionI,
 						this.vmURis.add(vm.getApplicationVM());
 					}
 				}
-				if(this.VMforNewApplication.size() < MIN_VM) {
+				if(this.VMforNewApplication.size() < MIN_VM_FOR_SUB_APPLICATION) {
 					synchronized (VMforNewApplication) {
 						this.VMforNewApplication.add(currentDynamicState.getApplicationVMInfo());
 					}
@@ -710,10 +711,20 @@ implements 	ApplicationSubmissionI,
 			}
 		}
 	}
-
-	private void addFreeVM() {
-		// TODO Auto-generated method stub
+	
+	private void addFreeVM(int nbVmToCreate) throws Exception {
 		
+		//TODO Changer structure computer => Tri selon leur nombre de vm / coeurs libres
+		for(Entry<String, ComputerControllerManagementOutboutPort> entry : this.cmops.entrySet()) {
+			if(entry.getValue().compteurVM() < 2 && nbVmToCreate > 0) {
+				try {
+					createVM(entry.getValue().getPortURI());
+					nbVmToCreate--;
+				}catch (Exception e) {
+					this.logMessage("Impossible de créer une VM sur cet ordinateur");
+				}
+			}
+		}
 	}
 
 	public void	sendDynamicState() throws Exception
