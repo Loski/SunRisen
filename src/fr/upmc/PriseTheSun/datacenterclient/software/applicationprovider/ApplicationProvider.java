@@ -10,6 +10,7 @@ import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.ports.A
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.cvm.AbstractCVM;
 import fr.upmc.components.exceptions.ComponentShutdownException;
+import fr.upmc.components.exceptions.ComponentStartException;
 import fr.upmc.datacenter.software.connectors.RequestSubmissionConnector;
 import fr.upmc.datacenterclient.requestgenerator.RequestGenerator;
 import fr.upmc.datacenterclient.requestgenerator.connectors.RequestGeneratorManagementConnector;
@@ -39,9 +40,6 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 
     /** the inbound port used to send/stop application **/
     protected ApplicationProviderManagementInboundPort apmip;
-    
-    
-    
     
 
     // ------------------------------------------------------------------
@@ -99,7 +97,8 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
         this.apmip = new ApplicationProviderManagementInboundPort(applicationManagementInboundPort, ApplicationProviderManagementI.class, this);
         this.addPort( this.apmip );
         this.apmip.publishPort();
-        this.asop.doConnection(applicationSubmissionInboundPortURI, ApplicationSubmissionConnector.class.getCanonicalName());    
+
+        this.asop.doConnection(applicationSubmissionInboundPortURI, ApplicationSubmissionConnector.class.getCanonicalName());
 	}
 	
 
@@ -211,9 +210,6 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
         else
             System.err.println("Pas de resources disponibles" );
 		
-	}
-
-
-    
+	}    
     
 }

@@ -59,7 +59,8 @@ public class TestDCVM extends AbstractDistributedCVM{
 
 	protected AdmissionControllerDynamic ac;
 	protected AdmissionControllerManagementOutboundPort acmop;
-	protected ApplicationProvider ap[];
+	protected ApplicationProvider ap1[];
+	protected ApplicationProvider ap2[];
 	public ApplicationProviderManagementOutboundPort apmop[];
 	public ArrayList<ComputerWrapper> cw = new ArrayList<>();
 	public static final  String applicationSubmissionInboundPortURI = "asip";
@@ -109,18 +110,38 @@ public class TestDCVM extends AbstractDistributedCVM{
 	 * @param nbApplication
 	 * @throws Exception
 	 */
-	private void createApplication(int nbApplication) throws Exception {
-		this.ap = new ApplicationProvider[nbApplication];
-		this.apmop = new ApplicationProviderManagementOutboundPort[nbApplication];
-		for(int i =0; i < 1; i++) {
-			this.ap[i] = new ApplicationProvider("App"+"-"+i, applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI+"-"+i, applicationManagementInboundPort+"-"+i);
-			this.addDeployedComponent(this.ap[i]);
+	private void createApplicationPool1() throws Exception {
+		this.ap1 = new ApplicationProvider[NB_APPLICATION/2];
+		this.apmop = new ApplicationProviderManagementOutboundPort[NB_APPLICATION/2];
+		for(int i = 0; i < NB_APPLICATION/2; i++) {
+			this.ap1[i] = new ApplicationProvider("App"+"-"+i, applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI+"-"+i, applicationManagementInboundPort+"-"+i);
+			this.addDeployedComponent(this.ap1[i]);
+		}
+	}
+	
+	private void createApplicationPool2() throws Exception {
+		this.ap2 = new ApplicationProvider[NB_APPLICATION/2];
+		this.apmop = new ApplicationProviderManagementOutboundPort[NB_APPLICATION/2];
+		for(int i = 0; i < NB_APPLICATION/2; i++) {
+			int j = NB_APPLICATION/2+i;
+			this.ap2[i] = new ApplicationProvider("App"+"-"+j, applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI+"-"+j, applicationManagementInboundPort+"-"+j);
+			this.addDeployedComponent(this.ap2[i]);
 		}
 	}
 	
 	
+	
 	@Override
 	public void instantiateAndPublish() throws Exception {
+		if (thisJVMURI.equals(AdmissionController)) {
+			createAdmissionController();
+		}
+		else if(thisJVMURI.equals(Application1)) {
+			createApplicationPool1();			
+		}else if(thisJVMURI.equals(Application2)) {
+			createApplicationPool2();
+		}
+		
 		super.instantiateAndPublish();
 	}
 
@@ -138,17 +159,7 @@ public class TestDCVM extends AbstractDistributedCVM{
 	}
 
 	@Override
-	public void deploy() throws Exception {
-		
-		if (thisJVMURI.equals(AdmissionController)) {
-			createAdmissionController();
-		}
-		else if(thisJVMURI.equals(Application1)) {
-			createApplication(NB_APPLICATION/2);			
-		}else if(thisJVMURI.equals(Application2)) {
-			createApplication(NB_APPLICATION/2);
-		}
-		
+	public void deploy() throws Exception {		
 		super.deploy();
 	}
 
