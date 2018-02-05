@@ -192,7 +192,7 @@ public class TestDCVM extends AbstractDistributedCVM{
 	public static void	main(String[] args)
 	{
 		// Uncomment next line to execute components in debug mode.
-		AbstractCVM.toggleDebugMode() ;
+	//	AbstractCVM.toggleDebugMode() ;
 		try {
 			final TestDCVM trd = new TestDCVM(args) ;
 			// Deploy the components

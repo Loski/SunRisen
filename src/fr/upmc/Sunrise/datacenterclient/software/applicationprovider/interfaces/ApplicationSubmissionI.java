@@ -13,11 +13,10 @@ public interface ApplicationSubmissionI extends	OfferedI, RequiredI {
 	 * Envoie une application au controller
 	 * Le controller vérifie s'il possède les ressources pour accepter l'application
 	 * @param appURI Uri of the Application
-	 * @param nbVM VM require for the application
 	 * @return The requestDispatcherUri if success with his inboundPort.
 	 * @throws Exception
 	 */
-	public String[] submitApplication(String appURI, int nbVM) throws Exception;
+	public String[] submitApplication(String appURI) throws Exception;
 	
 	//public String[] submitApplication(String appURI, int nbVM, Class submissionInterface) throws Exception;
 	

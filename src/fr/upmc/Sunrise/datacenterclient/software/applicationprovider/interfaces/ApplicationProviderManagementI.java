@@ -25,7 +25,7 @@ public interface ApplicationProviderManagementI extends	OfferedI, RequiredI{
 	public void stopApplication() throws Exception;
 
 	/**
-     * @see fr.upmc.Sunrise.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int)
+     * @see fr.upmc.Sunrise.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String)
 	 * @param Class to be recompiled by Javassist
 	 * @throws Exception
 	 */

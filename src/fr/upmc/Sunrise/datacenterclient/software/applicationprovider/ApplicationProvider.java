@@ -105,7 +105,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 	@Override
 	public void createAndSendApplication() throws Exception {
 		System.out.println("Waiting acception of Application : "+this.apURI);
-		rdUri = this.asop.submitApplication(apURI,  2 );
+		rdUri = this.asop.submitApplication(apURI );
 		System.out.println("Request submitted, the reply is : ");
 
         if ( rdUri != null ) {
@@ -179,7 +179,7 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
 		assert submissionInterface.isInterface();
 		
 		System.out.println("Waiting acception of Application ["+this.apURI+"] with submissionInterface ["+submissionInterface.getCanonicalName()+"]");
-		rdUri = this.asop.submitApplication(apURI, 2);
+		rdUri = this.asop.submitApplication(apURI);
 		System.err.println("Request submitted, the reply is : " + rdUri[0]);
 		
         if ( rdUri != null ) {

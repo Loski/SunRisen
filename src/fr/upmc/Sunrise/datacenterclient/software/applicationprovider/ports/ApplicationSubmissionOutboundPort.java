@@ -12,11 +12,11 @@ public class ApplicationSubmissionOutboundPort extends AbstractOutboundPort impl
     }
 
     /**
-     * @see fr.upmc.Sunrise.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int)
+     * @see fr.upmc.Sunrise.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String)
      */
     @Override
-    public String[] submitApplication(String appURI, int nbVM ) throws Exception {
-      return  ( ( ApplicationSubmissionI ) this.connector ).submitApplication(appURI, nbVM );
+    public String[] submitApplication(String appURI ) throws Exception {
+      return  ( ( ApplicationSubmissionI ) this.connector ).submitApplication(appURI );
 }
 
 	/**

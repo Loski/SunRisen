@@ -9,15 +9,15 @@ public class ApplicationSubmissionInboundPort extends AbstractInboundPort implem
     private static final long serialVersionUID = 1L;
     
     /**
-     * @see fr.upmc.Sunrise.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int)
+     * @see fr.upmc.Sunrise.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String)
      */
     @Override
-    public String[] submitApplication(final String appURI,  final int nbVM ) throws Exception {
+    public String[] submitApplication(final String appURI ) throws Exception {
         final ApplicationSubmissionI aps = ( ApplicationSubmissionI ) this.owner;
         return this.owner.handleRequestSync( new ComponentI.ComponentService<String[]>() {
             @Override
             public String[] call() throws Exception {
-                return aps.submitApplication(appURI, nbVM );
+                return aps.submitApplication(appURI );
             }
         } );
     }

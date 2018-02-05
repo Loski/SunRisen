@@ -13,9 +13,9 @@ public class ApplicationSubmissionConnector extends	AbstractConnector
 implements	ApplicationSubmissionI {
 
 	@Override
-	public String[] submitApplication(String appURI, int nbVM) throws Exception {
+	public String[] submitApplication(String appURI) throws Exception {
 		
-		return ( ( ApplicationSubmissionI ) this.offering ).submitApplication(appURI, nbVM);
+		return ( ( ApplicationSubmissionI ) this.offering ).submitApplication(appURI);
 
 	}
 

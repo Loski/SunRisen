@@ -500,10 +500,10 @@ implements 	ApplicationSubmissionI,
 	}
 	
 	/**
-	 * @see fr.upmc.Sunrise.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String, int)
+	 * @see fr.upmc.Sunrise.datacenterclient.software.applicationprovider.interfaces.ApplicationSubmissionI#submitApplication(java.lang.String)
 	 */
 	@Override
-	public  String[] submitApplication(String appURI, int nbVM) throws Exception{
+	public  String[] submitApplication(String appURI) throws Exception{
 		
 		this.logMessage("New Application received in dynamic controller ("+appURI+")"+".\n Waiting for evaluation ");
 		w.write(Arrays.asList("application " + appURI +" accepted"));

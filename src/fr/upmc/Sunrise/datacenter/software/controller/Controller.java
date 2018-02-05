@@ -823,7 +823,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 		// Create a mock up port to manage the AVM component (allocate cores).
 		ApplicationVMManagementOutboundPort avmPort;
 		int id = ++idVm;
-		w.write(Arrays.asList("ask to add a vm"));
 
 		try {
 			avmPort = new ApplicationVMManagementOutboundPort(
@@ -859,9 +858,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 			synchronized (myVMs) {
 				this.myVMs.add(vm);
 			}
-			w.write(Arrays.asList("VM add"));
-
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
