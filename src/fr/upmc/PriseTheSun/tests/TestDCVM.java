@@ -138,10 +138,10 @@ public class TestDCVM extends AbstractDistributedCVM{
 			createAdmissionController();
 		}
 		else if(thisJVMURI.equals(Application1)) {
-			Thread.sleep(500);
+			Thread.sleep(2000);
 			createApplicationPool1();			
 		}else if(thisJVMURI.equals(Application2)) {
-			Thread.sleep(500);
+			Thread.sleep(2000);
 			createApplicationPool2();
 		}
 		
@@ -228,10 +228,12 @@ public class TestDCVM extends AbstractDistributedCVM{
 	protected void testScenario() throws Exception {
 		if (thisJVMURI.equals(AdmissionController)) {}
 		else if(thisJVMURI.equals(Application1)) {
+			Thread.sleep(1000);
 			for(int i = 0; i < NB_APPLICATION/2; i++) {
 				this.apmop1[i].createAndSendApplication();
 			}
 		}else if(thisJVMURI.equals(Application2)) {
+			Thread.sleep(1000);
 			for(int i = 0; i < NB_APPLICATION/2; i++) {
 				this.apmop2[i].createAndSendApplication();
 			}
