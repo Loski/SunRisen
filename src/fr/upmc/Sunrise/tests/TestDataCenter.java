@@ -215,7 +215,7 @@ extends		AbstractCVM
 		for(int i = 0; i < NB_APPLICATION;i++) {
 			this.apmop[i].createAndSendApplication();
 		}
-		Thread.sleep(5000);
+		/*Thread.sleep(5000);
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -227,7 +227,7 @@ extends		AbstractCVM
 					throw new RuntimeException(e) ;
 				}
 			}
-		}).start();
+		}).start();*/
 	}
 
 	
