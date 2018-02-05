@@ -106,7 +106,6 @@ public class ComputerController extends AbstractComponent implements ComputerCon
 		assert vmUri != null;
 		ArrayList<Point> cores =  reservedCore.remove(vmUri);		
 		if(cores != null) {
-			System.err.println("je rentre " + vmUri);
 			csop.releaseCore(cores);
 		}
 	}

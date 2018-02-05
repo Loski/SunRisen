@@ -95,6 +95,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	
 	int idVm = 0;
 	int waitDecision = 0;
+	boolean needVM;
 	/**Max de mauvaises information du capteur de vélocité de requêtage*/
 	private int compteur_null = 0;
 	/** VMs réservées au prochain tour d'allocation */
@@ -135,36 +136,31 @@ implements 	RequestDispatcherStateDataConsumerI,
 	
 	public final static int PUSH_INTERVAL = 1000;
 	public final static int REQUEST_MIN = PUSH_INTERVAL/100;
+	public static final long TIME_MAX = 60000l;
+	public static final int NB_VM_RESERVED = 2;
+
+	public  int very_slow_compteur  = 0;
+
 	
-	public static int vmaskdeco = 0;
-	public static int vm_deco = 0;
-	public static int vm_add = 0;
 	
-	public int coreReserved = 0;
-	
-	static class StaticData {
+	static class TargetData {
 		public static final double AVERAGE_TARGET=5E9D;
 		
 		public static final double VERY_FAST_PERCENT_LIMIT=0.78;
 		public static final double FASTER_PERCENT_LIMIT=0.85;
 		public static final double SLOWER_PERCENT_LIMIT=1.15;
 		public static final double VERY_SLOW_PERCENT_LIMIT=1.22;
-
 		public static final double TARGET_VERY_SLOW = AVERAGE_TARGET * VERY_SLOW_PERCENT_LIMIT;
 		public static final double TARGET_SLOW = AVERAGE_TARGET * SLOWER_PERCENT_LIMIT;
 		public static final double TARGET_FAST = AVERAGE_TARGET * FASTER_PERCENT_LIMIT;
 		public static final double TARGET_VERY_FAST = AVERAGE_TARGET * VERY_FAST_PERCENT_LIMIT;
-		public static final long minute = 60000l;
-		public static final int NB_VM_RESERVED = 2;
+
 
 		public static final int MAX_NULL = 60;
 
 		public static final int MAX_VM = 8;
-		//Max core
-		public static int MAX_ALLOCATION=25;
-		
-		public static int MIN_ALLOCATED_CORE = 2;
 
+		public static final int MIN_ALLOCATED_CORE = 2;
 	}
 	
 	
@@ -302,7 +298,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		//Nettoyage...
 		int erase = 0;
 		while(!tmp.isEmpty()) {
-			if( timestamp_max - tmp.get(0).timestamp > StaticData.minute) {
+			if( timestamp_max - tmp.get(0).timestamp > TIME_MAX) {
 				tmp.remove(0);
 				erase++;
 			}else {
@@ -350,10 +346,12 @@ implements 	RequestDispatcherStateDataConsumerI,
 		//this.logMessage(String.format("[%s] Dispatcher Dynamic Data : %4.3f",dispatcherURI,currentDynamicState.getAvgExecutionTime()/1000000/1000));
 		
 		try {
-			if(compteur_null == StaticData.MAX_NULL) {
+			//Cas où le dispatcher n'arrive pas à produire des statistiques tellement la VM à du mal.
+			if(compteur_null == TargetData.MAX_NULL) {
 				compteur_null =  Integer.MIN_VALUE;
-
-				throw new Exception("IT'S DANGEROUS TO GO ALONE, TAKE A DATA PLEASE" + this.appURI);
+				needVM = true;
+				this.logMessage("IT'S DANGEROUS TO GO ALONE, TAKE A VM PLEASE " + this.controllerURI);
+				return;
 			}
 			if((waitDecision % REQUEST_MIN) == 0) {
 				reserveCore(1, currentDynamicState.getVirtualMachineDynamicStates());
@@ -379,9 +377,13 @@ implements 	RequestDispatcherStateDataConsumerI,
 		    
 		    this.statistique.get("All").add(new Mesure(currentDynamicState.getAvgExecutionTime(), timestamp));
 		    
-			if((waitDecision % REQUEST_MIN) == 0) {
+		    if(waitDecision % (REQUEST_MIN-1) == 0) {
+		    	needVM = true && myVMs.size() <= TargetData.MAX_VM;
+		    }
+		    else if((waitDecision % REQUEST_MIN) == 0) {
 				processControl(currentDynamicState);
 				//On redonne les VMs au prochain controller.
+				needVM = false;
 				synchronized (vmReserved) {
 					while(!vmReserved.isEmpty()) {
 						synchronized (freeApplicationVM) {
@@ -389,8 +391,6 @@ implements 	RequestDispatcherStateDataConsumerI,
 						}
 					}
 				}
-				System.out.println("ask" + vmaskdeco + " effecter" + vm_deco +"vmadd" + vm_add);
-				//System.err.println(waitDecision);
 			}
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -447,7 +447,6 @@ implements 	RequestDispatcherStateDataConsumerI,
     }
     
 	/**
-	 * 
 	 * Seuil
 	 */
     public enum Threeshold{
@@ -458,27 +457,59 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		double speed = time.doubleValue();
 		
-		if(speed>StaticData.TARGET_SLOW) {
-			if(speed>StaticData.TARGET_VERY_SLOW) {
+		if(speed>TargetData.TARGET_SLOW) {
+			if(speed>TargetData.TARGET_VERY_SLOW) {
 				return Threeshold.VERY_SLOW;
 			}
 			return Threeshold.SLOWER;
 		}
 		
-		else if(speed<StaticData.TARGET_SLOW && speed>StaticData.TARGET_FAST)
+		else if(speed<TargetData.TARGET_SLOW && speed>TargetData.TARGET_FAST)
 		{
 			return Threeshold.GOOD;
 		}
-		else if(speed < StaticData.TARGET_FAST ) {
-			if(speed < StaticData.TARGET_VERY_FAST){
+		else if(speed < TargetData.TARGET_FAST ) {
+			if(speed < TargetData.TARGET_VERY_FAST){
 				return Threeshold.VERY_FAST;
 			}
 			return Threeshold.VERY_FAST;
 		}
 			return null;
 	}
-
 	
+	/**
+	 * Renvoie l'URI de la VM ayant le moins de coeurs
+	 * @param vms
+	 * @return
+	 */
+	private String getBadVM(Map<String, ApplicationVMDynamicStateI > vms) {
+		int number = -1;
+		int tmp;
+		String str = null;
+		for (Entry<String, ApplicationVMDynamicStateI> entry : vms.entrySet())
+		{
+		   tmp = entry.getValue().getAllocatedCoresNumber().length;
+		   if(tmp > number) {
+			   str = entry.getKey();
+			   number = tmp;
+		   }
+		}
+		return str;
+	}
+	
+	/**
+	 * Find a vm in myVm with his uri
+	 * @param VMURI
+	 * @return
+	 */
+	private int findVm(String VMURI) {
+			for(int i = 0; i < myVMs.size(); i++) {
+				if(myVMs.get(i).getApplicationVM().equals(VMURI)) {
+					return i;
+				}
+			}
+		return -1;
+	}
 	private void processControl(RequestDispatcherDynamicStateI currentDynamicState){
 		Map<String, ApplicationVMDynamicStateI > vms = currentDynamicState.getVirtualMachineDynamicStates();
 		double average = 0;
@@ -490,25 +521,33 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 		Threeshold th = getThreeshold(average);
 		w.write(Arrays.asList("ASK", ""+average, ((Integer)vms.size()).toString(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms),  ""+currentDynamicState.getNbRequestReceived(), ""+currentDynamicState.getNbRequestTerminated()));
-
+		
 		try {
-			switch(th){
-			case VERY_SLOW:
+			if(th == Threeshold.VERY_SLOW) {
+				very_slow_compteur++;
+				//Tentative de déconnecter une mauvaise VM pour en réallouer une nouvelle..
+				if(very_slow_compteur > 10) {
+					very_slow_compteur  = 0;
+					synchronized (myVMs) {
+						if(myVMs.size() > 2) {
+							askDisconnect(myVMs.remove(findVm(getBadVM(vms))));
+							this.logMessage("Tentative de déconnection forcée d'une VM pour mauvaise performance !");
+						}
+					}
+					
+				}
 				tooSlowCase(vms, 5);
-			case SLOWER :
-				tooSlowCase(vms, 2);
-				break;
-			case FASTER :
-				tooFastCase(vms, 2);
-				break;
-			case VERY_FAST:
-				tooFastCase(vms, 5);
-				break;
-			case GOOD :
-				break;
-			default:
-				break;
+			}else {
+				very_slow_compteur = 0;
+				if(th== Threeshold.SLOWER){
+					tooSlowCase(vms, 2);
+				}else if(th == Threeshold.FASTER){
+					tooFastCase(vms, 2);
+				}else if(th == Threeshold.VERY_FAST) {
+					tooFastCase(vms, 5);
+				}
 			}
+		
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -560,7 +599,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 				ApplicationVMInfo vm = null;
 				synchronized (this.vmReserved) {
 					int tailleVm = this.myVMs.size();
-					if(tailleVm < StaticData.MAX_VM && !vmReserved.isEmpty()) {
+					if(tailleVm < TargetData.MAX_VM && !vmReserved.isEmpty()) {
 						vm = vmReserved.remove(0);
 					}
 				}
@@ -588,7 +627,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			synchronized(myVMs) {
 				for (int i = 0; i < this.myVMs.size(); i++)
 				{
-					if(vms.get(myVMs.get(i).getApplicationVM()).getAllocatedCoresNumber().length > StaticData.MIN_ALLOCATED_CORE) {
+					if(vms.get(myVMs.get(i).getApplicationVM()).getAllocatedCoresNumber().length > TargetData.MIN_ALLOCATED_CORE) {
 						this.avms.get(myVMs.get(i).getApplicationVM()).desallocateCores(1);
 						objectif--;
 					}else {
@@ -601,13 +640,8 @@ implements 	RequestDispatcherStateDataConsumerI,
 				synchronized (myVMs) {
 					boolean canRemoveVM = myVMs.size() > 1 ;
 					if(canRemoveVM) {
-						w.write(Arrays.asList("ask to remove a vm"));
-						vmaskdeco++;
 						ApplicationVMInfo randomVM = this.myVMs.remove(0);
-						this.logMessage("Demande de déconnexion de " + randomVM.getApplicationVM());
-	
-						this.VMsToBeKilled.put(randomVM.getApplicationVM(), randomVM);
-						this.rdmop.askVirtualMachineDisconnection(randomVM.getApplicationVM());
+						askDisconnect(randomVM);
 					}
 				}
 			}
@@ -634,7 +668,17 @@ implements 	RequestDispatcherStateDataConsumerI,
 	}
 	*/
 
-
+	/**
+	 * Ask to disconnect a vm to the dispatcher
+	 * @param vm vm to be disconnected
+	 * @throws Exception 
+	 */
+	private void askDisconnect(ApplicationVMInfo vm) throws Exception {
+		this.logMessage("Demande de déconnexion de " + vm.getApplicationVM());
+		this.VMsToBeKilled.put(vm.getApplicationVM(), vm);
+		this.rdmop.askVirtualMachineDisconnection(vm.getApplicationVM());
+	}
+	
 	/**
 	 * @see fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI#acceptRingNetworkDynamicData(java.lang.String, fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkDynamicStateI)
 	 */
@@ -646,7 +690,9 @@ implements 	RequestDispatcherStateDataConsumerI,
 		//System.out.println(vm + controllerDataRingOutboundPortURI);
 
 		if(vm != null) {
-				if(vmReserved.size() < 2 /*&& (waitDecision % REQUEST_MIN == 1)*/) {
+				
+				if(needVM) {
+					needVM = false;
 					synchronized(vmReserved){
 						vmReserved.add(vm);
 					}
@@ -835,14 +881,14 @@ implements 	RequestDispatcherStateDataConsumerI,
 
 			ComputerControllerManagementOutboutPort ccmop = this.cmops.remove(vmURI);
 			ccmop.releaseCore(vmURI);
-			
+			ApplicationVMInfo vm = VMsToBeKilled.remove(vmURI);
+
 			//reallocation
 			int number = ccmop.tryReserveCore(vmURI, AdmissionControllerDynamic.NB_CORES, 0);
 			if(number == 0 ) {
 				throw new Exception("Impossible de rendre la VM au data ring.. Ordinateur plein..");
 			}
 			//this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
-			ApplicationVMInfo vm = VMsToBeKilled.remove(vmURI);
 			if(vm == null) {
 				throw new Exception("No vm found for this URI");
 			}

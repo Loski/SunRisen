@@ -116,6 +116,7 @@ implements 	ApplicationSubmissionI,
 	protected static final String VMDisconnectionHandlerOutboundPort = "VMDisconnectionHandlerOutboundPort";
 	private Writter w;
 
+	
 	protected AdmissionControllerManagementInboundPort acmip;
 	protected ApplicationSubmissionInboundPort asip;
 	
@@ -126,12 +127,12 @@ implements 	ApplicationSubmissionI,
 	@SuppressWarnings("unused")
 	private String controllerManagementPreviousInboundPort;
 	
+
 	
 	private static int nbappli = 0;
 	protected ArrayList<ComputerStaticStateDataOutboundPort> cssdops;
 	protected ArrayList<ComputerDynamicStateDataOutboundPort> cdsdops;
 	protected Map<String, ComputerControllerManagementOutboutPort > cmops;
-
 	protected ScheduledFuture<?>	pushingFuture ;
 	
 	/** Set pour check le nombre de vm dans le ring */
@@ -152,8 +153,7 @@ implements 	ApplicationSubmissionI,
 	
 	/**Min vm dans l'arrayLMist pour accepter des applications **/
 	private static final int MIN_VM_FOR_SUB_APPLICATION = 15;
-	
-	
+		
 	/** Nombre minimum de VM dans le ring.. */
 	private static final int NUMBER_MIN_VM = 10;
 	
@@ -165,6 +165,12 @@ implements 	ApplicationSubmissionI,
 
 	/**Nombre de VM à détruire dans le network ring */
 	private int askToBeDestroy;
+	
+	/**Nombre de valeur nulle tolérée avant ajout de VM */
+	private static final int NB_NULL_RING = 50;
+	/**Compteur de null*/
+	protected int compteur_null = 0;
+
 
 	private DynamicComponentCreationOutboundPort portTControllerJVM;
 	
@@ -674,6 +680,7 @@ implements 	ApplicationSubmissionI,
 	}
 
 	/**
+	 * Réceptionne les VM dans le Data Ring. De plus, l'ADM à la responsabilité de gérer le nombre de VM dans le data ring, il peut soit en ajouter soit en supprimer selon un seuil min et max.
 	 * @see fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkStateDataConsumerI#acceptRingNetworkDynamicData(java.lang.String, fr.upmc.PriseTheSun.datacenter.software.ring.interfaces.RingNetworkDynamicStateI)
 	 */
 	@Override
@@ -681,6 +688,7 @@ implements 	ApplicationSubmissionI,
 			throws Exception {
 			ApplicationVMInfo vm = currentDynamicState.getApplicationVMInfo();
 			if(vm != null) {
+				compteur_null = 0;
 				if(askToBeDestroy > 0) {
 					askToBeDestroy--;
 					this.cmops.get(vm.getComputerManagementInboundPortURI()).releaseCore(vm.getApplicationVM());
@@ -696,7 +704,6 @@ implements 	ApplicationSubmissionI,
 							askToBeDestroy = numberVmInRing - NUMBER_MAX_VM;
 						}
 						w.write(Arrays.asList(""+numberVmInRing, ""+askToBeDestroy, ""+tocreate));
-
 						this.vmURis.clear();
 					}else {				
 						this.vmURis.add(vm.getApplicationVM());
@@ -711,6 +718,11 @@ implements 	ApplicationSubmissionI,
 						freeApplicationVM.add(currentDynamicState.getApplicationVMInfo());
 					}
 				}
+			}
+		}else {
+			this.compteur_null++;
+			if(compteur_null > NB_NULL_RING) {
+				this.logMessage("Not vm perceived since long time. times to create some !");
 			}
 		}
 	}
