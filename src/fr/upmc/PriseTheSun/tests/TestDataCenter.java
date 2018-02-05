@@ -99,7 +99,7 @@ extends		AbstractCVM
 	protected AdmissionControllerDynamic ac;
 	protected AdmissionControllerManagementOutboundPort acmop;
 	protected ApplicationProvider ap[];
-	public  ApplicationProviderManagementOutboundPort apmop[];
+	public static  ApplicationProviderManagementOutboundPort apmop[];
 	public ArrayList<ComputerWrapper> cw = new ArrayList<>();
 	public static final  String applicationSubmissionInboundPortURI = "asip";
 	public static final String AdmissionControllerManagementInboundPortURI = "acmip";
@@ -207,7 +207,7 @@ extends		AbstractCVM
 
 	/**
 	 * send application to the adm
-	 *
+	 * the second thread stop an application after 4500ms
 	 * @throws Exception
 	 */
 	public void			testScenario() throws Exception
@@ -215,8 +215,19 @@ extends		AbstractCVM
 		for(int i = 0; i < NB_APPLICATION;i++) {
 			this.apmop[i].createAndSendApplication();
 		}
-		Thread.sleep(10000);
-		this.apmop[4].stopApplication();
+		Thread.sleep(5000);
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(4500);
+					TestDataCenter.apmop[0].stopApplication();
+
+				} catch (Exception e) {
+					throw new RuntimeException(e) ;
+				}
+			}
+		}).start();
 	}
 
 	
@@ -244,9 +255,6 @@ extends		AbstractCVM
 				public void run() {
 					try {
 						trd.testScenario() ;
-						Thread.sleep(1600);
-						trd.apmop[1].stopApplication();
-
 					} catch (Exception e) {
 						throw new RuntimeException(e) ;
 					}

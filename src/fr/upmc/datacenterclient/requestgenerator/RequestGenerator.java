@@ -92,7 +92,7 @@ public class				RequestGenerator
 extends		AbstractComponent
 implements	RequestNotificationHandlerI
 {
-	public static int	DEBUG_LEVEL = 2;
+	public static int	DEBUG_LEVEL = -1;
 
 	// -------------------------------------------------------------------------
 	// Constants and instance variables

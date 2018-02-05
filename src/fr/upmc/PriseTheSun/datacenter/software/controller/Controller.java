@@ -919,7 +919,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 	public void disconnectController() throws Exception {
 		System.err.println("tentative de déconnexion..");
 		try {
-		NodeManagementOutboundPort cmopPrevious = new NodeManagementOutboundPort("cmop-previous-"+this.controllerURI, this);
+		NodeManagementOutboundPort cmopPrevious = new NodeManagementOutboundPort("cmop-previous-"+this.controllerURI + idVm, this);
 		this.addPort(cmopPrevious);
 		cmopPrevious.publishPort();
 		cmopPrevious.doConnection(controllerManagementPreviousInboundPort, NodeManagementConnector.class.getCanonicalName());
@@ -932,12 +932,13 @@ implements 	RequestDispatcherStateDataConsumerI,
 				Thread.sleep(300);
 			}
 		}
+		
 		//On attends jusqu'a ce qu'il ne reste plus de vm.
 		
 		// On raccorde les ports de managements
 		cmopPrevious.setNextManagementInboundPort(controllerManagementNextInboundPort);
 
-		NodeManagementOutboundPort cmopNext = new NodeManagementOutboundPort("cmop-next-"+this.controllerURI, this);
+		NodeManagementOutboundPort cmopNext = new NodeManagementOutboundPort("cmop-next-"+this.controllerURI +idVm, this);
 		this.addPort(cmopNext);
 		cmopNext.publishPort();
 		cmopNext.doConnection(controllerManagementNextInboundPort, NodeManagementConnector.class.getCanonicalName());

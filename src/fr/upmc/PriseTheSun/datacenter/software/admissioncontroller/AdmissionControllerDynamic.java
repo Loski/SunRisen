@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -257,7 +258,7 @@ implements 	ApplicationSubmissionI,
 		this.addPort(nmip);
 		this.nmip.publishPort();
 		
-		this.rdmopMap = new HashMap<String, RequestDispatcherManagementOutboundPort>();
+		this.rdmopMap = new ConcurrentHashMap<String, RequestDispatcherManagementOutboundPort>();
 		this.cssdops = new ArrayList<ComputerStaticStateDataOutboundPort>();
 		this.cdsdops = new ArrayList<ComputerDynamicStateDataOutboundPort>();
 		this.cmops = new HashMap<String, ComputerControllerManagementOutboutPort>();
@@ -532,6 +533,7 @@ implements 	ApplicationSubmissionI,
 		String dispatcherUri[] = createDispatcher(appURI, RequestDispatcher.class.getCanonicalName());
 		String controllerUris[] = createController(appURI,dispatcherUri[6],dispatcherUri[8],dispatcherUri[0], vm);
 		this.rdmopMap.get(appURI).connectController(controllerUris[0],controllerUris[6]);
+		
 		return dispatcherUri;
 	}
 	
@@ -860,7 +862,6 @@ implements 	ApplicationSubmissionI,
 			RequestDispatcherManagementOutboundPort rdmop = this.rdmopMap.get(appUri);
 			rdmop.disconnectController();
 			rdmop.disconnectRequestGenerator();
-
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
