@@ -419,7 +419,8 @@ implements
 			}
 		}
 		
-		this.requestNotificationOutboundPort.notifyRequestTermination( r );
+		if(this.requestNotificationOutboundPort.connected())
+			this.requestNotificationOutboundPort.notifyRequestTermination( r );
 		
 		}catch(Exception e)
 		{
