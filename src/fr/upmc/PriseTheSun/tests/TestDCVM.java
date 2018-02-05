@@ -11,21 +11,18 @@ import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.AdmissionCont
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.connector.AdmissionControllerManagementConnector;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.ApplicationProvider;
-import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.connectors.ApplicationProviderManagementConnector;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.ports.ApplicationProviderManagementOutboundPort;
-import fr.upmc.PriseTheSun.tests.TestAdmissionController.ComputerWrapper;
 import fr.upmc.components.AbstractComponent;
-import fr.upmc.components.connectors.DataConnector;
 import fr.upmc.components.cvm.AbstractCVM;
 import fr.upmc.components.cvm.AbstractDistributedCVM;
-import fr.upmc.datacenter.connectors.ControlledDataConnector;
 import fr.upmc.datacenter.hardware.computers.Computer;
-import fr.upmc.datacenter.hardware.computers.ports.ComputerServicesOutboundPort;
-import fr.upmc.datacenter.hardware.processors.Processor;
-import fr.upmc.datacenter.hardware.tests.ComputerMonitor;
-import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 
 
+/**
+ * Cas de test dans un cas DCVM
+ * @author Maxime Lavaste Loïc Lafontaine
+ *
+ */
 public class TestDCVM extends AbstractDistributedCVM{
 	
 	/**
