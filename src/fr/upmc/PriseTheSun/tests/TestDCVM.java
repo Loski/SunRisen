@@ -17,6 +17,7 @@ import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.cvm.AbstractCVM;
 import fr.upmc.components.cvm.AbstractDistributedCVM;
 import fr.upmc.datacenter.hardware.computers.Computer;
+import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 
 
 /**
@@ -126,7 +127,7 @@ public class TestDCVM extends AbstractDistributedCVM{
 		this.ap2 = new ApplicationProvider[NB_APPLICATION/2];
 		this.apmop2 = new ApplicationProviderManagementOutboundPort[NB_APPLICATION/2];
 		for(int i = 0; i < NB_APPLICATION/2; i++) {
-			int j = NB_APPLICATION+i;
+			int j = NB_APPLICATION/2+i;
 			this.ap2[i] = new ApplicationProvider("App"+"-"+j, applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI+"-"+j, applicationManagementInboundPort+"-"+j);
 			this.addDeployedComponent(this.ap2[i]);
 		}
@@ -138,10 +139,10 @@ public class TestDCVM extends AbstractDistributedCVM{
 			createAdmissionController();
 		}
 		else if(thisJVMURI.equals(Application1)) {
-			Thread.sleep(500);
+			Thread.sleep(2000);
 			createApplicationPool1();			
 		}else if(thisJVMURI.equals(Application2)) {
-			Thread.sleep(500);
+			Thread.sleep(2000);
 			createApplicationPool2();
 		}
 		
@@ -167,9 +168,10 @@ public class TestDCVM extends AbstractDistributedCVM{
 		}		
 		else if(thisJVMURI.equals(Application2)) {
 			for(int i = 0; i < NB_APPLICATION/2; i++) {
-				this.apmop2[i] = new ApplicationProviderManagementOutboundPort("apmop"+"-"+i, new AbstractComponent(0, 0) {});
+				int j = NB_APPLICATION/2+i;
+				this.apmop2[i] = new ApplicationProviderManagementOutboundPort("apmop"+"-"+j, new AbstractComponent(0, 0) {});
 				this.apmop2[i].publishPort();
-				this.apmop2[i].doConnection(applicationManagementInboundPort+"-"+i, ApplicationProviderManagementConnector.class.getCanonicalName());
+				this.apmop2[i].doConnection(applicationManagementInboundPort+"-"+j, ApplicationProviderManagementConnector.class.getCanonicalName());
 			}
 		}
 	}
@@ -227,10 +229,13 @@ public class TestDCVM extends AbstractDistributedCVM{
 	protected void testScenario() throws Exception {
 		if (thisJVMURI.equals(AdmissionController)) {}
 		else if(thisJVMURI.equals(Application1)) {
-			for(int i = 0; i < NB_APPLICATION/2; i++) {
+			Thread.sleep(1000);
+			this.apmop1[0].createAndSendApplication(RequestSubmissionI.class);
+			for(int i = 1; i < NB_APPLICATION/2; i++) {
 				this.apmop1[i].createAndSendApplication();
 			}
 		}else if(thisJVMURI.equals(Application2)) {
+			Thread.sleep(1000);
 			for(int i = 0; i < NB_APPLICATION/2; i++) {
 				this.apmop2[i].createAndSendApplication();
 			}
