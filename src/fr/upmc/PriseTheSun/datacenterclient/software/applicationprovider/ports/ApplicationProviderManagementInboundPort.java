@@ -1,5 +1,6 @@
 package fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.ports;
 
+import fr.upmc.PriseTheSun.datacenter.software.requestdispatcher.interfaces.RequestDispatcherManagementI;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.interfaces.ApplicationProviderManagementI;
 import fr.upmc.components.ComponentI;
 import fr.upmc.components.ports.AbstractInboundPort;
@@ -8,16 +9,24 @@ import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 
 public class ApplicationProviderManagementInboundPort extends AbstractInboundPort implements ApplicationProviderManagementI {
 
-	public ApplicationProviderManagementInboundPort(Class<?> implementedInterface, ComponentI owner) throws Exception {
-		super(ApplicationProviderManagementI.class, owner);
-		assert	owner != null && owner instanceof ApplicationProviderManagementI ;
-	}
+	public				ApplicationProviderManagementInboundPort(
+			ComponentI owner
+			) throws Exception
+		{
+			super(ApplicationProviderManagementI.class, owner) ;
 
-	public ApplicationProviderManagementInboundPort(String uri, Class<?> implementedInterface, ComponentI owner)
-			throws Exception {
-		super(uri, ApplicationProviderManagementI.class, owner);
-		assert	owner != null && owner instanceof ApplicationProviderManagementI ;
-	}
+			assert	owner instanceof ApplicationProviderManagementI ;
+		}
+
+		public				ApplicationProviderManagementInboundPort(
+			String uri,
+			ComponentI owner
+			) throws Exception
+		{
+			super(uri, RequestDispatcherManagementI.class, owner);
+
+			assert	uri != null && owner instanceof ApplicationProviderManagementI ;
+		}
 	
 	@Override
     public void createAndSendApplication() throws Exception  {

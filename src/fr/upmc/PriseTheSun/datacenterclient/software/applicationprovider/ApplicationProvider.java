@@ -94,9 +94,9 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
         
         //send HERE
         this.addOfferedInterface( ApplicationProviderManagementI.class );
-        this.apmip = new ApplicationProviderManagementInboundPort(applicationManagementInboundPort, ApplicationProviderManagementI.class, this);
+        this.apmip = new ApplicationProviderManagementInboundPort(applicationManagementInboundPort, this);
         this.addPort( this.apmip );
-        this.apmip.publishPort();
+        this.apmip.localPublishPort();
 
         this.asop.doConnection(applicationSubmissionInboundPortURI, ApplicationSubmissionConnector.class.getCanonicalName());
 	}
