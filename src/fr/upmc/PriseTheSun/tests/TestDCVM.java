@@ -17,6 +17,7 @@ import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.cvm.AbstractCVM;
 import fr.upmc.components.cvm.AbstractDistributedCVM;
 import fr.upmc.datacenter.hardware.computers.Computer;
+import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 
 
 /**
@@ -229,7 +230,8 @@ public class TestDCVM extends AbstractDistributedCVM{
 		if (thisJVMURI.equals(AdmissionController)) {}
 		else if(thisJVMURI.equals(Application1)) {
 			Thread.sleep(1000);
-			for(int i = 0; i < NB_APPLICATION/2; i++) {
+			this.apmop1[0].createAndSendApplication(RequestSubmissionI.class);
+			for(int i = 1; i < NB_APPLICATION/2; i++) {
 				this.apmop1[i].createAndSendApplication();
 			}
 		}else if(thisJVMURI.equals(Application2)) {
