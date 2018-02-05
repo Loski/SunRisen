@@ -854,9 +854,9 @@ implements 	ApplicationSubmissionI,
 	public void stopApplication(String appUri) throws Exception {
 		try {
 			RequestDispatcherManagementOutboundPort rdmop = this.rdmopMap.get(appUri);
-			rdmop.disconnectRequestGenerator();
 			rdmop.disconnectController();
-			
+			rdmop.disconnectRequestGenerator();
+
 		}catch(Exception e) {
 			e.printStackTrace();
 		}

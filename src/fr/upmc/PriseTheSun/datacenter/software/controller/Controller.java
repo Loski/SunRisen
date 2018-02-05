@@ -520,7 +520,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		}
 
 		Threeshold th = getThreeshold(average);
-		w.write(Arrays.asList("ASK", ""+average, ((Integer)vms.size()).toString(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms),  ""+currentDynamicState.getNbRequestReceived(), ""+currentDynamicState.getNbRequestTerminated()));
+		w.write(Arrays.asList(""+average, ((Integer)vms.size()).toString(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms),  ""+currentDynamicState.getNbRequestReceived(), ""+currentDynamicState.getNbRequestTerminated()));
 		
 		try {
 			if(th == Threeshold.VERY_SLOW) {
@@ -554,7 +554,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 		
 		//Release les cores
 		releaseCore(vms);
-		w.write(Arrays.asList("DO :", ""+average, ""+myVMs.size(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms),  ""+currentDynamicState.getNbRequestReceived(), ""+currentDynamicState.getNbRequestTerminated()));
+		w.write(Arrays.asList(""+average, ""+myVMs.size(), th.name(), ""+this.getNumberOfCoresAllocatedFrom(vms),  ""+currentDynamicState.getNbRequestReceived(), ""+currentDynamicState.getNbRequestTerminated()));
 	}
 
 	/**
@@ -886,7 +886,7 @@ implements 	RequestDispatcherStateDataConsumerI,
 			//reallocation
 			int number = ccmop.tryReserveCore(vmURI, AdmissionControllerDynamic.NB_CORES, 0);
 			if(number == 0 ) {
-				throw new Exception("Impossible de rendre la VM au data ring.. Ordinateur plein..");
+				this.logMessage("Impossible de rendre la VM au data ring.. Ordinateur plein..");
 			}
 			//this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
 			if(vm == null) {
