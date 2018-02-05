@@ -210,15 +210,6 @@ public class ApplicationProvider extends AbstractComponent implements Applicatio
         else
             System.err.println("Pas de resources disponibles" );
 		
-	}
-
-	/**
-	 * @see fr.upmc.components.AbstractComponent#start()
-	 */
-	@Override
-	public void start() throws ComponentStartException {
-		super.start();
-	}
-    
+	}    
     
 }
