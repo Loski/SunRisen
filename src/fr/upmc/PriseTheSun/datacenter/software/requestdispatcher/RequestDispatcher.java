@@ -751,9 +751,11 @@ implements
 	public void disconnectController() throws Exception 
 	{
 		inDisconnectionState = true;
-		Iterator<Entry<String, VirtualMachineData>> it = this.requestVirtualMachineDataMap.entrySet().iterator();
-		while(it.hasNext()) {
-			this.askVirtualMachineDisconnection(it.next().getKey());
+		synchronized(this.listLock) {
+			Iterator<Entry<String, VirtualMachineData>> it = this.requestVirtualMachineDataMap.entrySet().iterator();
+			while(it.hasNext()) {
+				this.askVirtualMachineDisconnection(it.next().getKey());
+			}
 		}
 	}
 	

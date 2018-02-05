@@ -85,7 +85,7 @@ implements	RequestDispatcherManagementI
 
 		final RequestDispatcherManagementI rdm = ( RequestDispatcherManagementI ) this.owner;
 		
-		this.owner.handleRequestAsync(
+		this.owner.handleRequestSync(
 				new ComponentI.ComponentService<Void>() {
 					@Override
 					public Void call() throws Exception {

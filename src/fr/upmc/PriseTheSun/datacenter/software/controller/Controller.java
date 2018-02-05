@@ -889,8 +889,15 @@ implements 	RequestDispatcherStateDataConsumerI,
 				this.logMessage("Impossible de rendre la VM au data ring.. Ordinateur plein..");
 			}
 			//this.rddsdop.startUnlimitedPushing(PUSH_INTERVAL);
+			
+			//Sans doute une demande de déconnexion par le dispatcher sans que le Controller lui demande
 			if(vm == null) {
-				throw new Exception("No vm found for this URI");
+				synchronized (myVMs) {
+					int index = findVm(vmURI);
+					if(index > 0) {
+						myVMs.remove(index);
+					}
+				}
 			}
 			synchronized (this.freeApplicationVM) {
 				this.freeApplicationVM.add(vm);
@@ -949,8 +956,9 @@ implements 	RequestDispatcherStateDataConsumerI,
 		}
 		
 		if(cmopPrevious.connected()) {
-			cmopPrevious.destroyPort();
 			cmopPrevious.doDisconnection();
+
+			cmopPrevious.destroyPort();
 		}
 		
 		
@@ -997,7 +1005,11 @@ implements 	RequestDispatcherStateDataConsumerI,
 		assert nbToAllocate > 0;
 		synchronized (myVMs) {
 			for(int i = 0; i < this.myVMs.size(); i++) {
-				this.tryReserveCore(this.myVMs.get(i).getApplicationVM(), nbToAllocate, vms.get(myVMs.get(i).getApplicationVM()).getAllocatedCoresNumber().length);
+				ApplicationVMDynamicStateI info = vms.get(myVMs.get(i).getApplicationVM());
+				if(info == null) {
+					return;
+				}
+				this.tryReserveCore(this.myVMs.get(i).getApplicationVM(), nbToAllocate, info.getAllocatedCoresNumber().length);
 			}
 		}
 	}

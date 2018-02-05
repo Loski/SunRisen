@@ -614,7 +614,11 @@ implements 	ApplicationSubmissionI,
 		ccmop.doConnection(
 				computerController[2],
 				ComputerControllerConnector.class.getCanonicalName());
-		this.cmops.put(ccmopUri, ccmop);
+		
+		synchronized (cmops) {
+			this.cmops.put(ccmopUri, ccmop);
+		}
+		
 			
 		if(initialisation > 0) {
 			initialisation--;

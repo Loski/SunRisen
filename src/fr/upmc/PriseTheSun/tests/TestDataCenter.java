@@ -54,15 +54,18 @@ import fr.upmc.datacenter.hardware.computers.Computer;
 import fr.upmc.datacenter.hardware.processors.Processor;
 import fr.upmc.datacenter.software.interfaces.RequestSubmissionI;
 
-
-public class				TestAdmissionController
+/**
+ * Cas de test du système auto adaptatif dans un cas CVM. Les applications, l'AdmissionController ainsi que les ordinateurs
+ *  sont créés dès le départ.
+ *  Chaques composant est ensuite linké pour créer le data center.
+ * @author Maxime Lavaste Loïc Lafontaine
+ *
+ */
+public class				TestDataCenter
 extends		AbstractCVM
 {
-	// ------------------------------------------------------------------------
-	// Constants and instance variables
-	// ------------------------------------------------------------------------
 
-	public TestAdmissionController() throws Exception {
+	public TestDataCenter() throws Exception {
 		super();
 	}
 
@@ -96,7 +99,7 @@ extends		AbstractCVM
 	protected AdmissionControllerDynamic ac;
 	protected AdmissionControllerManagementOutboundPort acmop;
 	protected ApplicationProvider ap[];
-	public ApplicationProviderManagementOutboundPort apmop[];
+	public  ApplicationProviderManagementOutboundPort apmop[];
 	public ArrayList<ComputerWrapper> cw = new ArrayList<>();
 	public static final  String applicationSubmissionInboundPortURI = "asip";
 	public static final String AdmissionControllerManagementInboundPortURI = "acmip";
@@ -203,20 +206,17 @@ extends		AbstractCVM
 	// ------------------------------------------------------------------------
 
 	/**
-	 * generate requests for 20 seconds and then stop generating.
+	 * send application to the adm
 	 *
 	 * @throws Exception
 	 */
 	public void			testScenario() throws Exception
 	{
 		for(int i = 0; i < NB_APPLICATION;i++) {
-		//	Thread.sleep(500);
-			//this.apmop[i].createAndSendApplication();
 			this.apmop[i].createAndSendApplication();
 		}
-		//Thread.sleep(25000);
-
-	//	this.apmop[4].stopApplication();
+		Thread.sleep(10000);
+		this.apmop[4].stopApplication();
 	}
 
 	
@@ -231,7 +231,7 @@ extends		AbstractCVM
 		// Uncomment next line to execute components in debug mode.
 		//AbstractCVM.toggleDebugMode() ;
 		try {
-			final TestAdmissionController trd = new TestAdmissionController() ;
+			final TestDataCenter trd = new TestDataCenter() ;
 			// Deploy the components
 			trd.deploy() ;
 			System.out.println("starting...") ;
@@ -244,6 +244,9 @@ extends		AbstractCVM
 				public void run() {
 					try {
 						trd.testScenario() ;
+						Thread.sleep(1600);
+						trd.apmop[1].stopApplication();
+
 					} catch (Exception e) {
 						throw new RuntimeException(e) ;
 					}
