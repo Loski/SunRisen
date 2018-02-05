@@ -11,6 +11,7 @@ import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.AdmissionCont
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.connector.AdmissionControllerManagementConnector;
 import fr.upmc.PriseTheSun.datacenter.software.admissioncontroller.ports.AdmissionControllerManagementOutboundPort;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.ApplicationProvider;
+import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.connectors.ApplicationProviderManagementConnector;
 import fr.upmc.PriseTheSun.datacenterclient.software.applicationprovider.ports.ApplicationProviderManagementOutboundPort;
 import fr.upmc.components.AbstractComponent;
 import fr.upmc.components.cvm.AbstractCVM;
@@ -125,7 +126,7 @@ public class TestDCVM extends AbstractDistributedCVM{
 		this.ap2 = new ApplicationProvider[NB_APPLICATION/2];
 		this.apmop2 = new ApplicationProviderManagementOutboundPort[NB_APPLICATION/2];
 		for(int i = 0; i < NB_APPLICATION/2; i++) {
-			int j = NB_APPLICATION+i;
+			int j = NB_APPLICATION/2+i;
 			this.ap2[i] = new ApplicationProvider("App"+"-"+j, applicationSubmissionInboundPortURI, applicationSubmissionOutboundPortURI+"-"+j, applicationManagementInboundPort+"-"+j);
 			this.addDeployedComponent(this.ap2[i]);
 		}
@@ -166,9 +167,10 @@ public class TestDCVM extends AbstractDistributedCVM{
 		}		
 		else if(thisJVMURI.equals(Application2)) {
 			for(int i = 0; i < NB_APPLICATION/2; i++) {
-				this.apmop2[i] = new ApplicationProviderManagementOutboundPort("apmop"+"-"+i, new AbstractComponent(0, 0) {});
+				int j = NB_APPLICATION/2+i;
+				this.apmop2[i] = new ApplicationProviderManagementOutboundPort("apmop"+"-"+j, new AbstractComponent(0, 0) {});
 				this.apmop2[i].publishPort();
-				this.apmop2[i].doConnection(applicationManagementInboundPort+"-"+i, ApplicationProviderManagementConnector.class.getCanonicalName());
+				this.apmop2[i].doConnection(applicationManagementInboundPort+"-"+j, ApplicationProviderManagementConnector.class.getCanonicalName());
 			}
 		}
 	}

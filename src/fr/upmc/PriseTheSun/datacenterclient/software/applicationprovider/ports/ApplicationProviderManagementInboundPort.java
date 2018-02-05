@@ -23,7 +23,7 @@ public class ApplicationProviderManagementInboundPort extends AbstractInboundPor
 			ComponentI owner
 			) throws Exception
 		{
-			super(uri, RequestDispatcherManagementI.class, owner);
+			super(uri, ApplicationProviderManagementI.class, owner);
 
 			assert	uri != null && owner instanceof ApplicationProviderManagementI ;
 		}
